@@ -228,7 +228,7 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
 
   return (
     <CareerOSContext.Provider value={value}>
-      {storageError && <p role="alert" className="fixed right-4 top-4 z-50 rounded-xl bg-[#9b4426] px-4 py-3 text-sm font-bold text-white">{storageError}</p>}
+      {storageError && <p role="alert" className="fixed right-4 top-4 z-50 rounded-xl bg-[var(--danger)] px-4 py-3 text-sm font-medium text-white">{storageError}</p>}
       {children}
     </CareerOSContext.Provider>
   );

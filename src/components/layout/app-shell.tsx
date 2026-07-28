@@ -8,8 +8,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen">
       <Sidebar />
       <MobileHeader />
-      <main className="pb-24 lg:ml-64 lg:pb-0">
-        <div className="mx-auto min-h-screen w-full max-w-[1500px] px-4 py-7 sm:px-7 lg:px-10 lg:py-10">{children}</div>
+      <main className="pb-24 lg:ml-[13.5rem] lg:pb-0">
+        <div className="mx-auto min-h-screen w-full max-w-[1280px] px-4 py-7 sm:px-8 lg:px-12 lg:py-12">{children}</div>
       </main>
       <MobileNavigation />
     </div>

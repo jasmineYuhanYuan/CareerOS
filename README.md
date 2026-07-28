@@ -20,7 +20,10 @@ The current MVP supports two independent test profiles:
 - Action-centre dashboard with current metrics, deadlines and planning progress
 - Theme and default-profile preferences
 - Versioned JSON export, validated import and reset controls
-- Desktop sidebar and compact mobile navigation
+- Editorial responsive interface with desktop sidebar and five-item mobile navigation
+
+The interface foundations, responsive behaviour and accessibility decisions are
+documented in [docs/VISUAL_REFRESH.md](docs/VISUAL_REFRESH.md).
 
 ## Sample-data disclaimer
 

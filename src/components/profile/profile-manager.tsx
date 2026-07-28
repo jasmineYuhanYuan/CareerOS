@@ -3,10 +3,9 @@
 import { useState, type FormEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/form-field";
-import { PageHeading } from "@/components/ui/page-heading";
+import { SectionHeader } from "@/components/ui/section-header";
 import { useCareerOS } from "@/providers/careeros-provider";
 import type { CareerProfile, Project, Skill } from "@/types/domain";
 
@@ -75,70 +74,89 @@ export function ProfileManager() {
 
   return (
     <div className="page-enter">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-        <PageHeading eyebrow="Profile" title={profile.displayName} description="Your profile shapes every opportunity, recommendation and planning view." />
+      <header className="flex flex-col gap-5 border-b border-[var(--border)] pb-9 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4 sm:gap-5">
+          <span aria-hidden="true" className="grid size-16 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] font-display text-xl font-medium text-[var(--accent)] sm:size-20">
+            {profile.displayName.split(" ").map((part) => part[0]).slice(0, 2).join("")}
+          </span>
+          <div>
+            <p className="eyebrow mb-1.5">{profile.studyLevel} profile</p>
+            <h1 className="font-display text-[1.85rem] font-medium leading-tight tracking-[-0.045em] sm:text-[2.4rem]">{profile.displayName}</h1>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              {profile.preferredName && profile.preferredName !== profile.displayName ? `Prefers ${profile.preferredName} · ` : ""}
+              {profile.university} · {profile.discipline} · {profile.location}
+            </p>
+          </div>
+        </div>
         <Button onClick={openProfileEditor}>Edit profile</Button>
-      </div>
+      </header>
 
-      <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-        <Card eyebrow={profile.studyLevel} title={`${profile.degree} · ${profile.university}`}>
-          <dl className="grid gap-4 text-sm sm:grid-cols-2">
-            {[
-              ["Preferred name", profile.preferredName || "Not added"],
-              ["Discipline", profile.discipline],
-              ["Location", profile.location],
-              ["Expected graduation", profile.expectedGraduationDate || "Not added"],
-              ["Work eligibility", profile.workEligibility || "Not added"],
-              ["Registration", profile.registrationStatus || "Not applicable"],
-            ].map(([term, value]) => (
-              <div key={term}>
-                <dt className="text-xs font-bold uppercase tracking-wide text-[#7b857e]">{term}</dt>
-                <dd className="mt-1 font-semibold">{value}</dd>
-              </div>
-            ))}
-          </dl>
-          <p className="mt-6 border-t border-[#e4e5dd] pt-5 text-sm leading-6 text-[#68736c]">{profile.experienceSummary}</p>
-          {linkItems.length > 0 && (
-            <div className="mt-5 flex flex-wrap gap-2">
-              {linkItems.map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer" className="rounded-xl border border-[#ced1c8] px-3 py-2 text-xs font-bold text-[#245b45]">{label} ↗</a>)}
-            </div>
+      <div className="grid gap-x-12 lg:grid-cols-[1.35fr_.65fr]">
+        <main>
+          <section className="border-b border-[var(--border)] py-9">
+            <SectionHeader title="About" />
+            <p className="max-w-3xl text-[0.95rem] leading-7 text-[var(--text-secondary)]">{profile.experienceSummary}</p>
+            <dl className="mt-6 grid gap-5 text-sm sm:grid-cols-2">
+              {[
+                ["Degree", profile.degree],
+                ["Expected graduation", profile.expectedGraduationDate || "Not added"],
+                ["Work eligibility", profile.workEligibility || "Not added"],
+                ["Preferred locations", profile.preferredCities.join(", ") || "Not added"],
+              ].map(([term, value]) => <div key={term}><dt className="text-[0.75rem] uppercase tracking-[0.08em] text-[var(--text-tertiary)]">{term}</dt><dd className="mt-1.5 font-medium">{value}</dd></div>)}
+            </dl>
+          </section>
+
+          {profile.discipline === "Chiropractic" && (
+            <section className="border-b border-[var(--border)] py-9">
+              <SectionHeader title="Professional registration" description="Registration and eligibility remain separate from general profile details." />
+              <div className="rounded-2xl bg-[var(--success-soft)] p-5 text-sm font-medium text-[var(--success)]">{profile.registrationStatus || "Not added"}</div>
+            </section>
           )}
-        </Card>
 
-        <Card eyebrow="Direction" title="Career goals">
-          <ul className="flex flex-wrap gap-2">{profile.careerGoals.map((goal) => <li key={goal}><Badge tone="green">{goal}</Badge></li>)}</ul>
-          <h3 className="mt-7 text-xs font-bold uppercase tracking-wide text-[#7b857e]">Preferred locations</h3>
-          <p className="mt-2 text-sm font-semibold">{profile.preferredCities.join(", ") || "Not added"}</p>
-        </Card>
-
-        <Card eyebrow={`${profile.skills.length} recorded`} title="Skills" action={<Button size="sm" variant="secondary" onClick={() => setSkillDraft(emptySkill)}>Add skill</Button>}>
-          {profile.skills.length === 0 ? <p className="text-sm text-[#68736c]">Add skills with evidence to improve transparent matching.</p> : (
-            <ul className="space-y-3">{profile.skills.map((skill) => (
-              <li key={skill.id} className="rounded-2xl border border-[#e4e5dd] p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div><p className="font-bold">{skill.name}</p><p className="mt-1 text-xs text-[#68736c]">{skill.category} · {skill.proficiency}</p></div>
+          <section className="border-b border-[var(--border)] py-9">
+            <SectionHeader title="Skills" action={<Button size="sm" variant="secondary" onClick={() => setSkillDraft(emptySkill)}>Add skill</Button>} />
+            {profile.skills.length === 0 ? <p className="text-sm text-[var(--text-secondary)]">Add skills with evidence to improve transparent matching.</p> : (
+              <ul className="divide-y divide-[var(--border)]">{profile.skills.map((skill) => (
+                <li key={skill.id} className="flex flex-col gap-3 py-4 first:pt-0 sm:flex-row sm:items-center">
+                  <div className="min-w-0 flex-1"><p className="font-medium">{skill.name}</p><p className="mt-1 text-[0.8rem] text-[var(--text-secondary)]">{skill.category} · {skill.proficiency}</p><p className="mt-2 text-sm text-[var(--text-secondary)]">{skill.evidence || "No evidence added yet."}</p></div>
                   <div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => setSkillDraft(skill)}>Edit</Button><Button size="sm" variant="ghost" onClick={() => window.confirm(`Remove ${skill.name}?`) && updateProfile({ ...profile, skills: profile.skills.filter((item) => item.id !== skill.id) })}>Remove</Button></div>
-                </div>
-                <p className="mt-3 text-sm text-[#59645e]">{skill.evidence || "No evidence added yet."}</p>
-              </li>
-            ))}</ul>
-          )}
-        </Card>
+                </li>
+              ))}</ul>
+            )}
+          </section>
 
-        <Card eyebrow={`${profile.projects.length} recorded`} title={profile.discipline === "Chiropractic" ? "Clinical experience & projects" : "Projects"} action={<Button size="sm" variant="secondary" onClick={() => setProjectDraft(emptyProject)}>Add project</Button>}>
-          {profile.projects.length === 0 ? <p className="text-sm text-[#68736c]">No projects or clinical experience records yet. Add one when ready.</p> : (
-            <ul className="space-y-3">{profile.projects.map((project) => (
-              <li key={project.id} className="rounded-2xl border border-[#e4e5dd] p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div><p className="font-bold">{project.name}</p><p className="mt-1 text-xs text-[#68736c]">{project.role || "Role not added"}</p></div>
-                  <div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => setProjectDraft(project)}>Edit</Button><Button size="sm" variant="ghost" onClick={() => window.confirm(`Remove ${project.name}?`) && updateProfile({ ...profile, projects: profile.projects.filter((item) => item.id !== project.id) })}>Remove</Button></div>
-                </div>
-                <p className="mt-3 text-sm leading-6 text-[#59645e]">{project.description || "Add a description and relevant competencies."}</p>
-                <div className="mt-3 flex flex-wrap gap-2">{project.competencies.map((item) => <Badge key={item}>{item}</Badge>)}</div>
-              </li>
-            ))}</ul>
-          )}
-        </Card>
+          <section className="py-9">
+            <SectionHeader title={profile.discipline === "Chiropractic" ? "Clinical experience & projects" : "Projects"} action={<Button size="sm" variant="secondary" onClick={() => setProjectDraft(emptyProject)}>Add project</Button>} />
+            {profile.projects.length === 0 ? <p className="text-sm text-[var(--text-secondary)]">No projects or clinical experience records yet. Add one when ready.</p> : (
+              <div className="space-y-4">{profile.projects.map((project) => (
+                <article key={project.id} className="interactive-lift surface-card p-5 sm:p-6">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div><h3 className="font-display text-lg font-medium">{project.name}</h3><p className="mt-1 text-sm text-[var(--text-secondary)]">{project.role || "Role not added"}</p></div>
+                    <div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => setProjectDraft(project)}>Edit</Button><Button size="sm" variant="ghost" onClick={() => window.confirm(`Remove ${project.name}?`) && updateProfile({ ...profile, projects: profile.projects.filter((item) => item.id !== project.id) })}>Remove</Button></div>
+                  </div>
+                  <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">{project.description || "Add a description and relevant competencies."}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">{project.competencies.map((item) => <Badge key={item}>{item}</Badge>)}</div>
+                  {(project.repositoryUrl || project.liveUrl) && <div className="mt-4 flex gap-4 text-sm font-medium text-[var(--accent)]">{project.repositoryUrl && <a href={project.repositoryUrl} target="_blank" rel="noreferrer">Repository ↗</a>}{project.liveUrl && <a href={project.liveUrl} target="_blank" rel="noreferrer">Live project ↗</a>}</div>}
+                </article>
+              ))}</div>
+            )}
+          </section>
+        </main>
+
+        <aside>
+          <section className="border-b border-[var(--border)] py-9">
+            <SectionHeader title="Goals" />
+            <ul className="flex flex-wrap gap-2">{profile.careerGoals.map((goal) => <li key={goal}><Badge tone="orange">{goal}</Badge></li>)}</ul>
+          </section>
+          <section className="border-b border-[var(--border)] py-9">
+            <SectionHeader title="Experience" />
+            <p className="text-sm leading-6 text-[var(--text-secondary)]">{profile.experienceSummary}</p>
+          </section>
+          <section className="py-9">
+            <SectionHeader title="Links" />
+            {linkItems.length === 0 ? <p className="text-sm text-[var(--text-secondary)]">No links added yet.</p> : <ul className="space-y-2">{linkItems.map(([label, url]) => <li key={label}><a href={url} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-between border-b border-[var(--border)] text-sm font-medium"><span>{label}</span><span className="text-[var(--accent)]">↗</span></a></li>)}</ul>}
+          </section>
+        </aside>
       </div>
 
       <Dialog open={editOpen} title="Edit profile" description="Changes apply immediately across your local CareerOS workspace." onClose={closeProfileEditor}>
