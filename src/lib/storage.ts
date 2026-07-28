@@ -43,7 +43,20 @@ function isWorkspace(value: unknown, profileId: string): value is ProfileWorkspa
       return record.profileId === profileId && typeof record.id === "string" && typeof record.title === "string";
     }) &&
     typeof workspace.organisationNotes === "object" &&
-    workspace.organisationNotes !== null
+    workspace.organisationNotes !== null &&
+    isStringArray(workspace.savedOpportunityIds) &&
+    Array.isArray(workspace.contacts) &&
+    workspace.contacts.every((item) => {
+      if (typeof item !== "object" || item === null) return false;
+      const record = item as Record<string, unknown>;
+      return record.profileId === profileId && typeof record.id === "string" && typeof record.name === "string";
+    }) &&
+    Array.isArray(workspace.documents) &&
+    workspace.documents.every((item) => {
+      if (typeof item !== "object" || item === null) return false;
+      const record = item as Record<string, unknown>;
+      return record.profileId === profileId && typeof record.id === "string" && typeof record.name === "string";
+    })
   );
 }
 
@@ -55,6 +68,9 @@ export function validateState(value: unknown): value is CareerOSState {
     typeof state.activeProfileId !== "string" ||
     typeof state.defaultProfileId !== "string" ||
     !["System", "Light", "Dark"].includes(String(state.theme)) ||
+    !["en", "zh-CN"].includes(String(state.language)) ||
+    typeof state.dashboardPreferences !== "object" ||
+    state.dashboardPreferences === null ||
     typeof state.profiles !== "object" ||
     state.profiles === null
   ) {
@@ -70,11 +86,40 @@ export function validateState(value: unknown): value is CareerOSState {
   );
 }
 
+export function migrateState(value: unknown): CareerOSState | null {
+  if (validateState(value)) return value;
+  if (typeof value !== "object" || value === null) return null;
+  const legacy = value as Record<string, unknown>;
+  if (legacy.version !== 2 || typeof legacy.profiles !== "object" || legacy.profiles === null) return null;
+  const migratedProfiles: Record<string, unknown> = {};
+  for (const [profileId, workspaceValue] of Object.entries(legacy.profiles as Record<string, unknown>)) {
+    if (typeof workspaceValue !== "object" || workspaceValue === null) return null;
+    migratedProfiles[profileId] = {
+      ...(workspaceValue as Record<string, unknown>),
+      savedOpportunityIds: [],
+      contacts: [],
+      documents: [],
+    };
+  }
+  const migrated = {
+    ...legacy,
+    version: STORAGE_VERSION,
+    language: "en",
+    dashboardPreferences: {
+      defaultRegion: "Australia",
+      showSampleData: true,
+      showArchivedOpportunities: false,
+    },
+    profiles: migratedProfiles,
+  };
+  return validateState(migrated) ? migrated : null;
+}
+
 export function parseStoredState(raw: string | null): CareerOSState {
   if (!raw) return createSeedState();
   try {
     const parsed: unknown = JSON.parse(raw);
-    return validateState(parsed) ? parsed : createSeedState();
+    return migrateState(parsed) ?? createSeedState();
   } catch {
     return createSeedState();
   }

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run"
+    ,"validate:data": "vitest run src/data/opportunities.test.ts"
   },
   "dependencies": {
     "next": "16.2.12",

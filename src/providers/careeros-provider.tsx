@@ -14,10 +14,14 @@ import { parseStoredState, readState, saveState, serialiseState, validateState }
 import type {
   CareerOSState,
   CareerProfile,
+  CareerContact,
+  CareerDocumentRecord,
+  DashboardPreferences,
   JobApplication,
   PostgraduateApplication,
   RoadmapItem,
   ThemePreference,
+  AppLocale,
 } from "@/types/domain";
 
 interface CareerOSContextValue {
@@ -39,6 +43,13 @@ interface CareerOSContextValue {
   deleteRoadmapItem: (id: string) => void;
   updateOrganisationNote: (organisationId: string, note: string) => void;
   setTheme: (theme: ThemePreference) => void;
+  setLanguage: (language: AppLocale) => void;
+  updateDashboardPreferences: (preferences: DashboardPreferences) => void;
+  toggleSavedOpportunity: (opportunityId: string) => void;
+  upsertContact: (contact: CareerContact) => void;
+  deleteContact: (id: string) => void;
+  upsertDocument: (document: CareerDocumentRecord) => void;
+  deleteDocument: (id: string) => void;
   setDefaultProfile: (id: string) => void;
   resetCurrentProfile: () => void;
   resetAll: () => void;
@@ -204,6 +215,38 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
   }, []);
   const resetAll = useCallback(() => setState(createSeedState()), []);
   const setTheme = useCallback((theme: ThemePreference) => setState((current) => ({ ...current, theme })), []);
+  const setLanguage = useCallback((language: AppLocale) => setState((current) => ({ ...current, language })), []);
+  const updateDashboardPreferences = useCallback((dashboardPreferences: DashboardPreferences) => setState((current) => ({ ...current, dashboardPreferences })), []);
+  const toggleSavedOpportunity = useCallback((opportunityId: string) => {
+    updateActive((workspace) => ({
+      ...workspace,
+      savedOpportunityIds: workspace.savedOpportunityIds.includes(opportunityId)
+        ? workspace.savedOpportunityIds.filter((id) => id !== opportunityId)
+        : [...workspace.savedOpportunityIds, opportunityId],
+    }));
+  }, [updateActive]);
+  const upsertContact = useCallback((contact: CareerContact) => {
+    updateActive((workspace) => ({
+      ...workspace,
+      contacts: workspace.contacts.some((item) => item.id === contact.id)
+        ? workspace.contacts.map((item) => item.id === contact.id ? contact : item)
+        : [...workspace.contacts, contact],
+    }));
+  }, [updateActive]);
+  const deleteContact = useCallback((id: string) => {
+    updateActive((workspace) => ({ ...workspace, contacts: workspace.contacts.filter((item) => item.id !== id) }));
+  }, [updateActive]);
+  const upsertDocument = useCallback((document: CareerDocumentRecord) => {
+    updateActive((workspace) => ({
+      ...workspace,
+      documents: workspace.documents.some((item) => item.id === document.id)
+        ? workspace.documents.map((item) => item.id === document.id ? document : item)
+        : [...workspace.documents, document],
+    }));
+  }, [updateActive]);
+  const deleteDocument = useCallback((id: string) => {
+    updateActive((workspace) => ({ ...workspace, documents: workspace.documents.filter((item) => item.id !== id) }));
+  }, [updateActive]);
   const setDefaultProfile = useCallback((id: string) => setState((current) => current.profiles[id] ? { ...current, defaultProfileId: id } : current), []);
   const exportData = useCallback(() => serialiseState(state), [state]);
   const importData = useCallback((raw: string) => {
@@ -222,9 +265,10 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
     state, activeWorkspace, hydrated, storageError, setActiveProfileId, updateProfile,
     toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication,
     toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication,
-    upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setDefaultProfile,
-    resetCurrentProfile, resetAll, exportData, importData,
-  }), [state, activeWorkspace, hydrated, storageError, setActiveProfileId, updateProfile, toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication, toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication, upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData]);
+    upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage,
+    updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact,
+    upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData,
+  }), [state, activeWorkspace, hydrated, storageError, setActiveProfileId, updateProfile, toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication, toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication, upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage, updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact, upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData]);
 
   return (
     <CareerOSContext.Provider value={value}>

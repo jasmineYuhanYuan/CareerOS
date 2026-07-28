@@ -212,6 +212,9 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
     postgraduateApplications: [],
     roadmapItems: roadmap(profile.id, items, profile.id === TOMMY_ID ? "Registration" : "Project"),
     organisationNotes: {},
+    savedOpportunityIds: [],
+    contacts: [],
+    documents: [],
   };
 }
 
@@ -221,6 +224,12 @@ export function createSeedState(): CareerOSState {
     activeProfileId: YUHAN_ID,
     defaultProfileId: YUHAN_ID,
     theme: "System",
+    language: "en",
+    dashboardPreferences: {
+      defaultRegion: "Australia",
+      showSampleData: true,
+      showArchivedOpportunities: false,
+    },
     profiles: {
       [YUHAN_ID]: workspace(structuredClone(yuhan)),
       [TOMMY_ID]: workspace(structuredClone(tommy)),

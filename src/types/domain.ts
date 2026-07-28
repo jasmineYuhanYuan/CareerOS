@@ -1,4 +1,5 @@
-export const STORAGE_VERSION = 2 as const;
+export const STORAGE_VERSION = 3 as const;
+export type AppLocale = "en" | "zh-CN";
 
 export type StudyLevel = "Undergraduate" | "Postgraduate";
 export type Proficiency = "Learning" | "Working" | "Confident" | "Advanced";
@@ -51,6 +52,12 @@ export type RoadmapCategory =
 export type RoadmapStatus = "Not started" | "In progress" | "Completed" | "Blocked";
 export type Priority = "Low" | "Medium" | "High";
 export type ThemePreference = "System" | "Light" | "Dark";
+export type OpportunityCategory = "Job" | "Internship" | "Graduate program" | "Research opportunity" | "Scholarship" | "Hackathon" | "Competition" | "Networking event" | "Career event" | "Continuing education" | "Professional registration" | "Other";
+export type VerificationStatus = "Sample" | "Unverified" | "Official source" | "Expired" | "Archived";
+export type SourceType = "Seed" | "Official" | "User";
+export type RelationshipType = "Recruiter" | "Hiring manager" | "University contact" | "Lecturer" | "Alumni" | "Mentor" | "Clinic owner" | "Professional contact" | "Other";
+export type CareerDocumentType = "English résumé" | "Chinese résumé" | "Cover letter" | "Portfolio" | "Academic transcript" | "Personal statement" | "Recommendation materials" | "Other";
+export type CareerDocumentStatus = "Draft" | "Ready" | "Needs update" | "Archived";
 
 export interface Skill {
   id: string;
@@ -208,6 +215,71 @@ export interface RoadmapItem {
   linkedProgramId?: string;
 }
 
+export interface Opportunity {
+  id: string;
+  category: OpportunityCategory;
+  title: string;
+  organisationId: string;
+  organisationName: string;
+  description: string;
+  disciplineTags: string[];
+  roleFamilyTags: string[];
+  skillTags: string[];
+  suitableProfileIds: string[];
+  country: string;
+  city: string;
+  locationText: string;
+  remoteType: RemoteType;
+  employmentType?: EmploymentType;
+  startDate?: string;
+  deadline?: string;
+  publishedDate?: string;
+  sourceUrl?: string;
+  sourceName: string;
+  sourceType: SourceType;
+  verificationStatus: VerificationStatus;
+  lastVerifiedAt?: string;
+  dataNotes?: string;
+  eligibilityText?: string;
+  salaryText?: string;
+  sampleData: boolean;
+  archived: boolean;
+}
+
+export interface CareerContact {
+  id: string;
+  profileId: string;
+  name: string;
+  organisation: string;
+  role: string;
+  email?: string;
+  linkedInUrl?: string;
+  relationshipType: RelationshipType;
+  lastContactDate?: string;
+  nextFollowUpDate?: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CareerDocumentRecord {
+  id: string;
+  profileId: string;
+  documentType: CareerDocumentType;
+  name: string;
+  version: string;
+  updatedAt: string;
+  notes: string;
+  externalUrl?: string;
+  status: CareerDocumentStatus;
+}
+
+export interface DashboardPreferences {
+  defaultRegion: string;
+  showSampleData: boolean;
+  showArchivedOpportunities: boolean;
+}
+
 export interface ProfileWorkspace {
   profile: CareerProfile;
   savedJobIds: string[];
@@ -216,6 +288,9 @@ export interface ProfileWorkspace {
   postgraduateApplications: PostgraduateApplication[];
   roadmapItems: RoadmapItem[];
   organisationNotes: Record<string, string>;
+  savedOpportunityIds: string[];
+  contacts: CareerContact[];
+  documents: CareerDocumentRecord[];
 }
 
 export interface CareerOSState {
@@ -223,7 +298,17 @@ export interface CareerOSState {
   activeProfileId: string;
   defaultProfileId: string;
   theme: ThemePreference;
+  language: AppLocale;
+  dashboardPreferences: DashboardPreferences;
   profiles: Record<string, ProfileWorkspace>;
+}
+
+export interface MatchDimension {
+  name: "Goal alignment" | "Discipline alignment" | "Skill overlap" | "Location alignment" | "Experience/project relevance" | "Eligibility confidence" | "Opportunity type preference";
+  score: number | null;
+  weight: number;
+  evidence: string[];
+  uncertainty: string;
 }
 
 export interface MatchResult {
@@ -231,11 +316,13 @@ export interface MatchResult {
   strengths: string[];
   gaps: string[];
   explanation: string;
+  dimensions?: MatchDimension[];
+  confidence?: "High information" | "Medium information" | "Limited information";
 }
 
 export interface DashboardDeadline {
   id: string;
   title: string;
-  source: "Job" | "Application" | "Postgraduate" | "Roadmap";
+  source: "Job" | "Application" | "Postgraduate" | "Roadmap" | "Opportunity" | "Contact";
   date: string;
 }
