@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 export function Dialog({
   open,
@@ -25,7 +26,7 @@ export function Dialog({
   }, [open, onClose]);
 
   if (!open) return null;
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-end bg-[#171915]/45 p-0 backdrop-blur-[2px] sm:place-items-center sm:p-5" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <section role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby={description ? "dialog-description" : undefined} className="max-h-[94dvh] w-full overflow-y-auto rounded-t-[1.75rem] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_24px_80px_rgba(20,22,18,0.18)] sm:max-w-2xl sm:rounded-[1.75rem] sm:p-8">
         <header className="mb-5 flex items-start justify-between gap-4">
@@ -37,6 +38,7 @@ export function Dialog({
         </header>
         {children}
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
