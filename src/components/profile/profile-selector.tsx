@@ -11,7 +11,7 @@ export function ProfileSelector() {
     <label className="block">
       <span className="sr-only">Active profile</span>
       <span className="flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2">
-        <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-xs font-semibold text-[var(--accent)]">
+        <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--surface-subtle)] text-xs font-semibold text-[var(--text-primary)]">
           {activeProfile.displayName.split(" ").map((part) => part[0]).slice(0, 2).join("")}
         </span>
         <span className="min-w-0 flex-1">

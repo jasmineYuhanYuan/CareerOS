@@ -91,7 +91,7 @@ export function PostgraduatePlanner() {
         activeWorkspace.postgraduateApplications.length === 0 ? <p className="surface-card border-dashed p-10 text-center text-sm text-[var(--text-secondary)]">No study applications yet. Track one from Discover programs.</p> :
         <div className="space-y-3">{activeWorkspace.postgraduateApplications.map((application) => {
           const program = programs.find((item) => item.id === application.programId);
-          return <button type="button" key={application.id} onClick={() => setApplicationDraft(structuredClone(application))} className="interactive-lift surface-card flex min-h-24 w-full items-center justify-between gap-4 p-5 text-left"><div><StatusBadge status="active">{application.status}</StatusBadge><strong className="mt-3 block font-medium">{program?.programName}</strong><span className="mt-1 block text-sm text-[var(--text-secondary)]">{program?.university}</span></div><span className="text-[var(--accent)]">→</span></button>;
+          return <button type="button" key={application.id} onClick={() => setApplicationDraft(structuredClone(application))} className="interactive-lift surface-card flex min-h-24 w-full items-center justify-between gap-4 p-5 text-left"><div><StatusBadge status="active">{application.status}</StatusBadge><strong className="mt-3 block font-medium">{program?.programName}</strong><span className="mt-1 block text-sm text-[var(--text-secondary)]">{program?.university}</span></div><span className="text-[var(--text-secondary)]">→</span></button>;
         })}</div>
       )}
 
@@ -100,7 +100,7 @@ export function PostgraduatePlanner() {
         <div className="space-y-4">{activeWorkspace.postgraduateApplications.map((application) => {
           const program = programs.find((item) => item.id === application.programId);
           const complete = Object.values(application.documents).filter(Boolean).length;
-          return <button type="button" key={application.id} onClick={() => setApplicationDraft(structuredClone(application))} className="surface-card block w-full p-5 text-left"><span className="text-[0.75rem] text-[var(--text-tertiary)]">{complete} of {Object.keys(application.documents).length} ready</span><strong className="mt-2 block font-medium">{program?.programName}</strong><div className="mt-4 h-1.5 rounded-full bg-[var(--surface-subtle)]"><span className="block h-full rounded-full bg-[var(--accent)]" style={{ width: `${(complete / Object.keys(application.documents).length) * 100}%` }} /></div></button>;
+          return <button type="button" key={application.id} onClick={() => setApplicationDraft(structuredClone(application))} className="surface-card block w-full p-5 text-left"><span className="text-[0.75rem] text-[var(--text-tertiary)]">{complete} of {Object.keys(application.documents).length} ready</span><strong className="mt-2 block font-medium">{program?.programName}</strong><div className="mt-4 h-1.5 rounded-full bg-[var(--surface-subtle)]"><span className="block h-full rounded-full bg-[var(--success)]" style={{ width: `${(complete / Object.keys(application.documents).length) * 100}%` }} /></div></button>;
         })}</div>
       )}
 

@@ -3,7 +3,7 @@
 ## Direction
 
 The refreshed interface uses a youthful editorial direction: generous whitespace,
-compact navigation, bold display typography and a restrained orange-red accent.
+compact navigation, bold display typography and a restrained blue accent.
 It takes broad inspiration from contemporary Chinese lifestyle applications
 without copying any brand assets, layouts, illustrations, wording or protected
 visual identity.
@@ -12,9 +12,9 @@ visual identity.
 
 Global design tokens live in `src/app/globals.css` and cover:
 
-- warm neutral backgrounds and white content surfaces
+- cool neutral backgrounds and white content surfaces
 - near-black primary text and quieter secondary text
-- orange-red actions and navigation emphasis
+- blue primary actions, links, focus states and navigation emphasis
 - green reserved for positive and completed states
 - semantic warning and danger colours
 - matching dark-mode values

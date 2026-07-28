@@ -145,7 +145,7 @@ export function Dashboard() {
               <span className="text-sm text-[var(--text-secondary)]">setup + roadmap</span>
             </div>
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--surface-subtle)]">
-              <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${progress}%` }} />
+              <div className="h-full rounded-full bg-[var(--text-primary)]" style={{ width: `${progress}%` }} />
             </div>
             <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
               Reflects completed profile setup and roadmap items. It does not predict career success.
@@ -163,7 +163,7 @@ export function Dashboard() {
               <ol className="divide-y divide-[var(--border)]">
                 {deadlines.map((deadline) => (
                   <li key={deadline.id} className="grid grid-cols-[3.6rem_1fr] gap-4 py-4">
-                    <time dateTime={deadline.date} className="text-sm font-medium text-[var(--accent)]">
+                    <time dateTime={deadline.date} className="text-sm font-medium text-[var(--text-primary)]">
                       {new Date(`${deadline.date}T00:00:00`).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}
                     </time>
                     <div className="min-w-0">

@@ -76,7 +76,7 @@ export function ProfileManager() {
     <div className="page-enter">
       <header className="flex flex-col gap-5 border-b border-[var(--border)] pb-9 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4 sm:gap-5">
-          <span aria-hidden="true" className="grid size-16 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] font-display text-xl font-medium text-[var(--accent)] sm:size-20">
+          <span aria-hidden="true" className="grid size-16 shrink-0 place-items-center rounded-full bg-[var(--surface-subtle)] font-display text-xl font-medium text-[var(--text-primary)] sm:size-20">
             {profile.displayName.split(" ").map((part) => part[0]).slice(0, 2).join("")}
           </span>
           <div>
@@ -146,7 +146,7 @@ export function ProfileManager() {
         <aside>
           <section className="border-b border-[var(--border)] py-9">
             <SectionHeader title="Goals" />
-            <ul className="flex flex-wrap gap-2">{profile.careerGoals.map((goal) => <li key={goal}><Badge tone="orange">{goal}</Badge></li>)}</ul>
+            <ul className="flex flex-wrap gap-2">{profile.careerGoals.map((goal) => <li key={goal}><Badge>{goal}</Badge></li>)}</ul>
           </section>
           <section className="border-b border-[var(--border)] py-9">
             <SectionHeader title="Experience" />
