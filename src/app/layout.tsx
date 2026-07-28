@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, Manrope } from "next/font/google";
 import { AppShell } from "@/components/layout/app-shell";
 import { CareerOSProvider } from "@/providers/careeros-provider";
@@ -12,6 +12,23 @@ export const metadata: Metadata = {
   title: { default: "CareerOS", template: "%s · CareerOS" },
   description:
     "A focused workspace for managing career goals, applications, postgraduate study and next steps.",
+  applicationName: "CareerOS",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/icon.svg" },
+  openGraph: {
+    title: "CareerOS",
+    description: "A calm, local-first workspace for career planning.",
+    type: "website",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+  ],
 };
 
 export default function RootLayout({

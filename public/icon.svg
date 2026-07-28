@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CareerOS">
+  <rect width="64" height="64" rx="16" fill="#111827"/>
+  <path d="M43 18a20 20 0 1 0 0 28" fill="none" stroke="#f8fafc" stroke-width="7" stroke-linecap="round"/>
+  <path d="m34 22 11 10-11 10" fill="none" stroke="#3b82f6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
