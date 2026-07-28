@@ -6,10 +6,13 @@ import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/form-field";
 import { PageHeading } from "@/components/ui/page-heading";
 import { useCareerOS } from "@/providers/careeros-provider";
-import type { ThemePreference } from "@/types/domain";
+import { useLanguage } from "@/providers/language-provider";
+import { formatDate } from "@/i18n/format";
+import type { AppLocale, ThemePreference } from "@/types/domain";
 
 export function SettingsPanel() {
-  const { state, activeWorkspace, setTheme, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData } = useCareerOS();
+  const { state, activeWorkspace, setTheme, setLanguage, updateDashboardPreferences, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData } = useCareerOS();
+  const { language, t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState("");
 
@@ -37,6 +40,15 @@ export function SettingsPanel() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card eyebrow="Appearance" title="Theme preference">
           <label className="block text-sm font-medium">Theme<Select value={state.theme} onChange={(e) => setTheme(e.target.value as ThemePreference)}>{["System", "Light", "Dark"].map((value) => <option key={value}>{value}</option>)}</Select></label>
+        </Card>
+        <Card eyebrow="Language" title={t("settings.language")}>
+          <label className="block text-sm font-medium">{t("settings.language")}<Select value={state.language} onChange={(event) => setLanguage(event.target.value as AppLocale)}><option value="en">EN</option><option value="zh-CN">中文</option></Select></label>
+          <p className="mt-4 text-sm text-[var(--text-secondary)]">{t("settings.datePreview")}: {formatDate(new Date().toISOString().slice(0, 10), language)}</p>
+        </Card>
+        <Card eyebrow="Opportunity preferences" title="Discovery defaults">
+          <label className="block text-sm font-medium">{t("settings.region")}<Select value={state.dashboardPreferences.defaultRegion} onChange={(event) => updateDashboardPreferences({ ...state.dashboardPreferences, defaultRegion: event.target.value })}>{["Australia", "United States", "United Kingdom", "Singapore", "All regions"].map((value) => <option key={value}>{value}</option>)}</Select></label>
+          <label className="mt-4 flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={state.dashboardPreferences.showSampleData} onChange={(event) => updateDashboardPreferences({ ...state.dashboardPreferences, showSampleData: event.target.checked })} />{t("settings.sample")}</label>
+          <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={state.dashboardPreferences.showArchivedOpportunities} onChange={(event) => updateDashboardPreferences({ ...state.dashboardPreferences, showArchivedOpportunities: event.target.checked })} />{t("settings.archived")}</label>
         </Card>
         <Card eyebrow="Profile behaviour" title="Default profile">
           <label className="block text-sm font-medium">Profile shown by default<Select value={state.defaultProfileId} onChange={(e) => setDefaultProfile(e.target.value)}>{Object.values(state.profiles).map((workspace) => <option key={workspace.profile.id} value={workspace.profile.id}>{workspace.profile.displayName}</option>)}</Select></label>
