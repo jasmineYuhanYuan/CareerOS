@@ -3,15 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { MobileBottomSheet } from "@/components/ui/mobile-bottom-sheet";
+import { useLanguage } from "@/providers/language-provider";
+import { LanguageToggle } from "./language-toggle";
 
 const secondaryLinks = [
-  { href: "/companies", label: "Companies", description: "Research organisations and clinics" },
-  { href: "/roadmap", label: "Roadmap", description: "Plan milestones and next steps" },
-  { href: "/settings", label: "Settings", description: "Theme, backup and local data" },
+  { href: "/companies", label: "Companies", zhLabel: "公司与诊所", description: "Research organisations and clinics", zhDescription: "研究公司、机构与诊所" },
+  { href: "/roadmap", label: "Roadmap", zhLabel: "职业规划", description: "Plan milestones and next steps", zhDescription: "规划里程碑和下一步行动" },
+  { href: "/settings", label: "Settings", zhLabel: "设置", description: "Theme, backup and local data", zhDescription: "主题、备份与本地数据" },
 ];
 
 export function MobileHeader() {
   const [open, setOpen] = useState(false);
+  const { language } = useLanguage();
   return (
     <>
       <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-[color:var(--background)]/92 px-4 py-3 backdrop-blur-lg lg:hidden">
@@ -19,19 +22,22 @@ export function MobileHeader() {
           <Link href="/" className="font-display text-lg font-semibold tracking-[-0.045em]">
             Career<span className="text-[var(--accent)]">OS</span>
           </Link>
-          <button type="button" onClick={() => setOpen(true)} className="min-h-11 rounded-xl px-3 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-subtle)]">
-            More
-          </button>
+          <div className="flex items-center gap-1">
+            <LanguageToggle compact />
+            <button type="button" onClick={() => setOpen(true)} className="min-h-11 rounded-xl px-3 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-subtle)]">
+              {language === "zh" ? "更多" : "More"}
+            </button>
+          </div>
         </div>
       </header>
-      <MobileBottomSheet open={open} title="More from CareerOS" onClose={() => setOpen(false)}>
-        <nav aria-label="Secondary mobile navigation">
+      <MobileBottomSheet open={open} title={language === "zh" ? "更多 CareerOS 功能" : "More from CareerOS"} onClose={() => setOpen(false)}>
+        <nav aria-label={language === "zh" ? "移动端次级导航" : "Secondary mobile navigation"}>
           <ul className="divide-y divide-[var(--border)]">
             {secondaryLinks.map((item) => (
               <li key={item.href}>
                 <Link href={item.href} onClick={() => setOpen(false)} className="block min-h-16 py-4">
-                  <span className="block font-medium">{item.label}</span>
-                  <span className="mt-1 block text-sm text-[var(--text-secondary)]">{item.description}</span>
+                  <span className="block font-medium">{language === "zh" ? item.zhLabel : item.label}</span>
+                  <span className="mt-1 block text-sm text-[var(--text-secondary)]">{language === "zh" ? item.zhDescription : item.description}</span>
                 </Link>
               </li>
             ))}

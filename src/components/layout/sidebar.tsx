@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ProfileSelector } from "@/components/profile/profile-selector";
-import { navigationItems } from "./navigation";
+import { useLanguage } from "@/providers/language-provider";
+import { LanguageToggle } from "./language-toggle";
+import { getNavigationLabel, navigationItems } from "./navigation";
 
 const primaryHrefs = ["/", "/jobs", "/applications", "/postgraduate"];
 
-function NavList({ items, pathname }: { items: typeof navigationItems; pathname: string }) {
+function NavList({ items, pathname, language }: { items: typeof navigationItems; pathname: string; language: "en" | "zh" }) {
   return (
     <ul className="space-y-1">
       {items.map((item) => {
@@ -24,7 +26,7 @@ function NavList({ items, pathname }: { items: typeof navigationItems; pathname:
               }`}
             >
               <span aria-hidden="true" className="grid w-5 place-items-center text-[1rem]">{item.icon}</span>
-              {item.label}
+              {getNavigationLabel(item, language)}
             </Link>
           </li>
         );
@@ -35,6 +37,7 @@ function NavList({ items, pathname }: { items: typeof navigationItems; pathname:
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { language } = useLanguage();
   const primary = navigationItems.filter((item) => primaryHrefs.includes(item.href));
   const secondary = navigationItems.filter((item) => !primaryHrefs.includes(item.href));
 
@@ -43,11 +46,14 @@ export function Sidebar() {
       <Link href="/" className="px-2 font-display text-[1.25rem] font-semibold tracking-[-0.045em]" aria-label="CareerOS home">
         Career<span className="text-[var(--accent)]">OS</span>
       </Link>
-      <nav className="mt-10 flex-1" aria-label="Primary navigation">
-        <NavList items={primary} pathname={pathname} />
+      <nav className="mt-10 flex-1" aria-label={language === "zh" ? "主导航" : "Primary navigation"}>
+        <NavList items={primary} pathname={pathname} language={language} />
         <div className="my-5 border-t border-[var(--border)]" />
-        <NavList items={secondary} pathname={pathname} />
+        <NavList items={secondary} pathname={pathname} language={language} />
       </nav>
+      <div className="mb-3">
+        <LanguageToggle />
+      </div>
       <ProfileSelector />
     </aside>
   );
