@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState, type FormEvent } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/form-field";
 import { PageHeading } from "@/components/ui/page-heading";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { useCareerOS } from "@/providers/careeros-provider";
 import type { ApplicationStatus, JobApplication } from "@/types/domain";
 
@@ -68,7 +68,7 @@ export function ApplicationTracker() {
           <Field label="CV version"><Input value={draft.cvVersion} onChange={(e) => setDraft({ ...draft, cvVersion: e.target.value })} /></Field>
         </div>
         <Field label="Notes"><Textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
-        {draft.id && <section><h3 className="text-sm font-bold">Activity history</h3><ol className="mt-2 space-y-2">{draft.activity.slice().reverse().map((event) => <li key={event.id} className="flex justify-between gap-3 rounded-xl bg-[#f5f4ee] p-3 text-xs"><span className="font-semibold">{event.label}</span><time dateTime={event.occurredAt}>{new Date(event.occurredAt).toLocaleDateString("en-AU")}</time></li>)}</ol></section>}
+        {draft.id && <section><h3 className="text-sm font-medium">Activity history</h3><ol className="mt-2 divide-y divide-[var(--border)]">{draft.activity.slice().reverse().map((event) => <li key={event.id} className="flex justify-between gap-3 py-3 text-xs"><span className="font-medium">{event.label}</span><time dateTime={event.occurredAt} className="text-[var(--text-tertiary)]">{new Date(event.occurredAt).toLocaleDateString("en-AU")}</time></li>)}</ol></section>}
         <div className="flex flex-wrap justify-between gap-2">
           {draft.id ? <Button type="button" variant="danger" onClick={() => { if (window.confirm("Delete this application?")) { deleteApplication(draft.id); setDraft(null); } }}>Delete</Button> : <span />}
           <div className="flex gap-2"><Button type="button" variant="secondary" onClick={() => setDraft(null)}>Cancel</Button><Button type="submit">Save application</Button></div>
@@ -83,26 +83,31 @@ export function ApplicationTracker() {
         <PageHeading eyebrow="Profile-specific tracker" title="Applications" description="Move opportunities through a reliable status workflow and keep the next action visible." />
         <Button onClick={() => setDraft(emptyApplication(activeWorkspace.profile.id))}>Create application</Button>
       </div>
-      <div className="mb-6 flex flex-col gap-3 rounded-[1.35rem] border border-[#dedfd7] bg-[#fffef9] p-4 sm:flex-row">
+      <div className="surface-card mb-7 flex flex-col gap-3 p-4 sm:flex-row">
         <label className="flex-1"><span className="sr-only">Search applications</span><Input type="search" placeholder="Search organisation or role" value={query} onChange={(e) => setQuery(e.target.value)} /></label>
         <Select aria-label="Filter application status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="sm:max-w-48"><option>All</option>{statuses.map((status) => <option key={status}>{status}</option>)}</Select>
-        <div className="flex rounded-xl bg-[#eef0e8] p-1" aria-label="Application view">
-          {(["Board", "List"] as const).map((mode) => <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={`min-h-10 flex-1 rounded-lg px-4 text-sm font-bold ${view === mode ? "bg-white text-[#245b45] shadow-sm" : "text-[#68736c]"}`}>{mode}</button>)}
+        <div className="hidden rounded-xl bg-[var(--surface-subtle)] p-1 md:flex" aria-label="Application view">
+          {(["Board", "List"] as const).map((mode) => <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={`min-h-10 flex-1 rounded-lg px-4 text-sm font-medium ${view === mode ? "bg-[var(--surface)] text-[var(--accent)] shadow-sm" : "text-[var(--text-secondary)]"}`}>{mode}</button>)}
         </div>
       </div>
 
-      {visible.length === 0 ? <p className="rounded-[1.35rem] border border-dashed border-[#cfd2c9] p-10 text-center text-sm text-[#68736c]">No applications match this view. Add one manually or from Jobs.</p> : view === "List" ? (
-        <div className="overflow-x-auto rounded-[1.35rem] border border-[#dedfd7] bg-[#fffef9]">
-          <table className="w-full min-w-[700px] text-left text-sm"><thead className="bg-[#eef0e8] text-xs uppercase tracking-wide text-[#59645e]"><tr><th className="p-4">Role</th><th className="p-4">Status</th><th className="p-4">Next action</th><th className="p-4">Date</th><th className="p-4"><span className="sr-only">Actions</span></th></tr></thead><tbody className="divide-y divide-[#e4e5dd]">{visible.map((application) => <tr key={application.id}><td className="p-4"><strong>{application.jobTitle}</strong><span className="mt-1 block text-xs text-[#68736c]">{application.organisationName}</span></td><td className="p-4"><Badge tone="green">{application.status}</Badge></td><td className="p-4">{application.nextAction || "Not set"}</td><td className="p-4">{application.nextActionDate || "—"}</td><td className="p-4"><Button size="sm" variant="secondary" onClick={() => setDraft(structuredClone(application))}>Edit</Button></td></tr>)}</tbody></table>
+      {visible.length === 0 ? <p className="surface-card border-dashed p-10 text-center text-sm text-[var(--text-secondary)]">No applications match this view. Add one manually or from Jobs.</p> : view === "List" ? (
+        <div className="hidden overflow-x-auto rounded-[1.35rem] border border-[var(--border)] bg-[var(--surface)] md:block">
+          <table className="w-full min-w-[700px] text-left text-sm"><thead className="bg-[var(--surface-subtle)] text-xs uppercase tracking-wide text-[var(--text-secondary)]"><tr><th className="p-4">Role</th><th className="p-4">Status</th><th className="p-4">Next action</th><th className="p-4">Date</th><th className="p-4"><span className="sr-only">Actions</span></th></tr></thead><tbody className="divide-y divide-[var(--border)]">{visible.map((application) => <tr key={application.id}><td className="p-4"><strong className="font-medium">{application.jobTitle}</strong><span className="mt-1 block text-xs text-[var(--text-secondary)]">{application.organisationName}</span></td><td className="p-4"><StatusBadge status="active">{application.status}</StatusBadge></td><td className="p-4">{application.nextAction || "Not set"}</td><td className="p-4">{application.nextActionDate || "—"}</td><td className="p-4"><Button size="sm" variant="secondary" onClick={() => setDraft(structuredClone(application))}>Edit</Button></td></tr>)}</tbody></table>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-4">
           {statuses.map((status) => {
             const items = visible.filter((application) => application.status === status);
-            return <section key={status} className="min-w-0 rounded-[1.35rem] bg-[#eef0e8] p-3"><h2 className="flex items-center justify-between p-2 text-sm font-extrabold">{status}<Badge>{items.length}</Badge></h2><div className="space-y-3">{items.map((application) => <button type="button" key={application.id} onClick={() => setDraft(structuredClone(application))} className="min-h-24 w-full rounded-2xl border border-[#dedfd7] bg-[#fffef9] p-4 text-left hover:border-[#245b45]"><strong className="block text-sm">{application.jobTitle}</strong><span className="mt-1 block text-xs text-[#68736c]">{application.organisationName}</span>{application.nextAction && <span className="mt-3 block text-xs font-semibold text-[#245b45]">Next: {application.nextAction}</span>}</button>)}</div></section>;
+            return <section key={status} className="min-w-0 rounded-[1.25rem] bg-[var(--surface-subtle)] p-3"><h2 className="flex items-center justify-between p-2 text-sm font-medium">{status}<span className="text-xs text-[var(--text-tertiary)]">{items.length}</span></h2><div className="space-y-3">{items.map((application) => <button type="button" key={application.id} onClick={() => setDraft(structuredClone(application))} className="min-h-24 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left transition-colors hover:border-[var(--accent)]"><strong className="block text-sm font-medium">{application.jobTitle}</strong><span className="mt-1 block text-xs text-[var(--text-secondary)]">{application.organisationName}</span>{application.nextAction && <span className="mt-3 block text-xs font-medium text-[var(--accent)]">Next: {application.nextAction}</span>}</button>)}</div></section>;
           })}
         </div>
       )}
+      {visible.length > 0 && <div className="space-y-6 md:hidden">{statuses.map((status) => {
+        const items = visible.filter((application) => application.status === status);
+        if (items.length === 0) return null;
+        return <section key={status}><h2 className="mb-2 flex items-center justify-between text-sm font-medium">{status}<span className="text-[var(--text-tertiary)]">{items.length}</span></h2><div className="divide-y divide-[var(--border)] rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface)]">{items.map((application) => <button type="button" key={application.id} onClick={() => setDraft(structuredClone(application))} className="block min-h-20 w-full p-4 text-left"><strong className="block font-medium">{application.jobTitle}</strong><span className="mt-1 block text-sm text-[var(--text-secondary)]">{application.organisationName}</span>{application.nextAction && <span className="mt-2 block text-xs text-[var(--accent)]">Next: {application.nextAction}</span>}</button>)}</div></section>;
+      })}</div>}
       {editor}
     </div>
   );
