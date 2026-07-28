@@ -20,11 +20,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${bodyFont.variable} ${displayFont.variable}`}>
       <body>
-        <LanguageProvider>
-          <CareerOSProvider>
+        <CareerOSProvider>
+          <LanguageProvider>
             <AppShell>{children}</AppShell>
-          </CareerOSProvider>
-        </LanguageProvider>
+          </LanguageProvider>
+        </CareerOSProvider>
       </body>
     </html>
   );

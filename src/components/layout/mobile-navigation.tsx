@@ -13,7 +13,7 @@ export function MobileNavigation() {
   const pathname = usePathname();
   const { language } = useLanguage();
   return (
-    <nav aria-label={language === "zh" ? "移动端导航" : "Mobile navigation"} className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--border)] bg-[color:var(--surface)]/96 px-2 pb-[max(.4rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-xl lg:hidden">
+    <nav aria-label={language === "zh-CN" ? "移动端导航" : "Mobile navigation"} className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--border)] bg-[color:var(--surface)]/96 px-2 pb-[max(.4rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-xl lg:hidden">
       <ul className="grid grid-cols-5">
         {primaryItems.map((item) => {
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
