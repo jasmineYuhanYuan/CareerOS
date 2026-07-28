@@ -5,38 +5,44 @@
 - [x] Create GitHub repository
 - [x] Define product vision
 - [x] Define two initial user profiles
-- [ ] Add repository documentation
-- [ ] Confirm technical stack
+- [x] Add repository documentation
+- [x] Confirm technical stack
 - [ ] Create project board
 - [ ] Create initial issues
 
 ## Phase 1 — Foundation
 
-- [ ] Create Next.js TypeScript project
-- [ ] Configure Tailwind CSS
-- [ ] Add shared layout and navigation
+- [x] Create Next.js TypeScript project
+- [x] Configure Tailwind CSS
+- [x] Add shared layout and navigation
 - [ ] Configure environment variables
 - [ ] Set up Supabase project
 - [ ] Define database tables
-- [ ] Add seed data
+- [x] Add local seed data
 
 ## Phase 2 — Core MVP
 
-- [ ] Dashboard
-- [ ] Career profile page
-- [ ] Jobs page
-- [ ] Companies page
-- [ ] Application tracker
-- [ ] Postgraduate planner
-- [ ] Career roadmap
+- [x] Dashboard
+- [x] Career profile page
+- [x] Jobs page
+- [x] Companies page
+- [x] Application tracker
+- [x] Postgraduate planner
+- [x] Career roadmap
+- [x] Versioned browser persistence and reset
+- [x] Local export and validated import
+- [x] Responsive desktop and mobile workflows
 
 ## Phase 3 — Personalisation
 
-- [ ] Job-profile matching rules
+- [x] Deterministic job-profile matching rules
 - [ ] Skill-gap analysis
-- [ ] Role recommendations
-- [ ] Postgraduate program comparison
-- [ ] Personalised next actions
+- [x] Profile-aware role recommendations
+- [x] Postgraduate program comparison
+- [x] Profile-aware dashboard actions
+- [ ] Refine skill-gap rules with user feedback
+- [ ] Add richer application activity reporting
+- [ ] Validate local MVP with both test users
 
 ## Phase 4 — AI
 
