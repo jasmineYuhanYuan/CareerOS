@@ -22,6 +22,21 @@ body {
   color: var(--ink);
   font-family: var(--font-body), sans-serif;
 }
+
+html[data-theme="dark"] body {
+  --ink: #eef4ef;
+  --canvas: #121915;
+  background: #121915;
+  filter: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"] body {
+    --ink: #eef4ef;
+    --canvas: #121915;
+    background: #121915;
+  }
+}
 button, select { font: inherit; }
 a { color: inherit; text-decoration: none; }
 ::selection { background: #dce9df; color: var(--ink); }
