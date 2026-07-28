@@ -1,39 +1,33 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-
-export type AppLanguage = "en" | "zh";
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
+import { useCareerOS } from "@/providers/careeros-provider";
+import { getTranslation, type TranslationKey } from "@/i18n";
+import type { AppLocale } from "@/types/domain";
 
 interface LanguageContextValue {
-  language: AppLanguage;
+  language: AppLocale;
+  setLanguage: (language: AppLocale) => void;
   toggleLanguage: () => void;
+  t: (key: TranslationKey, values?: Record<string, string | number>) => string;
 }
 
-const LANGUAGE_STORAGE_KEY = "careeros-language";
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<AppLanguage>("en");
+  const { state, setLanguage } = useCareerOS();
+  const language = state.language;
 
   useEffect(() => {
-    queueMicrotask(() => {
-      const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-      const initialLanguage: AppLanguage = stored === "zh" ? "zh" : "en";
-      setLanguage(initialLanguage);
-      document.documentElement.lang = initialLanguage === "zh" ? "zh-CN" : "en";
-    });
-  }, []);
+    document.documentElement.lang = language;
+  }, [language]);
 
-  const toggleLanguage = useCallback(() => {
-    setLanguage((current) => {
-      const next = current === "en" ? "zh" : "en";
-      window.localStorage.setItem(LANGUAGE_STORAGE_KEY, next);
-      document.documentElement.lang = next === "zh" ? "zh-CN" : "en";
-      return next;
-    });
-  }, []);
-
-  const value = useMemo(() => ({ language, toggleLanguage }), [language, toggleLanguage]);
+  const value = useMemo<LanguageContextValue>(() => ({
+    language,
+    setLanguage,
+    toggleLanguage: () => setLanguage(language === "en" ? "zh-CN" : "en"),
+    t: (key, values) => getTranslation(language, key, values),
+  }), [language, setLanguage]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

@@ -149,3 +149,11 @@ The MVP is successful when both initial users can:
 3. track job or postgraduate applications
 4. view a useful next-action dashboard
 5. use the system for at least two weeks without relying on a separate spreadsheet
+
+## 8. Career intelligence extension
+
+CareerOS supports curated cross-category opportunities with explicit provenance,
+deterministic match explanations, profile-specific professional contacts and
+career-document metadata. All non-user records must distinguish sample,
+unverified, official-source, expired and archived states without implying that
+sample records are live.

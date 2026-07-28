@@ -43,6 +43,11 @@
 - [ ] Refine skill-gap rules with user feedback
 - [ ] Add richer application activity reporting
 - [ ] Validate local MVP with both test users
+- [x] Add curated cross-category opportunity architecture
+- [x] Add opportunity provenance validation
+- [x] Add profile-specific contacts and document records
+- [x] Add version 2 to version 3 local-data migration
+- [ ] Complete bilingual copy coverage across legacy feature modules
 
 ## Phase 4 — AI
 

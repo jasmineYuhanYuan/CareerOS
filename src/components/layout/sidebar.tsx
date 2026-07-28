@@ -7,9 +7,9 @@ import { useLanguage } from "@/providers/language-provider";
 import { LanguageToggle } from "./language-toggle";
 import { getNavigationLabel, navigationItems } from "./navigation";
 
-const primaryHrefs = ["/", "/jobs", "/applications", "/postgraduate"];
+const primaryHrefs = ["/", "/jobs", "/opportunities", "/applications", "/postgraduate"];
 
-function NavList({ items, pathname, language }: { items: typeof navigationItems; pathname: string; language: "en" | "zh" }) {
+function NavList({ items, pathname, language }: { items: typeof navigationItems; pathname: string; language: "en" | "zh-CN" }) {
   return (
     <ul className="space-y-1">
       {items.map((item) => {
@@ -46,7 +46,7 @@ export function Sidebar() {
       <Link href="/" className="px-2 font-display text-[1.25rem] font-semibold tracking-[-0.045em]" aria-label="CareerOS home">
         Career<span className="text-[var(--accent)]">OS</span>
       </Link>
-      <nav className="mt-10 flex-1" aria-label={language === "zh" ? "主导航" : "Primary navigation"}>
+      <nav className="mt-10 flex-1" aria-label={language === "zh-CN" ? "主导航" : "Primary navigation"}>
         <NavList items={primary} pathname={pathname} language={language} />
         <div className="my-5 border-t border-[var(--border)]" />
         <NavList items={secondary} pathname={pathname} language={language} />

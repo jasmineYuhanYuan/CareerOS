@@ -21,6 +21,9 @@ The current MVP supports two independent test profiles:
 - Theme and default-profile preferences
 - Versioned JSON export, validated import and reset controls
 - Editorial responsive interface with desktop sidebar and five-item mobile navigation
+- Global English/Simplified Chinese preference with typed translations and locale formatting
+- Curated opportunities with provenance validation and transparent profile matching
+- Profile-specific contacts and career-document version records
 
 The interface foundations, responsive behaviour and accessibility decisions are
 documented in [docs/VISUAL_REFRESH.md](docs/VISUAL_REFRESH.md).
@@ -72,14 +75,15 @@ npm run build     # production build and TypeScript validation
 npm run start     # serve the production build
 npm run lint      # ESLint checks
 npm run test      # deterministic domain and persistence tests
+npm run validate:data # curated opportunity integrity checks
 ```
 
 ## Local data behaviour
 
 CareerOS stores MVP data in browser `localStorage` under one versioned document.
-Each profile has a separate workspace containing its edited profile, saved jobs,
-applications, organisation notes, saved programs and roadmap. Switching profiles
-never reuses another profile’s records.
+Each profile has a separate workspace containing its edited profile, saved jobs
+and opportunities, applications, contacts, documents, organisation notes, saved
+programs and roadmap. Switching profiles never reuses another profile’s records.
 
 Use **Settings → Export JSON** to create a local backup. Import validates the
 storage version and profile ownership before replacing valid data. Malformed or

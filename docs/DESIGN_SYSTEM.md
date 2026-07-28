@@ -1,0 +1,22 @@
+# CareerOS design system
+
+## Principles
+
+Calm, professional, clear, supportive and technology-oriented without feeling
+corporate-heavy or entertainment-oriented.
+
+## Foundations
+
+Tokens in `src/app/globals.css` define the cool background, surfaces, primary and
+secondary text, borders, blue accent/hover/soft states, semantic success,
+warning and danger colours, and dark-mode equivalents. Blue is reserved mainly
+for branding, primary actions, active controls, focus and links.
+
+DM Sans is the body face and Manrope is the display face. Spacing follows a
+four-point base with common eight-point increments. Controls target at least
+44px; cards, badges, filters, dialogs, forms, navigation, bottom sheets,
+timelines and opportunity cards share tokens and reusable primitives.
+
+Mobile layouts support safe-area padding and wrapping at 375px. Tablet layouts
+expand progressively; the persistent sidebar begins at 1024px. Long Chinese
+labels wrap naturally without uppercase transforms or artificial tracking.

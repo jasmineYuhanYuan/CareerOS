@@ -183,3 +183,22 @@ Supports companies, clinics, universities and other institutions.
 - gaps_json
 - explanation
 - calculated_at
+
+## opportunities
+
+- id, category, organisation_id, title, description
+- discipline_tags, role_family_tags, skill_tags, suitable_profile_ids
+- country, city, remote_type, employment_type
+- deadline, source_url, source_name, source_type
+- verification_status, last_verified_at, sample_data, archived
+
+## contacts
+
+- id, profile_id, name, organisation, role, email, linkedin_url
+- relationship_type, last_contact_date, next_follow_up_date, notes
+- created_at, updated_at
+
+## career_documents
+
+- id, profile_id, document_type, name, version, status
+- updated_at, notes, external_url

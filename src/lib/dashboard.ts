@@ -1,4 +1,5 @@
 import { jobs, programs } from "@/data/seed";
+import { opportunities } from "@/data/opportunities";
 import type { DashboardDeadline, ProfileWorkspace } from "@/types/domain";
 
 export function aggregateDeadlines(workspace: ProfileWorkspace): DashboardDeadline[] {
@@ -16,6 +17,13 @@ export function aggregateDeadlines(workspace: ProfileWorkspace): DashboardDeadli
   }
   for (const item of workspace.roadmapItems) {
     if (item.targetDate && item.status !== "Completed") deadlines.push({ id: `roadmap-${item.id}`, title: item.title, source: "Roadmap", date: item.targetDate });
+  }
+  for (const opportunityId of workspace.savedOpportunityIds) {
+    const opportunity = opportunities.find((item) => item.id === opportunityId);
+    if (opportunity?.deadline) deadlines.push({ id: `opportunity-${opportunity.id}`, title: opportunity.title, source: "Opportunity", date: opportunity.deadline });
+  }
+  for (const contact of workspace.contacts) {
+    if (contact.nextFollowUpDate) deadlines.push({ id: `contact-${contact.id}`, title: `Follow up with ${contact.name}`, source: "Contact", date: contact.nextFollowUpDate });
   }
   return deadlines.sort((a, b) => a.date.localeCompare(b.date));
 }

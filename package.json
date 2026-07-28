@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run"
+    ,"validate:data": "vitest run src/data/opportunities.test.ts",
+    "verify": "npm run test && npm run lint && npm run build && npm run validate:data"
   },
   "dependencies": {
     "next": "16.2.12",
