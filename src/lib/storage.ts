@@ -14,16 +14,34 @@ function isWorkspace(value: unknown, profileId: string): value is ProfileWorkspa
   const profile = workspace.profile;
   if (typeof profile !== "object" || profile === null) return false;
   const profileRecord = profile as Record<string, unknown>;
+  const applications = workspace.applications;
+  const postgraduateApplications = workspace.postgraduateApplications;
+  const roadmapItems = workspace.roadmapItems;
   return (
     profileRecord.id === profileId &&
     typeof profileRecord.displayName === "string" &&
     typeof profileRecord.university === "string" &&
     isStringArray(profileRecord.careerGoals) &&
-    Array.isArray(workspace.savedJobIds) &&
-    Array.isArray(workspace.applications) &&
-    Array.isArray(workspace.savedProgramIds) &&
-    Array.isArray(workspace.postgraduateApplications) &&
-    Array.isArray(workspace.roadmapItems) &&
+    isStringArray(workspace.savedJobIds) &&
+    Array.isArray(applications) &&
+    applications.every((item) => {
+      if (typeof item !== "object" || item === null) return false;
+      const record = item as Record<string, unknown>;
+      return record.profileId === profileId && typeof record.id === "string" && typeof record.status === "string";
+    }) &&
+    isStringArray(workspace.savedProgramIds) &&
+    Array.isArray(postgraduateApplications) &&
+    postgraduateApplications.every((item) => {
+      if (typeof item !== "object" || item === null) return false;
+      const record = item as Record<string, unknown>;
+      return record.profileId === profileId && typeof record.id === "string" && typeof record.programId === "string";
+    }) &&
+    Array.isArray(roadmapItems) &&
+    roadmapItems.every((item) => {
+      if (typeof item !== "object" || item === null) return false;
+      const record = item as Record<string, unknown>;
+      return record.profileId === profileId && typeof record.id === "string" && typeof record.title === "string";
+    }) &&
     typeof workspace.organisationNotes === "object" &&
     workspace.organisationNotes !== null
   );
