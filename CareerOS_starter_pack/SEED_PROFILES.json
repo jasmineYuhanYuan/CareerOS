@@ -1,0 +1,36 @@
+{
+  "profiles": [
+    {
+      "display_name": "Yuhan Yuan",
+      "university": "UNSW",
+      "degree": "Bachelor of Computer Science",
+      "discipline": "Computer Science",
+      "study_level": "Undergraduate",
+      "location": "Australia",
+      "career_goals": [
+        "AI Product Manager",
+        "Technical Product Manager",
+        "Software Engineer",
+        "Postgraduate study"
+      ],
+      "projects": [
+        "WearAgain",
+        "Unify",
+        "CareerOS"
+      ]
+    },
+    {
+      "display_name": "Chiropractic Graduate Profile",
+      "university": "Macquarie University",
+      "degree": "Postgraduate degree",
+      "discipline": "Chiropractic",
+      "study_level": "Postgraduate",
+      "location": "Australia",
+      "career_goals": [
+        "Graduate Chiropractor",
+        "Associate Chiropractor",
+        "Clinical chiropractic role"
+      ]
+    }
+  ]
+}
