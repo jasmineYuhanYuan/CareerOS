@@ -1,9 +1,11 @@
 "use client";
 
-import { useActiveProfile } from "./active-profile-provider";
+import { useCareerOS } from "@/providers/careeros-provider";
 
 export function ProfileSelector() {
-  const { activeProfile, profiles, setActiveProfileId } = useActiveProfile();
+  const { activeWorkspace, state, setActiveProfileId } = useCareerOS();
+  const activeProfile = activeWorkspace.profile;
+  const profiles = Object.values(state.profiles).map((workspace) => workspace.profile);
 
   return (
     <label className="block">
