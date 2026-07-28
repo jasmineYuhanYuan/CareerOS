@@ -19,7 +19,7 @@ export const dashboardData: Readonly<Record<string, ProfileDashboardData>> = {
       { id: "ya3", title: "Prepare interview stories", detail: "Draft concise examples for ownership, teamwork and ambiguity.", dueLabel: "Next", tone: "gold" },
     ],
   },
-  "chiropractic-graduate-profile": {
+  "taicheng-guo-tommy": {
     applicationSummary: [
       { status: "Saved", count: 6 },
       { status: "Preparing", count: 2 },

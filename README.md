@@ -13,7 +13,7 @@ It brings job discovery, application tracking, postgraduate planning, skills dev
 - Additional goal: postgraduate study planning
 - Relevant projects: WearAgain, Unify
 
-### Chiropractic graduate profile
+### Taicheng Guo (Tommy)
 - University: Macquarie University
 - Program level: Postgraduate
 - Field: Chiropractic
