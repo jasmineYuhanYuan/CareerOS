@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Manrope } from "next/font/google";
 import { AppShell } from "@/components/layout/app-shell";
-import { ActiveProfileProvider } from "@/components/profile/active-profile-provider";
+import { CareerOSProvider } from "@/providers/careeros-provider";
 import "./globals.css";
 
 const bodyFont = DM_Sans({ variable: "--font-body", subsets: ["latin"] });
@@ -19,9 +19,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${bodyFont.variable} ${displayFont.variable}`}>
       <body>
-        <ActiveProfileProvider>
+        <CareerOSProvider>
           <AppShell>{children}</AppShell>
-        </ActiveProfileProvider>
+        </CareerOSProvider>
       </body>
     </html>
   );

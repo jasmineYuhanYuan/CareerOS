@@ -22,6 +22,61 @@ body {
   color: var(--ink);
   font-family: var(--font-body), sans-serif;
 }
+
+html[data-theme="dark"] body {
+  --ink: #eef4ef;
+  --canvas: #121915;
+  background: #121915;
+  filter: none;
+}
+
+html[data-theme="dark"] [class*="bg-[#fffef9]"],
+html[data-theme="dark"] [class*="bg-white"],
+html[data-theme="dark"] [class*="bg-[#f8f7f1]"] {
+  background-color: #1b251f;
+}
+
+html[data-theme="dark"] [class*="text-[#17211b]"],
+html[data-theme="dark"] [class*="text-[#344039]"] {
+  color: #eef4ef;
+}
+
+html[data-theme="dark"] [class*="text-[#68736c]"],
+html[data-theme="dark"] [class*="text-[#59645e]"],
+html[data-theme="dark"] [class*="text-[#7b857e]"] {
+  color: #b8c4bc;
+}
+
+html[data-theme="dark"] [class*="border-[#dedfd7]"],
+html[data-theme="dark"] [class*="border-[#e4e5dd]"],
+html[data-theme="dark"] [class*="border-[#cfd2c9]"] {
+  border-color: #39473f;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"] body {
+    --ink: #eef4ef;
+    --canvas: #121915;
+    background: #121915;
+  }
+
+  html[data-theme="system"] [class*="bg-[#fffef9]"],
+  html[data-theme="system"] [class*="bg-white"],
+  html[data-theme="system"] [class*="bg-[#f8f7f1]"] {
+    background-color: #1b251f;
+  }
+
+  html[data-theme="system"] [class*="text-[#17211b]"],
+  html[data-theme="system"] [class*="text-[#344039]"] {
+    color: #eef4ef;
+  }
+
+  html[data-theme="system"] [class*="text-[#68736c]"],
+  html[data-theme="system"] [class*="text-[#59645e]"],
+  html[data-theme="system"] [class*="text-[#7b857e]"] {
+    color: #b8c4bc;
+  }
+}
 button, select { font: inherit; }
 a { color: inherit; text-decoration: none; }
 ::selection { background: #dce9df; color: var(--ink); }
