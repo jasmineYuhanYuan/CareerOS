@@ -49,12 +49,12 @@ export type RoadmapCategory =
   | "Registration"
   | "Networking"
   | "Other";
-export type RoadmapStatus = "Not started" | "In progress" | "Completed" | "Blocked";
+export type RoadmapStatus = "Not started" | "In progress" | "Completed" | "Not applicable" | "Blocked";
 export type Priority = "Low" | "Medium" | "High";
 export type ThemePreference = "System" | "Light" | "Dark";
 export type OpportunityCategory = "Job" | "Internship" | "Graduate program" | "Research opportunity" | "Scholarship" | "Hackathon" | "Competition" | "Networking event" | "Career event" | "Continuing education" | "Professional registration" | "Other";
 export type VerificationStatus = "Sample" | "Unverified" | "Official source" | "Expired" | "Archived";
-export type SourceType = "Seed" | "Official" | "Government" | "University" | "Community" | "User";
+export type SourceType = "Seed" | "Official" | "Government" | "University" | "Professional body" | "Job board" | "Community" | "User";
 export type RelationshipType = "Recruiter" | "Hiring manager" | "University contact" | "Lecturer" | "Alumni" | "Mentor" | "Clinic owner" | "Professional contact" | "Other";
 export type CareerDocumentType = "English résumé" | "Chinese résumé" | "Cover letter" | "Portfolio" | "Academic transcript" | "Personal statement" | "Recommendation materials" | "Other";
 export type CareerDocumentStatus = "Draft" | "Ready" | "Needs update" | "Archived";

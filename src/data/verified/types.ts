@@ -1,4 +1,4 @@
-export type VerifiedSourceType = "Official" | "Government" | "University" | "Community";
+export type VerifiedSourceType = "Official" | "Government" | "University" | "Professional body" | "Job board" | "Community";
 export type DataConfidence = "High" | "Medium" | "Low";
 export type DatasetLanguage = "en" | "zh-CN";
 
@@ -94,4 +94,72 @@ export interface CareerReference extends SourceMetadata {
   title: string;
   jurisdiction: string;
   summary: string[];
+}
+
+export type ChecklistStatus = "Not started" | "In progress" | "Completed" | "Not applicable" | "Blocked";
+export type VacancyVerificationStatus = "Current" | "Expired" | "Archived" | "Expression of interest" | "Employer directory only";
+
+export interface RegistrationRequirement {
+  label: string;
+  detail: string;
+  sourceUrl: string;
+}
+
+export interface ProfessionalRegistrationPathway extends SourceMetadata {
+  id: string;
+  profession: string;
+  regulator: string;
+  administrationBody: string;
+  registrationRequired: boolean;
+  applicationPortalUrl: string;
+  requirements: RegistrationRequirement[];
+  internationalQualificationPathway: string | null;
+  estimatedCost: string | null;
+  processingTime: string | null;
+  examinationRequirement: string | null;
+  uncertaintyNotes: string[];
+  governmentSource: boolean;
+}
+
+export interface VerifiedEmployerDirectoryRecord extends SourceMetadata {
+  id: string;
+  organisationName: string;
+  organisationType: string;
+  suburb: string;
+  city: string;
+  stateOrTerritory: string;
+  website: string;
+  careersPage: string | null;
+  serviceFocus: string;
+  multidisciplinaryStatus: string;
+  graduateSupport: string | null;
+  contactInformation: string;
+  verificationStatus: "Official employer website";
+  dataNotes: string;
+}
+
+export interface ChiropracticVacancyRecord extends SourceMetadata {
+  id: string;
+  exactTitle: string;
+  employer: string;
+  location: string;
+  employmentType: string;
+  publicationDate: string | null;
+  closingDate: string | null;
+  applicationUrl: string;
+  verificationStatus: VacancyVerificationStatus;
+  registrationRequirement: string | null;
+  experienceRequirement: string | null;
+  mentoringSupport: string | null;
+  salary: string | null;
+  workPattern: string | null;
+  dataNotes: string;
+}
+
+export interface InterviewQuestionRecord extends SourceMetadata {
+  id: string;
+  question: string;
+  category: string;
+  whyAsked: string;
+  answerFramework: string[];
 }

@@ -1,4 +1,10 @@
-import type { SourceMetadata, VerifiedCareerOpportunity, VerifiedProgramme } from "./types";
+import type {
+  ProfessionalRegistrationPathway,
+  SourceMetadata,
+  VerifiedCareerOpportunity,
+  VerifiedEmployerDirectoryRecord,
+  VerifiedProgramme,
+} from "./types";
 
 function validIsoDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00`));
@@ -49,6 +55,34 @@ export function validateVerifiedProgrammes(records: VerifiedProgramme[]): string
     ids.add(record.id);
     if (!record.university || !record.degree || !record.city) errors.push(`${record.id}: missing required programme fields`);
     if (record.deadline && !validIsoDate(record.deadline)) errors.push(`${record.id}: invalid deadline`);
+  }
+  return errors;
+}
+
+export function validateRegistrationPathway(record: ProfessionalRegistrationPathway): string[] {
+  const errors = metadataErrors(record, record.id);
+  if (!record.profession || !record.regulator || !record.administrationBody) errors.push(`${record.id}: missing registration authority`);
+  if (!record.registrationRequired) errors.push(`${record.id}: regulated pathway must explicitly require registration`);
+  if (!validOfficialUrl(record.applicationPortalUrl)) errors.push(`${record.id}: invalid application portal`);
+  if (record.requirements.length === 0) errors.push(`${record.id}: requirements are required`);
+  for (const requirement of record.requirements) {
+    if (!requirement.label || !requirement.detail || !validOfficialUrl(requirement.sourceUrl)) {
+      errors.push(`${record.id}: invalid sourced requirement`);
+    }
+  }
+  return errors;
+}
+
+export function validateEmployerDirectory(records: VerifiedEmployerDirectoryRecord[]): string[] {
+  const errors: string[] = [];
+  const ids = new Set<string>();
+  for (const record of records) {
+    errors.push(...metadataErrors(record, record.id));
+    if (ids.has(record.id)) errors.push(`${record.id}: duplicate ID`);
+    ids.add(record.id);
+    if (!record.organisationName || !record.suburb || !record.stateOrTerritory) errors.push(`${record.id}: missing employer fields`);
+    if (!validOfficialUrl(record.website)) errors.push(`${record.id}: invalid employer website`);
+    if (record.careersPage && !validOfficialUrl(record.careersPage)) errors.push(`${record.id}: invalid careers page`);
   }
   return errors;
 }
