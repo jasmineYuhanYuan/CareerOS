@@ -1,5 +1,7 @@
 # Morning acceptance
 
+Sprint 4 addition: enable Demo Mode in Settings before a presentation, confirm onboarding does not block the view, verify the Demo mode label is visible, and use “Reset demo data” to restore the portfolio workflow.
+
 Run the app with `npm run dev` and use a fresh private-browser window for the onboarding checks.
 
 ## 3-minute critical checklist
