@@ -67,6 +67,7 @@ export function OnboardingFlow() {
   const { t } = useLanguage();
   const [ready, setReady] = useState(false);
   const [completed, setCompleted] = useState(true);
+  const [dismissed, setDismissed] = useState(false);
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<OnboardingDraft>(emptyDraft);
 
@@ -95,7 +96,7 @@ export function OnboardingFlow() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ completed, step, draft } satisfies PersistedOnboarding));
   }, [completed, draft, ready, step]);
 
-  if (!ready || completed) return null;
+  if (!ready || completed || dismissed) return null;
 
   function chooseProfile(profileId: string) {
     const profile = state.profiles[profileId]?.profile;
@@ -150,7 +151,7 @@ export function OnboardingFlow() {
       <section className="mx-auto min-h-full w-full max-w-2xl rounded-2xl bg-[var(--surface)] p-5 shadow-2xl sm:min-h-0 sm:p-8">
         <div className="flex items-center justify-between gap-4">
           <p className="text-sm font-medium text-[var(--accent)]">{t("onboarding.progress", { current: step + 1, total: LAST_STEP + 1 })}</p>
-          <Button variant="ghost" size="sm" onClick={() => setCompleted(true)}>{t("onboarding.skip")}</Button>
+          <Button variant="ghost" size="sm" onClick={() => setDismissed(true)}>{t("onboarding.skip")}</Button>
         </div>
         <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--surface-subtle)]"><span className="block h-full bg-[var(--accent)]" style={{ width: `${((step + 1) / (LAST_STEP + 1)) * 100}%` }} /></div>
 
