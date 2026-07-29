@@ -11,6 +11,7 @@ import { isJobSuitableForProfile } from "@/lib/match";
 import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { Organisation } from "@/types/domain";
+import { displayOrganisationName } from "@/lib/presentation";
 
 export function CompanyBrowser() {
   const { activeWorkspace, updateOrganisationNote } = useCareerOS();
@@ -56,7 +57,7 @@ export function CompanyBrowser() {
             <article key={organisation.id} className="interactive-lift surface-card flex flex-col p-5 sm:p-6">
               <div className="flex items-start gap-4">
                 <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[var(--surface-subtle)] font-display text-sm font-medium text-[var(--text-secondary)]">{organisation.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</span>
-                <div className="min-w-0"><h2 className="break-words font-display text-lg font-medium leading-snug">{organisation.name}</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">{organisation.organisationType}</p></div>
+                <div className="min-w-0"><h2 className="break-words font-display text-lg font-medium leading-snug">{displayOrganisationName(organisation.name)}</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">{organisation.organisationType}</p></div>
               </div>
               <p className="mt-5 text-sm text-[var(--text-secondary)]">{organisation.sector} · {organisation.city}</p><div className="mt-3"><Badge>{t("common.sampleNotice")}</Badge></div>
               <div className="mt-4 flex flex-wrap gap-2">{organisation.roleFamilies.slice(0, 3).map((family) => <Badge key={family}>{family}</Badge>)}</div>
