@@ -6,9 +6,12 @@ interface EmptyStateProps {
   description: string;
   actionLabel?: string;
   actionHref?: string;
+  actionOnClick?: () => void;
+  secondaryLabel?: string;
+  secondaryHref?: string;
 }
 
-export function EmptyState({ icon, title, description, actionLabel, actionHref }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, actionLabel, actionHref, actionOnClick, secondaryLabel, secondaryHref }: EmptyStateProps) {
   return (
     <div className="rounded-[1.35rem] border border-dashed border-[var(--border-strong)] bg-[var(--surface)] px-6 py-12 text-center">
       <span aria-hidden="true" className="mx-auto grid size-11 place-items-center rounded-full bg-[var(--surface-subtle)] text-lg text-[var(--text-secondary)]">{icon}</span>
@@ -17,6 +20,8 @@ export function EmptyState({ icon, title, description, actionLabel, actionHref }
       {actionLabel && actionHref && (
         <Link href={actionHref} className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-[var(--accent)] px-5 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]">{actionLabel}</Link>
       )}
+      {actionLabel && actionOnClick && <button type="button" onClick={actionOnClick} className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-[var(--accent)] px-5 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]">{actionLabel}</button>}
+      {secondaryLabel && secondaryHref && <Link href={secondaryHref} className="mt-3 inline-flex min-h-11 items-center px-4 text-sm font-medium text-[var(--accent)] sm:ml-2 sm:mt-6">{secondaryLabel}</Link>}
     </div>
   );
 }

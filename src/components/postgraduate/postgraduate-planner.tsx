@@ -42,8 +42,8 @@ export function PostgraduatePlanner() {
     return (
       <div className="page-enter">
         <PageHeading eyebrow={t("study.optional")} title={t("study.continuing")} description={t("study.description")} />
-        <Card title="Keep the focus on your clinical pathway">
-          <p className="text-sm leading-7 text-[var(--text-secondary)]">Use your roadmap to track registration or eligibility preparation. Continuing-education planning can be added here later if it becomes relevant.</p>
+        <Card title={t("study.clinicalFocus")}>
+          <p className="text-sm leading-7 text-[var(--text-secondary)]">{t("study.clinicalBody")}</p>
         </Card>
       </div>
     );
