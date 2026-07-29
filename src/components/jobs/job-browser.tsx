@@ -57,7 +57,7 @@ export function JobBrowser() {
       <label className="text-sm font-medium">Role family<Select value={roleFamily} onChange={(e) => setRoleFamily(e.target.value)}><option>All</option>{[...new Set(jobs.map((job) => job.roleFamily))].map((value) => <option key={value}>{value}</option>)}</Select></label>
       <label className="text-sm font-medium">Employment type<Select value={employmentType} onChange={(e) => setEmploymentType(e.target.value)}><option>All</option>{[...new Set(jobs.map((job) => job.employmentType))].map((value) => <option key={value}>{value}</option>)}</Select></label>
       <label className="text-sm font-medium">Location<Select value={location} onChange={(e) => setLocation(e.target.value)}><option>All</option>{[...new Set(jobs.map((job) => job.location))].map((value) => <option key={value}>{value}</option>)}</Select></label>
-      <label className="text-sm font-medium">Work style<Select value={remoteType} onChange={(e) => setRemoteType(e.target.value)}><option>All</option>{["On-site", "Hybrid", "Remote"].map((value) => <option key={value}>{value}</option>)}</Select></label>
+      <label className="text-sm font-medium">Work style<Select value={remoteType} onChange={(e) => setRemoteType(e.target.value)}><option>All</option>{[...new Set(jobs.map((job) => job.remoteType))].map((value) => <option key={value}>{value}</option>)}</Select></label>
       <label className="flex min-h-11 items-center gap-2 text-sm font-medium"><input type="checkbox" checked={relevantOnly} onChange={(e) => setRelevantOnly(e.target.checked)} /> Relevant to active profile</label>
       <label className="flex min-h-11 items-center gap-2 text-sm font-medium"><input type="checkbox" checked={savedOnly} onChange={(e) => setSavedOnly(e.target.checked)} /> Saved only</label>
       <label className="text-sm font-medium md:col-span-2">Sort<Select value={sort} onChange={(e) => setSort(e.target.value)}>{["Most relevant", "Deadline soonest", "Recently added", "Company name"].map((value) => <option key={value}>{value}</option>)}</Select></label>
@@ -66,15 +66,15 @@ export function JobBrowser() {
 
   return (
     <div className="page-enter">
-      <PageHeading eyebrow={t("jobs.eyebrow")} title={t("jobs.title")} description={t("jobs.description", { name: profile.preferredName || profile.displayName })} />
+      <PageHeading eyebrow={t("jobs.verifiedEyebrow")} title={t("jobs.title")} description={t("jobs.verifiedDescription", { name: profile.preferredName || profile.displayName })} />
       <div className="mb-4 flex gap-3">
         <label className="flex-1"><span className="sr-only">Search jobs</span><Input type="search" placeholder="Search roles or organisations" value={query} onChange={(e) => setQuery(e.target.value)} className="!mt-0 !bg-[var(--surface)]" /></label>
         <Button className="md:hidden" variant="secondary" onClick={() => setFiltersOpen(true)}>{t("common.filters")}</Button>
       </div>
       <section aria-label="Job filters" className="surface-card mb-7 hidden p-5 md:block">{controls}</section>
       <div className="mb-5 flex items-center justify-between gap-4">
-        <p className="text-sm text-[var(--text-secondary)]" aria-live="polite">{visibleJobs.length} curated sample {visibleJobs.length === 1 ? "role" : "roles"}</p>
-        <StatusBadge status="active">{t("common.sampleNotice")}</StatusBadge>
+        <p className="text-sm text-[var(--text-secondary)]" aria-live="polite">{visibleJobs.length} verified programme-level {visibleJobs.length === 1 ? "record" : "records"}</p>
+        <StatusBadge status="positive">{t("jobs.officialSource")}</StatusBadge>
       </div>
 
       {visibleJobs.length === 0 ? (
@@ -88,12 +88,12 @@ export function JobBrowser() {
             return (
               <article key={job.id} className="interactive-lift surface-card relative flex min-w-0 flex-col p-5 sm:p-6">
                 <button type="button" aria-label={saved ? `Unsave ${job.title}` : `Save ${job.title}`} aria-pressed={saved} onClick={() => toggleSavedJob(job.id)} className={`absolute right-4 top-4 grid size-11 place-items-center rounded-full text-lg ${saved ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-[var(--text-tertiary)] hover:bg-[var(--surface-subtle)]"}`}>{saved ? "●" : "○"}</button>
-                <p className="pr-12 text-[0.78rem] font-medium text-[var(--text-tertiary)]">{displayOrganisationName(job.companyName)}</p><div className="mt-2"><Badge>{sampleStatus(language)}</Badge></div>
+                <p className="pr-12 text-[0.78rem] font-medium text-[var(--text-tertiary)]">{displayOrganisationName(job.companyName)}</p><div className="mt-2">{job.sampleData ? <Badge>{sampleStatus(language)}</Badge> : <StatusBadge status="positive">{t("jobs.officialSource")}</StatusBadge>}</div>
                 <h2 className="mt-3 pr-8 font-display text-xl font-medium leading-snug tracking-[-0.03em]">{job.title}</h2>
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">{job.location} · {job.remoteType} · {job.employmentType}</p>
                 <div className="mt-4 flex flex-wrap gap-2">{job.tags.slice(0, 2).map((tag) => <Badge key={tag}>{tag}</Badge>)}</div>
                 <div className="mt-6 flex items-end justify-between gap-3 border-t border-[var(--border)] pt-4">
-                  <div><StatusBadge status="positive">{result.score}% estimated match</StatusBadge><p className="mt-2 text-[0.75rem] text-[var(--text-tertiary)]">{t("common.syntheticDate")}: {new Date(`${job.deadline}T00:00:00`).toLocaleDateString(language === "zh-CN" ? "zh-CN" : "en-AU", { day: "numeric", month: "short" })}</p></div>
+                  <div><StatusBadge status="positive">{result.score}% estimated match</StatusBadge><p className="mt-2 text-[0.75rem] text-[var(--text-tertiary)]">{job.deadline ? new Date(`${job.deadline}T00:00:00`).toLocaleDateString(language === "zh-CN" ? "zh-CN" : "en-AU", { day: "numeric", month: "short" }) : job.applicationStage}</p></div>
                   <Button size="sm" onClick={() => setSelected(job)}>{t("jobs.view")}</Button>
                 </div>
                 {applied && <p className="mt-3 text-[0.78rem] font-medium text-[var(--success)]">Added to applications</p>}
@@ -108,10 +108,18 @@ export function JobBrowser() {
         <Button className="mt-6 w-full" onClick={() => setFiltersOpen(false)}>Show {visibleJobs.length} roles</Button>
       </MobileBottomSheet>
 
-      <Dialog open={selected !== null} title={selected?.title ?? "Job details"} description={selected ? `${displayOrganisationName(selected.companyName)} · ${sampleStatus(language)}` : undefined} onClose={() => setSelected(null)}>
+      <Dialog open={selected !== null} title={selected?.title ?? "Job details"} description={selected ? `${displayOrganisationName(selected.companyName)} · ${selected.sampleData ? sampleStatus(language) : t("jobs.officialSource")}` : undefined} onClose={() => setSelected(null)}>
         {selected && match && <div className="space-y-6">
-          <div className="flex flex-wrap gap-2"><StatusBadge status="active">{sampleStatus(language)}</StatusBadge><Badge>{t("common.syntheticDate")}</Badge><StatusBadge status="positive">{match.score}% estimated profile match</StatusBadge></div>
+          <div className="flex flex-wrap gap-2">{selected.sampleData ? <StatusBadge status="active">{sampleStatus(language)}</StatusBadge> : <StatusBadge status="positive">{t("jobs.officialSource")}</StatusBadge>}<StatusBadge status="positive">{match.score}% estimated profile match</StatusBadge></div>
           <section><h3 className="font-medium">Overview</h3><p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{selected.description}</p></section>
+          {selected.sourceUrl && (
+            <p className="text-sm">
+              <a className="font-medium text-[var(--accent)] underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" href={selected.sourceUrl} target="_blank" rel="noreferrer">
+                {t("jobs.openOfficialSource")}
+              </a>
+              {selected.lastUpdated && <span className="ml-3 text-[var(--text-tertiary)]">{t("jobs.lastReviewed", { date: selected.lastUpdated })}</span>}
+            </p>
+          )}
           <div className="grid gap-6 sm:grid-cols-2">
             <section><h3 className="font-medium">Requirements</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">{selected.requirements.map((item) => <li key={item}>{item}</li>)}</ul></section>
             <section><h3 className="font-medium">Preferred skills</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">{selected.preferredSkills.map((item) => <li key={item}>{item}</li>)}</ul></section>

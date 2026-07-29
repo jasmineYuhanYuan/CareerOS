@@ -55,6 +55,13 @@ export function calculateJobMatch(job: Job, profile: CareerProfile): MatchResult
   if (overlaps.length) strengths.push(`Skill overlap: ${overlaps.join(", ")}`);
   else gaps.push("Add evidence for the preferred skills");
 
+  const chiropracticRole = normalise(job.discipline).includes("chiropractic") || normalise(job.title).includes("chiropract");
+  const registrationUnknown = chiropracticRole && (!profile.registrationStatus || normalise(profile.registrationStatus).includes("to be confirmed"));
+  const workEligibilityUnknown = !profile.workEligibility || normalise(profile.workEligibility).includes("to be confirmed");
+  if (registrationUnknown) gaps.push("Registration status must be confirmed");
+  if (workEligibilityUnknown) gaps.push("Work eligibility must be confirmed");
+  if (registrationUnknown || workEligibilityUnknown) score = Math.min(score, 75);
+
   return {
     score: Math.min(100, score),
     strengths,

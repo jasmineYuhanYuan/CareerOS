@@ -88,7 +88,27 @@ export function validateState(value: unknown): value is CareerOSState {
 }
 
 export function migrateState(value: unknown): CareerOSState | null {
-  if (validateState(value)) return value;
+  if (validateState(value)) {
+    const profile = value.profiles["taicheng-guo-tommy"]?.profile;
+    if (profile?.university === "Australian National University" && profile.discipline === "Cyber Security and Data Analytics") {
+      const corrected = createSeedState().profiles["taicheng-guo-tommy"];
+      return {
+        ...value,
+        profiles: {
+          ...value.profiles,
+          "taicheng-guo-tommy": {
+            ...value.profiles["taicheng-guo-tommy"],
+            profile: corrected.profile,
+            savedJobIds: [],
+            savedOpportunityIds: [],
+            roadmapItems: corrected.roadmapItems,
+            organisationNotes: {},
+          },
+        },
+      };
+    }
+    return value;
+  }
   if (typeof value !== "object" || value === null) return null;
   const legacy = value as Record<string, unknown>;
   if (legacy.version === 3 && typeof legacy.profiles === "object" && legacy.profiles !== null) {

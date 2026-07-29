@@ -1,5 +1,6 @@
 import type {
   CareerOSState,
+  CareerDocumentRecord,
   CareerProfile,
   Job,
   Organisation,
@@ -8,6 +9,8 @@ import type {
   RoadmapItem,
 } from "@/types/domain";
 import { STORAGE_VERSION } from "@/types/domain";
+import { verifiedCareerOpportunities } from "@/data/verified/opportunities";
+import { verifiedProgrammes } from "@/data/verified/programmes";
 
 export const YUHAN_ID = "yuhan-yuan";
 export const TOMMY_ID = "taicheng-guo-tommy";
@@ -50,24 +53,31 @@ const tommy: CareerProfile = {
   degree: "Postgraduate degree",
   discipline: "Chiropractic",
   studyLevel: "Postgraduate",
-  location: "Australia",
+  location: "Canberra, Australia",
   expectedGraduationDate: "",
   workEligibility: "To be confirmed",
-  registrationStatus: "Registration or eligibility preparation",
-  careerGoals: ["Graduate Chiropractor", "Associate Chiropractor", "Clinical chiropractic role"],
-  preferredCities: ["Sydney"],
+  registrationStatus: "To be confirmed",
+  careerGoals: ["Graduate Chiropractor", "Associate Chiropractor", "Chiropractor", "Early-career clinical chiropractic role", "Chiropractic assistant"],
+  preferredCities: ["Canberra", "Sydney"],
   skills: [
-    { id: "ts1", name: "Patient communication", category: "Clinical practice", proficiency: "Working", evidence: "Postgraduate clinical training" },
-    { id: "ts2", name: "Clinical assessment", category: "Clinical practice", proficiency: "Working", evidence: "Postgraduate clinical training" },
+    { id: "ts1", name: "Patient communication", category: "Clinical practice", proficiency: "Learning", evidence: "" },
+    { id: "ts2", name: "Clinical reasoning", category: "Clinical practice", proficiency: "Learning", evidence: "" },
   ],
   projects: [],
-  experienceSummary: "Clinical experience details can be added when ready.",
+  experienceSummary: "Seeking early-career chiropractic work in Canberra/ACT, with Sydney/NSW as a secondary location. Clinical experience details are not yet recorded.",
   linkedInUrl: "",
   githubUrl: "",
   portfolioUrl: "",
 };
 
 export const seedProfiles = [yuhan, tommy] as const;
+
+const verifiedOrganisationSources: Record<string, string> = {
+  Atlassian: "https://www.atlassian.com/company/careers/earlycareers",
+  "Digital Transformation Agency": "https://www.dta.gov.au/join-our-team/graduate-program",
+  "Australian Signals Directorate": "https://www.asd.gov.au/careers/im-starting-my-career",
+  "Australian Government": "https://content.apsjobs.gov.au/career-pathways/graduate-programs",
+};
 
 export const organisations: Organisation[] = [
   ["canva", "Canva", "Technology company", "Design technology", "Sydney", ["Product", "Software Engineering", "AI"]],
@@ -84,6 +94,9 @@ export const organisations: Organisation[] = [
   ["northside-clinic", "Northside Wellness Clinic (Sample)", "Clinic", "Allied health", "Sydney", ["Chiropractic", "Clinical Healthcare"]],
   ["sports-rehab", "Sydney Sports & Rehab Clinic (Sample)", "Healthcare provider", "Sports rehabilitation", "Sydney", ["Chiropractic", "Clinical Healthcare"]],
   ["coastal-health", "Coastal Family Health (Sample)", "Clinic", "Family health", "Newcastle", ["Chiropractic", "Clinical Healthcare"]],
+  ["digital-transformation-agency", "Digital Transformation Agency", "Other", "Australian Government digital services", "Canberra", ["Data", "Software Engineering", "Technical Product"]],
+  ["australian-signals-directorate", "Australian Signals Directorate", "Other", "National security and cyber security", "Canberra", ["AI", "Data", "Software Engineering"]],
+  ["australian-government", "Australian Government", "Other", "Public sector", "Canberra", ["Data", "Technical Product"]],
 ].map(([id, name, organisationType, sector, city, roleFamilies]) => ({
   id: id as string,
   name: name as string,
@@ -92,110 +105,103 @@ export const organisations: Organisation[] = [
   country: "Australia",
   city: city as string,
   websiteUrl: "",
-  careersUrl: "",
-  description: "Sample organisation record for local CareerOS planning.",
+  careersUrl: verifiedOrganisationSources[name as string] ?? "",
+  description: verifiedOrganisationSources[name as string]
+    ? "Organisation linked to a verified official careers or government source."
+    : "Sample directory record. Organisation details have not yet passed the CareerOS verification gate.",
   roleFamilies: roleFamilies as Organisation["roleFamilies"],
-  sampleData: true,
+  sampleData: !verifiedOrganisationSources[name as string],
+  verified: Boolean(verifiedOrganisationSources[name as string]),
+  sourceType: (name as string).includes("Agency") || (name as string).includes("Directorate") || name === "Australian Government" ? "Government" : verifiedOrganisationSources[name as string] ? "Official" : "Seed",
+  officialUrl: verifiedOrganisationSources[name as string],
+  lastUpdated: verifiedOrganisationSources[name as string] ? "2026-07-29" : undefined,
+  nextReviewDate: verifiedOrganisationSources[name as string] ? "2026-08-29" : undefined,
+  language: verifiedOrganisationSources[name as string] ? "en" : undefined,
+  region: verifiedOrganisationSources[name as string] ? "Australia" : undefined,
+  confidence: verifiedOrganisationSources[name as string] ? "High" : undefined,
 }));
 
-function job(
-  id: string,
-  organisationId: string,
-  title: string,
-  family: Job["roleFamily"],
-  employmentType: Job["employmentType"],
-  remoteType: Job["remoteType"],
-  profileId: string,
-  deadline: string,
-  skills: string[],
-): Job {
-  const organisation = organisations.find((item) => item.id === organisationId);
-  if (!organisation) throw new Error(`Missing organisation ${organisationId}`);
-  return {
-    id,
-    organisationId,
-    companyName: organisation.name,
-    title,
-    roleFamily: family,
-    discipline: profileId === TOMMY_ID ? "Chiropractic" : "Computer Science",
-    employmentType,
-    location: organisation.city,
-    country: organisation.country,
-    remoteType,
-    description: "Sample planning record. This is not a verified active vacancy.",
-    requirements: profileId === TOMMY_ID ? ["Relevant chiropractic qualification", "Registration eligibility"] : ["Relevant degree or equivalent experience", "Clear communication"],
-    preferredSkills: skills,
-    postedDate: "2026-07-20",
-    deadline,
-    sourceUrl: "",
-    suitableProfileIds: [profileId],
-    tags: [family, employmentType],
-    registrationRequirement: profileId === TOMMY_ID ? "Confirm current registration or eligibility requirements." : undefined,
-    sampleData: true,
-  };
-}
+const organisationIdByName: Record<string, string> = {
+  Atlassian: "atlassian",
+  "Digital Transformation Agency": "digital-transformation-agency",
+  "Australian Signals Directorate": "australian-signals-directorate",
+  "Australian Government": "australian-government",
+};
 
-export const jobs: Job[] = [
-  job("j1", "canva", "Graduate Product Associate", "Product", "Graduate", "Hybrid", YUHAN_ID, "2026-10-10", ["Product discovery", "React"]),
-  job("j2", "atlassian", "Technical Product Intern", "Technical Product", "Internship", "Hybrid", YUHAN_ID, "2026-09-22", ["TypeScript", "Product discovery"]),
-  job("j3", "google", "Software Engineering Intern", "Software Engineering", "Internship", "Hybrid", YUHAN_ID, "2026-11-01", ["TypeScript", "React"]),
-  job("j4", "microsoft", "AI Product Graduate", "AI", "Graduate", "Hybrid", YUHAN_ID, "2026-10-18", ["Product discovery", "AI"]),
-  job("j5", "amazon", "Technical Program Graduate", "Technical Product", "Graduate", "On-site", YUHAN_ID, "2026-09-30", ["Communication", "TypeScript"]),
-  job("j6", "tiktok", "Graduate Software Engineer", "Software Engineering", "Graduate", "On-site", YUHAN_ID, "2026-10-25", ["TypeScript", "React"]),
-  job("j7", "wisetech", "Junior Software Engineer", "Software Engineering", "Full-time", "Hybrid", YUHAN_ID, "2026-11-15", ["TypeScript"]),
-  job("j8", "rea", "Graduate Data Analyst", "Data", "Graduate", "Hybrid", YUHAN_ID, "2026-10-05", ["SQL", "Analytics"]),
-  job("j9", "commbank", "Technology Graduate Program", "Software Engineering", "Graduate", "Hybrid", YUHAN_ID, "2026-09-15", ["Communication", "TypeScript"]),
-  job("j10", "macquarie", "Digital Product Graduate", "Product", "Graduate", "Hybrid", YUHAN_ID, "2026-09-28", ["Product discovery"]),
-  job("j11", "harbour-clinic", "Graduate Chiropractor", "Chiropractic", "Graduate", "On-site", TOMMY_ID, "2026-10-12", ["Patient communication", "Clinical assessment"]),
-  job("j12", "northside-clinic", "Associate Chiropractor", "Chiropractic", "Full-time", "On-site", TOMMY_ID, "2026-10-24", ["Clinical assessment"]),
-  job("j13", "sports-rehab", "Early-career Clinical Practitioner", "Clinical Healthcare", "Full-time", "On-site", TOMMY_ID, "2026-11-05", ["Patient communication"]),
-  job("j14", "coastal-health", "Chiropractic Assistant", "Chiropractic", "Part-time", "On-site", TOMMY_ID, "2026-09-26", ["Patient communication"]),
-  job("j15", "sports-rehab", "Rehabilitation Clinic Assistant", "Clinical Healthcare", "Contract", "On-site", TOMMY_ID, "2026-10-30", ["Clinical assessment"]),
-  job("j16", "harbour-clinic", "Associate Chiropractic Practitioner", "Chiropractic", "Full-time", "On-site", TOMMY_ID, "2026-11-20", ["Patient communication", "Clinical assessment"]),
-];
+export const jobs: Job[] = verifiedCareerOpportunities.map((record) => ({
+  id: record.id,
+  organisationId: organisationIdByName[record.company],
+  companyName: record.company,
+  title: record.title,
+  roleFamily: record.skills.some((skill) => skill.toLowerCase().includes("data")) ? "Data"
+    : record.skills.some((skill) => skill.toLowerCase().includes("cyber")) ? "AI"
+    : record.skills.some((skill) => skill.toLowerCase().includes("product")) ? "Product"
+    : "Software Engineering",
+  discipline: record.company.includes("Atlassian") ? "Computer Science" : "Government and Technology",
+  employmentType: record.employmentType === "Casual" ? "Part-time" : record.employmentType,
+  location: record.city,
+  country: record.country,
+  remoteType: record.workStyle,
+  description: `${record.source}. Review the official source before applying.`,
+  requirements: record.eligibility,
+  preferredSkills: record.skills,
+  postedDate: record.lastUpdated,
+  deadline: record.deadline ?? "",
+  sourceUrl: record.officialUrl,
+  suitableProfileIds: record.company === "Atlassian" ? [YUHAN_ID] : [],
+  tags: [record.earlyCareerType, record.applicationStage],
+  salaryText: record.salary ?? undefined,
+  sampleData: false,
+  verified: record.verified,
+  sourceType: record.sourceType,
+  lastUpdated: record.lastUpdated,
+  nextReviewDate: record.nextReviewDate,
+  language: record.language,
+  region: record.region,
+  confidence: record.confidence,
+  careersUrl: record.careersUrl,
+  visaSponsorship: record.visaSponsorship ?? undefined,
+  applicationStage: record.applicationStage,
+}));
 
-export const programs: PostgraduateProgram[] = [
-  ["p1", "UNSW", "Master of Information Technology", "Masters", "Information Technology", "Australia", "Sydney"],
-  ["p2", "University of Sydney", "Master of Computer Science", "Masters", "Computer Science", "Australia", "Sydney"],
-  ["p3", "University of Melbourne", "Master of Information Systems", "Masters", "Information Technology", "Australia", "Melbourne"],
-  ["p4", "ANU", "Master of Computing", "Masters", "Computer Science", "Australia", "Canberra"],
-  ["p5", "Monash University", "Master of Artificial Intelligence", "Masters", "Artificial Intelligence", "Australia", "Melbourne"],
-  ["p6", "UTS", "Master of Technology Management", "Masters", "Technology Management", "Australia", "Sydney"],
-  ["p7", "Carnegie Mellon University", "Master of Human-Computer Interaction", "Masters", "Human–Computer Interaction", "United States", "Pittsburgh"],
-  ["p8", "University of Washington", "Master of Human Centered Design & Engineering", "Masters", "Human–Computer Interaction", "United States", "Seattle"],
-  ["p9", "National University of Singapore", "Master of Computing", "Masters", "Computer Science", "Singapore", "Singapore"],
-  ["p10", "University College London", "MSc Human-Computer Interaction", "Masters", "Human–Computer Interaction", "United Kingdom", "London"],
-].map(([id, university, programName, degreeLevel, discipline, country, city], index) => ({
-  id,
-  university,
-  programName,
-  degreeLevel,
-  discipline,
-  country,
-  city,
-  duration: "See official program information",
-  tuitionText: "Confirm with university",
-  intake: "Sample intake",
-  deadline: `2027-0${(index % 8) + 1}-15`,
-  entryRequirements: ["Confirm current requirements with the university"],
-  languageRequirements: "Confirm with university",
-  greRequirement: "Confirm with university",
-  recommendationLetters: "Confirm with university",
+export const programs: PostgraduateProgram[] = verifiedProgrammes.map((record) => ({
+  id: record.id,
+  university: record.university,
+  programName: record.degree,
+  degreeLevel: "Masters",
+  discipline: record.degree.toLowerCase().includes("cyber") ? "Cyber Security" : "Information Technology",
+  country: record.country,
+  city: record.city,
+  duration: record.duration ?? "Not published",
+  tuitionText: record.tuition ?? "Not published",
+  intake: "Refer to official course page",
+  deadline: record.deadline ?? "",
+  entryRequirements: record.entryRequirements,
+  languageRequirements: record.ielts ?? "Refer to official university requirements",
+  greRequirement: record.gre ?? "Not published",
+  recommendationLetters: "Not published",
   requiredDocuments: ["Academic transcript", "CV or résumé", "Personal statement"],
-  applicationUrl: "",
+  applicationUrl: record.officialUrl,
   suitableProfileIds: [YUHAN_ID],
-  sampleData: true,
+  sampleData: false,
+  verified: record.verified,
+  sourceType: record.sourceType,
+  lastUpdated: record.lastUpdated,
+  nextReviewDate: record.nextReviewDate,
+  language: record.language,
+  region: record.region,
+  confidence: record.confidence,
 }));
 
-function roadmap(profileId: string, items: string[], category: RoadmapItem["category"]): RoadmapItem[] {
+function roadmap(profileId: string, items: string[], category: RoadmapItem["category"], withPlanningDates = true): RoadmapItem[] {
   return items.map((title, index) => ({
     id: `${profileId}-r${index + 1}`,
     profileId,
     title,
     description: "",
     category,
-    targetDate: `2026-${String(8 + Math.floor(index / 2)).padStart(2, "0")}-${String(10 + index).padStart(2, "0")}`,
-    status: index === 0 ? "In progress" : "Not started",
+    targetDate: withPlanningDates ? `2026-${String(8 + Math.floor(index / 2)).padStart(2, "0")}-${String(10 + index).padStart(2, "0")}` : "",
+    status: "Not started",
     priority: index < 2 ? "High" : "Medium",
   }));
 }
@@ -203,31 +209,66 @@ function roadmap(profileId: string, items: string[], category: RoadmapItem["cate
 function workspace(profile: CareerProfile): ProfileWorkspace {
   const items = profile.id === YUHAN_ID
     ? ["Complete CareerOS MVP", "Continue WearAgain iteration", "Finalise English résumé", "Finalise Chinese résumé", "Build SQL fundamentals", "Research postgraduate pathways", "Apply for suitable internships"]
-    : ["Finalise chiropractic résumé", "Identify suitable clinics", "Confirm registration or eligibility requirements", "Prepare clinical interview examples", "Submit targeted applications"];
+    : [
+      "Stage 1 — Confirm qualification completion",
+      "Stage 1 — Review Ahpra graduate-registration guidance",
+      "Stage 1 — Prepare identity and qualification documents",
+      "Stage 1 — Confirm English-language evidence requirements",
+      "Stage 1 — Review professional indemnity insurance obligations",
+      "Stage 1 — Review CPD and recency-of-practice standards",
+      "Stage 1 — Submit or track registration application",
+      "Stage 1 — Confirm registration status on the practitioner register",
+      "Stage 2 — Prepare clinical résumé and cover letters",
+      "Stage 2 — Prepare referee list and clinical case examples",
+      "Stage 3 — Build a Canberra clinic target list",
+      "Stage 3 — Review current verified vacancies",
+      "Stage 3 — Submit targeted applications and schedule follow-ups",
+      "Stage 3 — Prepare chiropractic interview questions",
+      "Stage 4 — Plan induction, mentoring and professional development",
+    ];
   const base: ProfileWorkspace = {
     profile,
     savedJobIds: [],
     applications: [],
     savedProgramIds: [],
     postgraduateApplications: [],
-    roadmapItems: roadmap(profile.id, items, profile.id === TOMMY_ID ? "Registration" : "Project"),
+    roadmapItems: roadmap(profile.id, items, profile.id === TOMMY_ID ? "Registration" : "Project", profile.id !== TOMMY_ID),
     organisationNotes: {},
-    savedOpportunityIds: profile.id === YUHAN_ID ? ["opportunity-j1"] : ["opportunity-j11"],
+    savedOpportunityIds: profile.id === YUHAN_ID ? ["opportunity-atlassian-au-intern-program"] : [],
     contacts: [],
     documents: [],
   };
   if (profile.id === YUHAN_ID) {
-    base.savedJobIds = ["j1"];
+    base.savedJobIds = ["atlassian-au-intern-program"];
     base.applications = [{
-      id: "demo-application-yuhan", profileId: YUHAN_ID, jobId: "j1",
-      organisationName: "Canva", jobTitle: "Graduate Product Associate", status: "Preparing",
+      id: "demo-application-yuhan", profileId: YUHAN_ID, jobId: "atlassian-au-intern-program",
+      organisationName: "Atlassian", jobTitle: "Australia Internship Program", status: "Preparing",
       savedAt: "2026-07-28T09:00:00.000Z", appliedAt: "", nextAction: "Review sample role requirements",
       nextActionDate: "2026-08-03", cvVersion: "English résumé v1", notes: "Sample planning record.",
       lastUpdatedAt: "2026-07-28T09:00:00.000Z",
       activity: [{ id: "demo-activity-yuhan", type: "created", label: "Application created", occurredAt: "2026-07-28T09:00:00.000Z" }],
     }];
   } else {
-    base.organisationNotes["harbour-clinic"] = "Saved clinic for sample career planning.";
+    const templates: Array<[string, CareerDocumentRecord["documentType"]]> = [
+      ["Chiropractic résumé", "English résumé"],
+      ["General clinical cover letter", "Cover letter"],
+      ["Canberra clinic cover letter", "Cover letter"],
+      ["Registration evidence/status record", "Other"],
+      ["Academic transcript", "Academic transcript"],
+      ["Clinical-placement summary", "Other"],
+      ["Referee list", "Other"],
+      ["Professional-development record", "Other"],
+    ];
+    base.documents = templates.map(([name, documentType], index) => ({
+      id: `tommy-document-template-${index + 1}`,
+      profileId: TOMMY_ID,
+      documentType,
+      name,
+      version: "Template",
+      updatedAt: "2026-07-29",
+      notes: "Empty template. Add only verified personal details.",
+      status: "Draft",
+    }));
   }
   return base;
 }

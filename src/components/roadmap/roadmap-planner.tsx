@@ -11,7 +11,7 @@ import { useLanguage } from "@/providers/language-provider";
 import type { Priority, RoadmapCategory, RoadmapItem, RoadmapStatus } from "@/types/domain";
 
 const categories: RoadmapCategory[] = ["Job application", "Postgraduate", "Skill", "Project", "Portfolio", "Interview", "Registration", "Networking", "Other"];
-const statuses: RoadmapStatus[] = ["Not started", "In progress", "Completed", "Blocked"];
+const statuses: RoadmapStatus[] = ["Not started", "In progress", "Completed", "Not applicable", "Blocked"];
 const priorities: Priority[] = ["Low", "Medium", "High"];
 
 function emptyItem(profileId: string): RoadmapItem {
