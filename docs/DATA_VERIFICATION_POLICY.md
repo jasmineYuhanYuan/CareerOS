@@ -32,7 +32,10 @@ As of 29 July 2026, the first verified slice contains:
 
 - 9 programme-level early-career opportunity records from 4 official source pages
 - 5 postgraduate programme records from 5 official university pages
-- 4 organisation records connected to the verified opportunity sources
+- 4 organisation records connected to verified opportunity sources
+- 8 Canberra/ACT and nearby NSW chiropractic employer-directory records
+- 1 Australian chiropractic registration pathway from the Chiropractic Board and Ahpra
+- 3 stale job-board leads retained as archived records; 0 are represented as current vacancies
 
 This is intentionally fewer than the requested 100 opportunities and 50
 companies. The repository must not inflate the count with invented role

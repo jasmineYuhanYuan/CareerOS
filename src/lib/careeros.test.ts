@@ -36,6 +36,21 @@ describe("deterministic match scoring", () => {
     const profile = createSeedState().profiles[YUHAN_ID].profile;
     expect(calculateJobMatch(jobs[0], profile)).toEqual(calculateJobMatch(jobs[0], profile));
   });
+
+  it("caps chiropractic matches when registration or work eligibility is unknown", () => {
+    const profile = createSeedState().profiles[TOMMY_ID].profile;
+    const result = calculateJobMatch({
+      ...jobs[0],
+      title: "Graduate Chiropractor",
+      discipline: "Chiropractic",
+      roleFamily: "Chiropractic",
+      suitableProfileIds: [TOMMY_ID],
+      location: "Canberra",
+    }, profile);
+    expect(result.score).toBeLessThanOrEqual(75);
+    expect(result.gaps).toContain("Registration status must be confirmed");
+    expect(result.gaps).toContain("Work eligibility must be confirmed");
+  });
 });
 
 describe("local storage parsing and fallback", () => {
@@ -43,6 +58,18 @@ describe("local storage parsing and fallback", () => {
     const state = parseStoredState("{not-json");
     expect(state.version).toBe(3);
     expect(state.profiles[YUHAN_ID].profile.displayName).toBe("Yuhan Yuan");
+  });
+
+  it("corrects the known false ANU and cybersecurity Tommy seed without preserving false eligibility", () => {
+    const incorrect = createSeedState();
+    incorrect.profiles[TOMMY_ID].profile.university = "Australian National University";
+    incorrect.profiles[TOMMY_ID].profile.discipline = "Cyber Security and Data Analytics";
+    incorrect.profiles[TOMMY_ID].profile.workEligibility = "Australian citizen";
+    const corrected = parseStoredState(JSON.stringify(incorrect));
+    expect(corrected.profiles[TOMMY_ID].profile.university).toBe("Macquarie University");
+    expect(corrected.profiles[TOMMY_ID].profile.discipline).toBe("Chiropractic");
+    expect(corrected.profiles[TOMMY_ID].profile.workEligibility).toBe("To be confirmed");
+    expect(corrected.profiles[TOMMY_ID].savedOpportunityIds).toEqual([]);
   });
 
   it("falls back for unsupported versions", () => {
