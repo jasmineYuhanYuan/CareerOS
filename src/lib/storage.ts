@@ -71,6 +71,7 @@ export function validateState(value: unknown): value is CareerOSState {
     !["en", "zh-CN"].includes(String(state.language)) ||
     typeof state.dashboardPreferences !== "object" ||
     state.dashboardPreferences === null ||
+    typeof (state.dashboardPreferences as Record<string, unknown>).demoMode !== "boolean" ||
     typeof state.profiles !== "object" ||
     state.profiles === null
   ) {
@@ -90,6 +91,13 @@ export function migrateState(value: unknown): CareerOSState | null {
   if (validateState(value)) return value;
   if (typeof value !== "object" || value === null) return null;
   const legacy = value as Record<string, unknown>;
+  if (legacy.version === 3 && typeof legacy.profiles === "object" && legacy.profiles !== null) {
+    const preferences = typeof legacy.dashboardPreferences === "object" && legacy.dashboardPreferences !== null
+      ? legacy.dashboardPreferences as Record<string, unknown>
+      : {};
+    const migrated = { ...legacy, dashboardPreferences: { ...preferences, demoMode: false } };
+    return validateState(migrated) ? migrated : null;
+  }
   if (legacy.version !== 2 || typeof legacy.profiles !== "object" || legacy.profiles === null) return null;
   const migratedProfiles: Record<string, unknown> = {};
   for (const [profileId, workspaceValue] of Object.entries(legacy.profiles as Record<string, unknown>)) {
@@ -109,6 +117,7 @@ export function migrateState(value: unknown): CareerOSState | null {
       defaultRegion: "Australia",
       showSampleData: true,
       showArchivedOpportunities: false,
+      demoMode: false,
     },
     profiles: migratedProfiles,
   };

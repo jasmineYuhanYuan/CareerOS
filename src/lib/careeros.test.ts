@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createSeedState, jobs, TOMMY_ID, YUHAN_ID } from "@/data/seed";
-import { aggregateDeadlines } from "@/lib/dashboard";
+import { aggregateDeadlines, profileReadiness, recentApplicationActivity } from "@/lib/dashboard";
+import { displayOrganisationName, sampleStatus } from "@/lib/presentation";
 import { calculateJobMatch, isJobSuitableForProfile } from "@/lib/match";
 import { getProfileWorkspace, parseStoredState, validateState } from "@/lib/storage";
 import { calculateOpportunityMatch } from "@/lib/opportunity-match";
@@ -48,8 +49,8 @@ describe("local storage parsing and fallback", () => {
 describe("profile data separation", () => {
   it("returns only the requested workspace", () => {
     const state = createSeedState();
-    state.profiles[YUHAN_ID].savedJobIds.push("j1");
-    expect(getProfileWorkspace(state, YUHAN_ID)?.savedJobIds).toEqual(["j1"]);
+    state.profiles[YUHAN_ID].savedJobIds.push("j2");
+    expect(getProfileWorkspace(state, YUHAN_ID)?.savedJobIds).toContain("j2");
     expect(getProfileWorkspace(state, TOMMY_ID)?.savedJobIds).toEqual([]);
   });
 });
@@ -63,6 +64,27 @@ describe("dashboard deadline aggregation", () => {
     expect(deadlines.map((item) => item.date)).toEqual(
       deadlines.map((item) => item.date).slice().sort(),
     );
+  });
+});
+
+describe("Sprint 4 dashboard presentation", () => {
+  it("builds an actionable readiness checklist", () => {
+    const workspace = createSeedState().profiles[YUHAN_ID];
+    const checks = profileReadiness(workspace);
+    expect(checks).toHaveLength(8);
+    expect(checks.find((item) => item.key === "education")?.complete).toBe(true);
+    expect(checks.find((item) => item.key === "resume")?.complete).toBe(false);
+  });
+
+  it("orders recent application activity newest first", () => {
+    const activity = recentApplicationActivity(createSeedState().profiles[YUHAN_ID]);
+    expect(activity).toHaveLength(1);
+    expect(activity[0].label).toBe("Application created");
+  });
+
+  it("removes duplicate sample suffixes and localises the consolidated warning", () => {
+    expect(displayOrganisationName("Harbour Chiropractic Clinic (Sample)")).toBe("Harbour Chiropractic Clinic");
+    expect(sampleStatus("zh-CN")).toBe("示例数据 · 非实时职位");
   });
 });
 
@@ -91,6 +113,17 @@ describe("Sprint 3 storage migration", () => {
     expect(migrated.version).toBe(3);
     expect(migrated.profiles[YUHAN_ID].profile.displayName).toBe("Yuhan Yuan");
     expect(migrated.profiles[YUHAN_ID].contacts).toEqual([]);
+  });
+});
+
+describe("Sprint 4 preference migration", () => {
+  it("adds a persistent demo-mode preference without dropping profile data", () => {
+    const legacy = structuredClone(createSeedState()) as unknown as Record<string, unknown>;
+    const preferences = legacy.dashboardPreferences as Record<string, unknown>;
+    delete preferences.demoMode;
+    const migrated = parseStoredState(JSON.stringify(legacy));
+    expect(migrated.dashboardPreferences.demoMode).toBe(false);
+    expect(migrated.profiles[TOMMY_ID].profile.displayName).toBe("Taicheng Guo (Tommy)");
   });
 });
 

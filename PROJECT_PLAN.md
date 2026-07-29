@@ -1,5 +1,9 @@
 # CareerOS Development Plan
 
+## Sprint 4 — portfolio polish
+
+Status: complete. This sprint strengthens visual hierarchy, navigation, dashboard usefulness, discovery presentation, feedback, loading, bilingual quality, accessibility and portfolio documentation without adding business modules. See `docs/SPRINT_4_SUMMARY.md`.
+
 ## Phase 0 — Product setup
 
 - [x] Create GitHub repository

@@ -96,7 +96,7 @@ export function OnboardingFlow() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ completed, step, draft } satisfies PersistedOnboarding));
   }, [completed, draft, ready, step]);
 
-  if (!ready || completed || dismissed) return null;
+  if (!ready || completed || dismissed || state.dashboardPreferences.demoMode) return null;
 
   function chooseProfile(profileId: string) {
     const profile = state.profiles[profileId]?.profile;

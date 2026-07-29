@@ -1,5 +1,9 @@
 # CareerOS
 
+CareerOS is a bilingual, local-first career planning portfolio product. Sprint 4 adds a hardened blue-first design system, actionable career dashboard, accessible interaction feedback, responsive loading states and a safe Demo Mode.
+
+For a guided portfolio review, enable **Demo mode** in Settings and follow [docs/PORTFOLIO_SCREENSHOTS.md](docs/PORTFOLIO_SCREENSHOTS.md). All opportunity records remain clearly labelled sample data; CareerOS does not claim live vacancy verification.
+
 CareerOS is a local-first career planning workspace for students and graduates.
 It brings profile management, sample job research, applications, postgraduate
 planning and an editable roadmap into one responsive product.

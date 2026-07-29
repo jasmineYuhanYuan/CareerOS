@@ -3,6 +3,7 @@ import { DM_Sans, Manrope } from "next/font/google";
 import { AppShell } from "@/components/layout/app-shell";
 import { CareerOSProvider } from "@/providers/careeros-provider";
 import { LanguageProvider } from "@/providers/language-provider";
+import { ToastProvider } from "@/providers/toast-provider";
 import "./globals.css";
 
 const bodyFont = DM_Sans({ variable: "--font-body", subsets: ["latin"] });
@@ -39,7 +40,7 @@ export default function RootLayout({
       <body>
         <CareerOSProvider>
           <LanguageProvider>
-            <AppShell>{children}</AppShell>
+            <ToastProvider><AppShell>{children}</AppShell></ToastProvider>
           </LanguageProvider>
         </CareerOSProvider>
       </body>

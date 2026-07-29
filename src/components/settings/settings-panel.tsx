@@ -9,10 +9,12 @@ import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
 import { formatDate } from "@/i18n/format";
 import type { AppLocale, ThemePreference } from "@/types/domain";
+import { useToast } from "@/providers/toast-provider";
 
 export function SettingsPanel() {
   const { state, activeWorkspace, setTheme, setLanguage, updateDashboardPreferences, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData } = useCareerOS();
   const { language, t } = useLanguage();
+  const { notify } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState("");
 
@@ -30,6 +32,7 @@ export function SettingsPanel() {
     if (!file) return;
     const result = importData(await file.text());
     setMessage(result.message);
+    notify(result.ok ? t("feedback.importSucceeded") : t("feedback.importFailed"), result.ok ? "success" : "error");
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -38,6 +41,11 @@ export function SettingsPanel() {
       <PageHeading eyebrow={t("settings.eyebrow")} title={t("settings.title")} description={t("settings.description")} />
       {message && <p role="status" className="mb-5 rounded-xl bg-[var(--success-soft)] p-4 text-sm font-medium text-[var(--success)]">{message}</p>}
       <div className="grid gap-4 lg:grid-cols-2">
+        <Card eyebrow={t("settings.demo")} title={t("settings.demo")}>
+          <p className="text-sm leading-6 text-[var(--text-secondary)]">{t("settings.demoDescription")}</p>
+          <label className="mt-4 flex min-h-11 items-center gap-3 text-sm font-medium"><input type="checkbox" checked={state.dashboardPreferences.demoMode} onChange={(event) => updateDashboardPreferences({ ...state.dashboardPreferences, demoMode: event.target.checked, showSampleData: event.target.checked || state.dashboardPreferences.showSampleData })} />{t("settings.demoLabel")}</label>
+          {state.dashboardPreferences.demoMode && <Button className="mt-3" variant="secondary" onClick={() => window.confirm(t("settings.resetAllConfirm")) && resetAll()}>{t("settings.demoReset")}</Button>}
+        </Card>
         <Card eyebrow={t("settings.appearance")} title={t("settings.theme")}>
           <label className="block text-sm font-medium">Theme<Select value={state.theme} onChange={(e) => setTheme(e.target.value as ThemePreference)}>{["System", "Light", "Dark"].map((value) => <option key={value}>{value}</option>)}</Select></label>
         </Card>

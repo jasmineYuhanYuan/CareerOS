@@ -1,22 +1,24 @@
+import type { IconName } from "@/components/ui/icon";
+
 export interface NavigationItem {
   label: string;
   href: string;
   shortLabel: string;
-  icon: string;
+  icon: IconName;
 }
 
 export const navigationItems: readonly NavigationItem[] = [
-  { label: "Home", href: "/", shortLabel: "Home", icon: "⌂" },
-  { label: "Jobs", href: "/jobs", shortLabel: "Jobs", icon: "◇" },
-  { label: "Opportunities", href: "/opportunities", shortLabel: "Explore", icon: "✦" },
-  { label: "Applications", href: "/applications", shortLabel: "Apply", icon: "▤" },
-  { label: "Study", href: "/postgraduate", shortLabel: "Study", icon: "□" },
-  { label: "Companies", href: "/companies", shortLabel: "Companies", icon: "▦" },
-  { label: "Roadmap", href: "/roadmap", shortLabel: "Plan", icon: "↗" },
-  { label: "Contacts", href: "/contacts", shortLabel: "Contacts", icon: "◎" },
-  { label: "Documents", href: "/documents", shortLabel: "Documents", icon: "▱" },
-  { label: "Profile", href: "/profiles", shortLabel: "Profile", icon: "○" },
-  { label: "Settings", href: "/settings", shortLabel: "Settings", icon: "···" },
+  { label: "Home", href: "/", shortLabel: "Home", icon: "home" },
+  { label: "Jobs", href: "/jobs", shortLabel: "Jobs", icon: "briefcase" },
+  { label: "Opportunities", href: "/opportunities", shortLabel: "Explore", icon: "sparkles" },
+  { label: "Applications", href: "/applications", shortLabel: "Apply", icon: "clipboard" },
+  { label: "Study", href: "/postgraduate", shortLabel: "Study", icon: "book" },
+  { label: "Companies", href: "/companies", shortLabel: "Companies", icon: "building" },
+  { label: "Roadmap", href: "/roadmap", shortLabel: "Plan", icon: "route" },
+  { label: "Contacts", href: "/contacts", shortLabel: "Contacts", icon: "users" },
+  { label: "Documents", href: "/documents", shortLabel: "Documents", icon: "document" },
+  { label: "Profile", href: "/profiles", shortLabel: "Profile", icon: "user" },
+  { label: "Settings", href: "/settings", shortLabel: "Settings", icon: "settings" },
 ];
 
 const chineseLabels: Record<string, { label: string; shortLabel: string }> = {

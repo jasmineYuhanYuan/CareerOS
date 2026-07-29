@@ -6,6 +6,8 @@ import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/form-field";
 import { PageHeading } from "@/components/ui/page-heading";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useToast } from "@/providers/toast-provider";
 import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { ApplicationStatus, JobApplication } from "@/types/domain";
@@ -27,6 +29,7 @@ function emptyApplication(profileId: string): JobApplication {
 export function ApplicationTracker() {
   const { activeWorkspace, createApplication, updateApplication, deleteApplication } = useCareerOS();
   const { t } = useLanguage();
+  const { notify } = useToast();
   const [view, setView] = useState<"Board" | "List">("Board");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -52,7 +55,7 @@ export function ApplicationTracker() {
     if (previous && (previous.nextAction !== draft.nextAction || previous.nextActionDate !== draft.nextActionDate)) activity.push({ id: `activity-${Date.now()}-next`, type: "next_action_updated", label: "Next action updated", occurredAt: at });
     const ready = { ...draft, id: draft.id || `manual-${Date.now()}`, lastUpdatedAt: at, activity };
     if (previous) updateApplication(ready);
-    else createApplication(ready);
+    else { createApplication(ready); notify(t("feedback.applicationCreated")); }
     setDraft(null);
     setError("");
   }
@@ -93,7 +96,7 @@ export function ApplicationTracker() {
         </div>
       </div>
 
-      {visible.length === 0 ? <p className="surface-card border-dashed p-10 text-center text-sm text-[var(--text-secondary)]">{t("applications.empty")}</p> : view === "List" ? (
+      {visible.length === 0 ? <EmptyState icon="▤" title={t("applications.emptyTitle")} description={t("applications.emptyBody")} actionLabel={t("applications.create")} actionOnClick={() => setDraft(emptyApplication(activeWorkspace.profile.id))} secondaryLabel={t("applications.browseJobs")} secondaryHref="/jobs" /> : view === "List" ? (
         <div className="hidden overflow-x-auto rounded-[1.35rem] border border-[var(--border)] bg-[var(--surface)] md:block">
           <table className="w-full min-w-[700px] text-left text-sm"><thead className="bg-[var(--surface-subtle)] text-xs uppercase tracking-wide text-[var(--text-secondary)]"><tr><th className="p-4">Role</th><th className="p-4">Status</th><th className="p-4">Next action</th><th className="p-4">Date</th><th className="p-4"><span className="sr-only">Actions</span></th></tr></thead><tbody className="divide-y divide-[var(--border)]">{visible.map((application) => <tr key={application.id}><td className="p-4"><strong className="font-medium">{application.jobTitle}</strong><span className="mt-1 block text-xs text-[var(--text-secondary)]">{application.organisationName}</span></td><td className="p-4"><StatusBadge status="active">{application.status}</StatusBadge></td><td className="p-4">{application.nextAction || "Not set"}</td><td className="p-4">{application.nextActionDate || "—"}</td><td className="p-4"><Button size="sm" variant="secondary" onClick={() => setDraft(structuredClone(application))}>Edit</Button></td></tr>)}</tbody></table>
         </div>

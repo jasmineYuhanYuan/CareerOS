@@ -13,6 +13,7 @@ import { calculateJobMatch, isJobSuitableForProfile } from "@/lib/match";
 import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { Job } from "@/types/domain";
+import { displayOrganisationName, sampleStatus } from "@/lib/presentation";
 
 export function JobBrowser() {
   const { activeWorkspace, toggleSavedJob, addJobApplication } = useCareerOS();
@@ -87,7 +88,7 @@ export function JobBrowser() {
             return (
               <article key={job.id} className="interactive-lift surface-card relative flex min-w-0 flex-col p-5 sm:p-6">
                 <button type="button" aria-label={saved ? `Unsave ${job.title}` : `Save ${job.title}`} aria-pressed={saved} onClick={() => toggleSavedJob(job.id)} className={`absolute right-4 top-4 grid size-11 place-items-center rounded-full text-lg ${saved ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-[var(--text-tertiary)] hover:bg-[var(--surface-subtle)]"}`}>{saved ? "●" : "○"}</button>
-                <p className="pr-12 text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[var(--text-tertiary)]">{job.companyName}</p><div className="mt-2 flex flex-wrap gap-2"><Badge>{t("common.sampleNotice")}</Badge><Badge>{t("common.unverifiedVacancy")}</Badge></div>
+                <p className="pr-12 text-[0.78rem] font-medium text-[var(--text-tertiary)]">{displayOrganisationName(job.companyName)}</p><div className="mt-2"><Badge>{sampleStatus(language)}</Badge></div>
                 <h2 className="mt-3 pr-8 font-display text-xl font-medium leading-snug tracking-[-0.03em]">{job.title}</h2>
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">{job.location} · {job.remoteType} · {job.employmentType}</p>
                 <div className="mt-4 flex flex-wrap gap-2">{job.tags.slice(0, 2).map((tag) => <Badge key={tag}>{tag}</Badge>)}</div>
@@ -107,9 +108,9 @@ export function JobBrowser() {
         <Button className="mt-6 w-full" onClick={() => setFiltersOpen(false)}>Show {visibleJobs.length} roles</Button>
       </MobileBottomSheet>
 
-      <Dialog open={selected !== null} title={selected?.title ?? "Job details"} description={selected ? `${selected.companyName} · Sample planning record` : undefined} onClose={() => setSelected(null)}>
+      <Dialog open={selected !== null} title={selected?.title ?? "Job details"} description={selected ? `${displayOrganisationName(selected.companyName)} · ${sampleStatus(language)}` : undefined} onClose={() => setSelected(null)}>
         {selected && match && <div className="space-y-6">
-          <div className="flex flex-wrap gap-2"><StatusBadge status="active">{t("common.sampleNotice")}</StatusBadge><StatusBadge status="neutral">{t("common.unverifiedVacancy")}</StatusBadge><Badge>{t("common.syntheticDate")}</Badge><StatusBadge status="positive">{match.score}% estimated profile match</StatusBadge></div>
+          <div className="flex flex-wrap gap-2"><StatusBadge status="active">{sampleStatus(language)}</StatusBadge><Badge>{t("common.syntheticDate")}</Badge><StatusBadge status="positive">{match.score}% estimated profile match</StatusBadge></div>
           <section><h3 className="font-medium">Overview</h3><p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{selected.description}</p></section>
           <div className="grid gap-6 sm:grid-cols-2">
             <section><h3 className="font-medium">Requirements</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">{selected.requirements.map((item) => <li key={item}>{item}</li>)}</ul></section>
