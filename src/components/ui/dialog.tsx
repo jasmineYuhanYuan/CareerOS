@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useLanguage } from "@/providers/language-provider";
 
 export function Dialog({
   open,
@@ -16,6 +17,7 @@ export function Dialog({
   children: ReactNode;
   onClose: () => void;
 }) {
+  const { t } = useLanguage();
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -34,7 +36,7 @@ export function Dialog({
             <h2 id="dialog-title" className="font-display text-2xl font-medium tracking-[-0.03em]">{title}</h2>
             {description && <p id="dialog-description" className="mt-1.5 text-sm text-[var(--text-secondary)]">{description}</p>}
           </div>
-          <button type="button" aria-label="Close dialog" onClick={onClose} className="grid size-11 shrink-0 place-items-center rounded-xl text-xl text-[var(--text-secondary)] hover:bg-[var(--surface-subtle)]">×</button>
+          <button type="button" aria-label={t("common.close")} onClick={onClose} className="grid size-11 shrink-0 place-items-center rounded-xl text-xl text-[var(--text-secondary)] hover:bg-[var(--surface-subtle)]">×</button>
         </header>
         {children}
       </section>

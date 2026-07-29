@@ -43,6 +43,15 @@ export function OpportunityBrowser() {
   [activeWorkspace.savedOpportunityIds, category, discipline, location, matches, query, savedOnly, sort, state.dashboardPreferences, verifiedOnly]);
 
   const detailMatch = selected ? matches.get(selected.id) : null;
+  const dimensionLabels = {
+    "Goal alignment": t("opportunities.goalAlignment"),
+    "Discipline alignment": t("opportunities.disciplineAlignment"),
+    "Skill overlap": t("opportunities.skillOverlap"),
+    "Location alignment": t("opportunities.locationAlignment"),
+    "Experience/project relevance": t("opportunities.experienceRelevance"),
+    "Eligibility confidence": t("opportunities.eligibilityConfidence"),
+    "Opportunity type preference": t("opportunities.typePreference"),
+  };
   const jobId = selected?.id.startsWith("opportunity-j") ? selected.id.replace("opportunity-", "") : "";
   const addSelectedToRoadmap = () => {
     if (!selected) return;
@@ -76,19 +85,35 @@ export function OpportunityBrowser() {
             const match = matches.get(item.id);
             const saved = activeWorkspace.savedOpportunityIds.includes(item.id);
             return <article key={item.id} className="surface-card p-5 sm:p-6">
-              <div className="flex items-start justify-between gap-4"><div><div className="flex flex-wrap gap-2"><Badge>{item.category}</Badge><StatusBadge status={item.verificationStatus === "Official source" ? "positive" : "neutral"}>{item.verificationStatus}</StatusBadge></div><h2 className="mt-4 font-display text-xl font-medium">{item.title}</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">{item.organisationName} · {item.locationText}</p></div><button type="button" className="min-h-11 px-2 text-[var(--accent)]" onClick={() => toggleSavedOpportunity(item.id)} aria-pressed={saved} aria-label={saved ? t("opportunities.unsave") : t("opportunities.save")}>{saved ? "●" : "○"}</button></div>
-              <div className="mt-5 flex items-end justify-between gap-4 border-t border-[var(--border)] pt-4"><div><p className="text-xs text-[var(--text-secondary)]">{t("opportunities.match")}</p><strong>{match ? formatPercentage(match.score, language) : "—"}</strong></div><div className="text-right">{item.deadline && <p className="text-xs text-[var(--text-secondary)]">{formatDate(item.deadline, language)}</p>}<Button size="sm" variant="secondary" onClick={() => setSelected(item)}>{t("opportunities.details")}</Button></div></div>
+              <div className="flex items-start justify-between gap-4"><div><div className="flex flex-wrap gap-2"><Badge>{item.category}</Badge><StatusBadge status={item.verificationStatus === "Official source" ? "positive" : "neutral"}>{item.verificationStatus}</StatusBadge>{item.sampleData && <Badge>{t("common.sampleNotice")}</Badge>}</div><h2 className="mt-4 font-display text-xl font-medium">{item.title}</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">{item.organisationName} · {item.locationText}</p>{item.sampleData && <p className="mt-2 text-xs font-medium text-[var(--warning)]">{t("common.unverifiedVacancy")}</p>}</div><button type="button" className="min-h-11 px-2 text-[var(--accent)]" onClick={() => toggleSavedOpportunity(item.id)} aria-pressed={saved} aria-label={saved ? t("opportunities.unsave") : t("opportunities.save")}>{saved ? "●" : "○"}</button></div>
+              <div className="mt-5 flex items-end justify-between gap-4 border-t border-[var(--border)] pt-4"><div><p className="text-xs text-[var(--text-secondary)]">{t("opportunities.match")}</p><strong>{match ? formatPercentage(match.score, language) : "—"}</strong></div><div className="text-right">{item.deadline && <p className="text-xs text-[var(--text-secondary)]">{t("common.syntheticDate")}: {formatDate(item.deadline, language)}</p>}<Button size="sm" variant="secondary" onClick={() => setSelected(item)}>{t("opportunities.details")}</Button></div></div>
             </article>;
           })}
         </div>
       )}
       <Dialog open={Boolean(selected)} title={selected?.title ?? ""} description={selected ? `${selected.organisationName} · ${selected.locationText}` : ""} onClose={() => setSelected(null)}>
         {selected && detailMatch && <div className="space-y-6">
+          {selected.sampleData && <div className="flex flex-wrap gap-2"><Badge>{t("common.sampleNotice")}</Badge><StatusBadge status="neutral">{t("common.unverifiedVacancy")}</StatusBadge>{selected.deadline && <Badge>{t("common.syntheticDate")}</Badge>}</div>}
           <p className="text-sm leading-7 text-[var(--text-secondary)]">{selected.description}</p>
+          <section>
+            <h3 className="font-medium">{t("opportunities.dimensions")}</h3>
+            <div className="mt-3 divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
+              {(detailMatch.dimensions ?? []).map((dimension) => (
+                <div key={dimension.name} className="grid gap-3 p-4 sm:grid-cols-[12rem_1fr]">
+                  <h4 className="font-medium">{dimensionLabels[dimension.name]}</h4>
+                  <dl className="grid gap-3 text-sm sm:grid-cols-3">
+                    <div><dt className="text-xs text-[var(--text-tertiary)]">{t("opportunities.result")}</dt><dd className="mt-1 font-medium">{dimension.score === null ? t("opportunities.insufficient") : formatPercentage(dimension.score, language)}</dd></div>
+                    <div><dt className="text-xs text-[var(--text-tertiary)]">{t("opportunities.evidence")}</dt><dd className="mt-1 text-[var(--text-secondary)]">{dimension.evidence.length ? dimension.evidence.join("; ") : t("opportunities.noEvidence")}</dd></div>
+                    <div><dt className="text-xs text-[var(--text-tertiary)]">{t("opportunities.uncertainty")}</dt><dd className="mt-1 text-[var(--text-secondary)]">{dimension.uncertainty || t("opportunities.noUncertainty")}</dd></div>
+                  </dl>
+                </div>
+              ))}
+            </div>
+          </section>
           <section><h3 className="font-medium">{t("opportunities.why")}</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">{detailMatch.strengths.slice(0, 5).map((value) => <li key={value}>{value}</li>)}</ul></section>
           <section><h3 className="font-medium">{t("opportunities.review")}</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">{detailMatch.gaps.map((value) => <li key={value}>{value}</li>)}</ul></section>
           <section className="rounded-xl bg-[var(--surface-subtle)] p-4 text-sm"><strong>{t("opportunities.source")}</strong><p className="mt-2 text-[var(--text-secondary)]">{selected.sourceName} · {selected.verificationStatus}</p>{selected.lastVerifiedAt && <p>{formatDate(selected.lastVerifiedAt, language)}</p>}{selected.dataNotes && <p className="mt-2 text-[var(--text-secondary)]">{selected.dataNotes}</p>}</section>
-          <div className="flex flex-wrap gap-2"><Button onClick={() => toggleSavedOpportunity(selected.id)}>{activeWorkspace.savedOpportunityIds.includes(selected.id) ? t("opportunities.unsave") : t("opportunities.save")}</Button>{jobId ? <Button variant="secondary" onClick={() => addJobApplication(jobId)}>Add to applications</Button> : <Button variant="secondary" onClick={addSelectedToRoadmap}>Add to roadmap</Button>}{selected.sourceUrl && <a href={selected.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center px-3 text-sm font-medium text-[var(--accent)]">Open official source ↗</a>}</div>
+          <div className="flex flex-wrap gap-2"><Button onClick={() => toggleSavedOpportunity(selected.id)}>{activeWorkspace.savedOpportunityIds.includes(selected.id) ? t("opportunities.unsave") : t("opportunities.save")}</Button>{jobId ? <Button variant="secondary" onClick={() => addJobApplication(jobId)}>{t("opportunities.addApplications")}</Button> : <Button variant="secondary" onClick={addSelectedToRoadmap}>{t("opportunities.addRoadmap")}</Button>}{selected.sourceUrl && <a href={selected.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center px-3 text-sm font-medium text-[var(--accent)]">{t("opportunities.openSource")} ↗</a>}</div>
         </div>}
       </Dialog>
     </div>

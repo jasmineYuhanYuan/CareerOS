@@ -6,7 +6,7 @@ import { getProfileWorkspace, parseStoredState, validateState } from "@/lib/stor
 import { calculateOpportunityMatch } from "@/lib/opportunity-match";
 import { opportunities } from "@/data/opportunities";
 import { formatDate } from "@/i18n/format";
-import { getTranslation, missingChineseKeys } from "@/i18n";
+import { en, getTranslation, missingChineseKeys, zhCN } from "@/i18n";
 
 describe("profile-aware job filtering", () => {
   it("keeps chiropractic jobs out of Yuhan's relevant results", () => {
@@ -97,6 +97,7 @@ describe("Sprint 3 storage migration", () => {
 describe("typed localisation", () => {
   it("covers every English key in Chinese and formats locale-aware dates", () => {
     expect(missingChineseKeys()).toEqual([]);
+    expect(Object.keys(zhCN).sort()).toEqual(Object.keys(en).sort());
     expect(getTranslation("zh-CN", "nav.opportunities")).toBe("机会");
     expect(formatDate("2026-07-29", "en")).toContain("29");
     expect(formatDate("2026-07-29", "zh-CN")).toContain("2026");
@@ -104,6 +105,19 @@ describe("typed localisation", () => {
 });
 
 describe("transparent opportunity matching", () => {
+  it("returns every required match dimension with evidence and uncertainty fields", () => {
+    const result = calculateOpportunityMatch(opportunities[0], createSeedState().profiles[YUHAN_ID].profile);
+    expect(result.dimensions?.map((dimension) => dimension.name)).toEqual([
+      "Goal alignment",
+      "Discipline alignment",
+      "Skill overlap",
+      "Location alignment",
+      "Experience/project relevance",
+      "Eligibility confidence",
+      "Opportunity type preference",
+    ]);
+    expect(result.dimensions?.every((dimension) => Array.isArray(dimension.evidence) && typeof dimension.uncertainty === "string")).toBe(true);
+  });
   it("is deterministic, profile-aware and case-insensitive", () => {
     const state = createSeedState();
     const opportunity = { ...opportunities[0], skillTags: ["typescript"] };

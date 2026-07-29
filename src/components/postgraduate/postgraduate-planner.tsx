@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { programs, TOMMY_ID } from "@/data/seed";
 import { calculateProgramMatch } from "@/lib/match";
 import { useCareerOS } from "@/providers/careeros-provider";
+import { useLanguage } from "@/providers/language-provider";
 import type { PostgraduateApplication, PostgraduateProgram, PostgraduateStatus, ProgramDocument } from "@/types/domain";
 
 const statuses: PostgraduateStatus[] = ["Considering", "Researching", "Preparing", "Submitted", "Interview", "Offer", "Rejected", "Withdrawn"];
@@ -20,6 +21,7 @@ type StudyTab = (typeof tabs)[number];
 
 export function PostgraduatePlanner() {
   const { activeWorkspace, toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication } = useCareerOS();
+  const { t } = useLanguage();
   const [tab, setTab] = useState<StudyTab>("Discover programs");
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("All");
@@ -39,7 +41,7 @@ export function PostgraduatePlanner() {
   if (activeWorkspace.profile.id === TOMMY_ID) {
     return (
       <div className="page-enter">
-        <PageHeading eyebrow="Optional pathway" title="Study & continuing education" description="Another postgraduate degree is not assumed to be your current goal." />
+        <PageHeading eyebrow={t("study.optional")} title={t("study.continuing")} description={t("study.description")} />
         <Card title="Keep the focus on your clinical pathway">
           <p className="text-sm leading-7 text-[var(--text-secondary)]">Use your roadmap to track registration or eligibility preparation. Continuing-education planning can be added here later if it becomes relevant.</p>
         </Card>
@@ -49,7 +51,7 @@ export function PostgraduatePlanner() {
 
   return (
     <div className="page-enter">
-      <PageHeading eyebrow="Study planning" title="Study" description="Explore possible postgraduate directions in a calm planning space. Always confirm current requirements and deadlines with each university." />
+      <PageHeading eyebrow={t("study.eyebrow")} title={t("study.title")} description={t("study.description")} />
       <nav aria-label="Study sections" className="mb-7 flex gap-2 overflow-x-auto pb-1">
         {tabs.map((item) => <FilterChip key={item} active={tab === item} onClick={() => setTab(item)}>{item}</FilterChip>)}
       </nav>
@@ -72,7 +74,7 @@ export function PostgraduatePlanner() {
                     <p className="text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[var(--text-tertiary)]">{program.university}</p>
                     <h2 className="mt-2 break-words font-display text-xl font-medium tracking-[-0.03em]">{program.programName}</h2>
                     <p className="mt-2 text-sm text-[var(--text-secondary)]">{program.city}, {program.country} · {program.degreeLevel} · {program.intake}</p>
-                    <div className="mt-4 flex flex-wrap items-center gap-2"><StatusBadge status="positive">{calculateProgramMatch(program, activeWorkspace.profile)}% estimated fit</StatusBadge><Badge>Sample planning data</Badge><span className="text-[0.75rem] text-[var(--text-tertiary)]">Deadline {program.deadline}</span></div>
+                    <div className="mt-4 flex flex-wrap items-center gap-2"><StatusBadge status="positive">{calculateProgramMatch(program, activeWorkspace.profile)}% estimated fit</StatusBadge><Badge>{t("common.sampleNotice")}</Badge><span className="text-[0.75rem] text-[var(--text-tertiary)]">{t("common.syntheticDate")}: {program.deadline}</span></div>
                   </div>
                   <div className="flex flex-wrap gap-2 sm:w-44 sm:justify-end">
                     <Button size="sm" variant="secondary" onClick={() => setSelected(program)}>Details</Button>
@@ -83,7 +85,7 @@ export function PostgraduatePlanner() {
               );
             })}
           </div>
-          {visible.length === 0 && <p className="surface-card border-dashed p-10 text-center text-sm text-[var(--text-secondary)]">No saved programs match this view.</p>}
+          {visible.length === 0 && <p className="surface-card border-dashed p-10 text-center text-sm text-[var(--text-secondary)]">{t("study.empty")}</p>}
         </>
       )}
 

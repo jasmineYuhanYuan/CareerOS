@@ -31,6 +31,7 @@ interface CareerOSContextValue {
   storageError: string;
   setActiveProfileId: (id: string) => void;
   updateProfile: (profile: CareerProfile) => void;
+  upsertProfile: (profile: CareerProfile) => void;
   toggleSavedJob: (jobId: string) => void;
   addJobApplication: (jobId: string) => void;
   createApplication: (application: JobApplication) => void;
@@ -101,6 +102,31 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
   const updateProfile = useCallback((profile: CareerProfile) => {
     updateActive((workspace) => ({ ...workspace, profile }));
   }, [updateActive]);
+
+  const upsertProfile = useCallback((profile: CareerProfile) => {
+    setState((current) => {
+      const existing = current.profiles[profile.id];
+      const workspace: CareerOSState["profiles"][string] = existing
+        ? { ...existing, profile }
+        : {
+          profile,
+          savedJobIds: [],
+          applications: [],
+          savedProgramIds: [],
+          postgraduateApplications: [],
+          roadmapItems: [],
+          organisationNotes: {},
+          savedOpportunityIds: [],
+          contacts: [],
+          documents: [],
+        };
+      return {
+        ...current,
+        activeProfileId: profile.id,
+        profiles: { ...current.profiles, [profile.id]: workspace },
+      };
+    });
+  }, []);
 
   const toggleSavedJob = useCallback((jobId: string) => {
     updateActive((workspace) => ({
@@ -262,13 +288,13 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
 
   const activeWorkspace = state.profiles[state.activeProfileId];
   const value = useMemo<CareerOSContextValue>(() => ({
-    state, activeWorkspace, hydrated, storageError, setActiveProfileId, updateProfile,
+    state, activeWorkspace, hydrated, storageError, setActiveProfileId, updateProfile, upsertProfile,
     toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication,
     toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication,
     upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage,
     updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact,
     upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData,
-  }), [state, activeWorkspace, hydrated, storageError, setActiveProfileId, updateProfile, toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication, toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication, upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage, updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact, upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData]);
+  }), [state, activeWorkspace, hydrated, storageError, setActiveProfileId, updateProfile, upsertProfile, toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication, toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication, upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage, updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact, upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData]);
 
   return (
     <CareerOSContext.Provider value={value}>

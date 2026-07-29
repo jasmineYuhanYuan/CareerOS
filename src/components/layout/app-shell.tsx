@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { MobileHeader } from "./mobile-header";
 import { MobileNavigation } from "./mobile-navigation";
 import { Sidebar } from "./sidebar";
+import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -12,6 +13,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto min-h-screen w-full max-w-[1280px] px-4 py-7 sm:px-8 lg:px-12 lg:py-12">{children}</div>
       </main>
       <MobileNavigation />
+      <OnboardingFlow />
     </div>
   );
 }

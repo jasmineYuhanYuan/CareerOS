@@ -4,6 +4,7 @@ import type { AppLocale } from "@/types/domain";
 import type { TranslationKey } from "./types";
 
 export type { TranslationKey };
+export { en, zhCN };
 
 export function getTranslation(locale: AppLocale, key: TranslationKey, values?: Record<string, string | number>): string {
   const translated = locale === "zh-CN" ? zhCN[key] : en[key];
