@@ -27,7 +27,7 @@ describe("verified career datasets", () => {
   });
 
   it("never presents stale job-board leads as current chiropractic vacancies", () => {
-    expect(chiropracticVacancies.every((record) => record.verificationStatus === "Archived")).toBe(true);
-    expect(chiropracticVacancies.some((record) => record.verificationStatus === "Current")).toBe(false);
+    expect(chiropracticVacancies.every((record) => record.vacancyStatus === "Archived")).toBe(true);
+    expect(chiropracticVacancies.some((record) => record.vacancyStatus === "Current")).toBe(false);
   });
 });

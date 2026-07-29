@@ -7,12 +7,14 @@ import type {
 
 const reviewed = {
   verified: true,
+  lastVerified: "2026-07-29",
   lastUpdated: "2026-07-29",
   nextReviewDate: "2026-08-29",
   country: "Australia",
   language: "en" as const,
   region: "ACT and nearby NSW",
   confidence: "High" as const,
+  verificationStatus: "Verified" as const,
 };
 
 const boardStandards = "https://www.chiropracticboard.gov.au/Registration-Standards.aspx";
@@ -121,7 +123,7 @@ function employer(
     source: `${organisationName} official website`,
     officialUrl: website,
     sourceType: "Official",
-    verificationStatus: "Official employer website",
+    directoryStatus: "Official employer website",
     dataNotes: "Employer directory record only. The official website did not provide a verified current vacancy or graduate-mentoring claim at review time.",
   };
 }
@@ -145,10 +147,11 @@ const archivedBase = {
   officialUrl: seekSearchUrl,
   sourceType: "Job board" as const,
   confidence: "Medium" as const,
+  verificationStatus: "Archived" as const,
+  vacancyStatus: "Archived" as const,
   publicationDate: null,
   closingDate: null,
   applicationUrl: seekSearchUrl,
-  verificationStatus: "Archived" as const,
   registrationRequirement: null,
   experienceRequirement: null,
   mentoringSupport: null,

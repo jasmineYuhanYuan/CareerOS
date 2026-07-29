@@ -1,18 +1,21 @@
-export type VerifiedSourceType = "Official" | "Government" | "University" | "Professional body" | "Job board" | "Community";
+export type VerifiedSourceType = "Official" | "Government" | "University" | "Employer" | "Professional body" | "Job board" | "Community";
 export type DataConfidence = "High" | "Medium" | "Low";
 export type DatasetLanguage = "en" | "zh-CN";
+export type DataVerificationStatus = "Verified" | "Partially verified" | "Archived" | "Unknown";
 
 export interface SourceMetadata {
   source: string;
   officialUrl: string;
   sourceType: VerifiedSourceType;
   verified: boolean;
+  lastVerified: string;
   lastUpdated: string;
   nextReviewDate: string;
   country: string;
   language: DatasetLanguage;
   region: string;
   confidence: DataConfidence;
+  verificationStatus: DataVerificationStatus;
 }
 
 export interface VerifiedCareerOpportunity extends SourceMetadata {
@@ -134,7 +137,7 @@ export interface VerifiedEmployerDirectoryRecord extends SourceMetadata {
   multidisciplinaryStatus: string;
   graduateSupport: string | null;
   contactInformation: string;
-  verificationStatus: "Official employer website";
+  directoryStatus: "Official employer website";
   dataNotes: string;
 }
 
@@ -147,7 +150,7 @@ export interface ChiropracticVacancyRecord extends SourceMetadata {
   publicationDate: string | null;
   closingDate: string | null;
   applicationUrl: string;
-  verificationStatus: VacancyVerificationStatus;
+  vacancyStatus: VacancyVerificationStatus;
   registrationRequirement: string | null;
   experienceRequirement: string | null;
   mentoringSupport: string | null;

@@ -2,11 +2,13 @@ import type { VerifiedCareerOpportunity } from "./types";
 
 const reviewed = {
   verified: true,
+  lastVerified: "2026-07-29",
   lastUpdated: "2026-07-29",
   nextReviewDate: "2026-08-29",
   language: "en" as const,
   region: "Australia",
   confidence: "High" as const,
+  verificationStatus: "Verified" as const,
 };
 
 export const verifiedCareerOpportunities: VerifiedCareerOpportunity[] = [

@@ -2,6 +2,7 @@ import type { VerifiedProgramme } from "./types";
 
 const base = {
   verified: true,
+  lastVerified: "2026-07-29",
   lastUpdated: "2026-07-29",
   nextReviewDate: "2026-10-29",
   country: "Australia",
@@ -9,6 +10,7 @@ const base = {
   region: "Australia",
   confidence: "High" as const,
   sourceType: "University" as const,
+  verificationStatus: "Verified" as const,
 };
 
 export const verifiedProgrammes: VerifiedProgramme[] = [

@@ -28,7 +28,7 @@ export function ChiropracticCareerHub() {
     () => activeWorkspace.roadmapItems.filter((item) => item.category === "Registration"),
     [activeWorkspace.roadmapItems],
   );
-  const currentVacancies = chiropracticVacancies.filter((record) => record.verificationStatus === "Current");
+  const currentVacancies = chiropracticVacancies.filter((record) => record.vacancyStatus === "Current");
 
   const tabs: Array<{ id: View; en: string; zh: string }> = [
     { id: "registration", en: "Registration", zh: "注册路径" },
@@ -124,7 +124,7 @@ export function ChiropracticCareerHub() {
       {view === "vacancies" && (
         <div className="space-y-6">
           {currentVacancies.length === 0 && <div className="surface-card border-dashed p-8 text-center"><h2 className="font-display text-xl font-medium">{zh ? "目前没有已核验的在招职位" : "No currently verified vacancies"}</h2><p className="mt-2 text-sm text-[var(--text-secondary)]">{zh ? "过期搜索结果不会显示为正在招聘。" : "Stale search results are never presented as open roles."}</p></div>}
-          <section><h2 className="mb-4 font-display text-xl font-medium">{zh ? "已归档线索" : "Archived leads"}</h2><div className="grid gap-4 md:grid-cols-2">{chiropracticVacancies.map((vacancy) => <article key={vacancy.id} className="surface-card p-5 opacity-80"><StatusBadge>{vacancy.verificationStatus}</StatusBadge><h3 className="mt-4 font-medium">{vacancy.exactTitle}</h3><p className="mt-1 text-sm text-[var(--text-secondary)]">{vacancy.employer} · {vacancy.location}</p><p className="mt-3 text-xs leading-5 text-[var(--text-tertiary)]">{vacancy.dataNotes}</p></article>)}</div></section>
+          <section><h2 className="mb-4 font-display text-xl font-medium">{zh ? "已归档线索" : "Archived leads"}</h2><div className="grid gap-4 md:grid-cols-2">{chiropracticVacancies.map((vacancy) => <article key={vacancy.id} className="surface-card p-5 opacity-80"><StatusBadge>{vacancy.vacancyStatus}</StatusBadge><h3 className="mt-4 font-medium">{vacancy.exactTitle}</h3><p className="mt-1 text-sm text-[var(--text-secondary)]">{vacancy.employer} · {vacancy.location}</p><p className="mt-3 text-xs leading-5 text-[var(--text-tertiary)]">{vacancy.dataNotes}</p></article>)}</div></section>
         </div>
       )}
 
