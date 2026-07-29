@@ -7,6 +7,7 @@ import { Field, Input, Select, Textarea } from "@/components/ui/form-field";
 import { PageHeading } from "@/components/ui/page-heading";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useCareerOS } from "@/providers/careeros-provider";
+import { useLanguage } from "@/providers/language-provider";
 import type { ApplicationStatus, JobApplication } from "@/types/domain";
 
 const statuses: ApplicationStatus[] = ["Saved", "Preparing", "Applied", "Assessment", "Interview", "Offer", "Rejected", "Withdrawn"];
@@ -25,6 +26,7 @@ function emptyApplication(profileId: string): JobApplication {
 
 export function ApplicationTracker() {
   const { activeWorkspace, createApplication, updateApplication, deleteApplication } = useCareerOS();
+  const { t } = useLanguage();
   const [view, setView] = useState<"Board" | "List">("Board");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -39,7 +41,7 @@ export function ApplicationTracker() {
   function save(event: FormEvent) {
     event.preventDefault();
     if (!draft?.organisationName.trim() || !draft.jobTitle.trim()) {
-      setError("Organisation and role title are required.");
+      setError(t("applications.validation"));
       return;
     }
     const previous = activeWorkspace.applications.find((item) => item.id === draft.id);
@@ -56,7 +58,7 @@ export function ApplicationTracker() {
   }
 
   const editor = (
-    <Dialog open={draft !== null} title={draft?.id ? "Edit application" : "Create application"} description="This record belongs only to the active profile." onClose={() => setDraft(null)}>
+    <Dialog open={draft !== null} title={draft?.id ? t("applications.edit") : t("applications.create")} description={t("applications.description")} onClose={() => setDraft(null)}>
       {draft && <form onSubmit={save} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Organisation" error={error}><Input required value={draft.organisationName} onChange={(e) => setDraft({ ...draft, organisationName: e.target.value })} /></Field>
@@ -70,8 +72,8 @@ export function ApplicationTracker() {
         <Field label="Notes"><Textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
         {draft.id && <section><h3 className="text-sm font-medium">Activity history</h3><ol className="mt-2 divide-y divide-[var(--border)]">{draft.activity.slice().reverse().map((event) => <li key={event.id} className="flex justify-between gap-3 py-3 text-xs"><span className="font-medium">{event.label}</span><time dateTime={event.occurredAt} className="text-[var(--text-tertiary)]">{new Date(event.occurredAt).toLocaleDateString("en-AU")}</time></li>)}</ol></section>}
         <div className="flex flex-wrap justify-between gap-2">
-          {draft.id ? <Button type="button" variant="danger" onClick={() => { if (window.confirm("Delete this application?")) { deleteApplication(draft.id); setDraft(null); } }}>Delete</Button> : <span />}
-          <div className="flex gap-2"><Button type="button" variant="secondary" onClick={() => setDraft(null)}>Cancel</Button><Button type="submit">Save application</Button></div>
+          {draft.id ? <Button type="button" variant="danger" onClick={() => { if (window.confirm(t("applications.deleteConfirm"))) { deleteApplication(draft.id); setDraft(null); } }}>{t("common.delete")}</Button> : <span />}
+          <div className="flex gap-2"><Button type="button" variant="secondary" onClick={() => setDraft(null)}>{t("common.cancel")}</Button><Button type="submit">{t("applications.save")}</Button></div>
         </div>
       </form>}
     </Dialog>
@@ -80,8 +82,8 @@ export function ApplicationTracker() {
   return (
     <div className="page-enter">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-        <PageHeading eyebrow="Profile-specific tracker" title="Applications" description="Move opportunities through a reliable status workflow and keep the next action visible." />
-        <Button onClick={() => setDraft(emptyApplication(activeWorkspace.profile.id))}>Create application</Button>
+        <PageHeading eyebrow={t("applications.eyebrow")} title={t("applications.title")} description={t("applications.description")} />
+        <Button onClick={() => setDraft(emptyApplication(activeWorkspace.profile.id))}>{t("applications.create")}</Button>
       </div>
       <div className="surface-card mb-7 flex flex-col gap-3 p-4 sm:flex-row">
         <label className="flex-1"><span className="sr-only">Search applications</span><Input type="search" placeholder="Search organisation or role" value={query} onChange={(e) => setQuery(e.target.value)} /></label>
@@ -91,7 +93,7 @@ export function ApplicationTracker() {
         </div>
       </div>
 
-      {visible.length === 0 ? <p className="surface-card border-dashed p-10 text-center text-sm text-[var(--text-secondary)]">No applications match this view. Add one manually or from Jobs.</p> : view === "List" ? (
+      {visible.length === 0 ? <p className="surface-card border-dashed p-10 text-center text-sm text-[var(--text-secondary)]">{t("applications.empty")}</p> : view === "List" ? (
         <div className="hidden overflow-x-auto rounded-[1.35rem] border border-[var(--border)] bg-[var(--surface)] md:block">
           <table className="w-full min-w-[700px] text-left text-sm"><thead className="bg-[var(--surface-subtle)] text-xs uppercase tracking-wide text-[var(--text-secondary)]"><tr><th className="p-4">Role</th><th className="p-4">Status</th><th className="p-4">Next action</th><th className="p-4">Date</th><th className="p-4"><span className="sr-only">Actions</span></th></tr></thead><tbody className="divide-y divide-[var(--border)]">{visible.map((application) => <tr key={application.id}><td className="p-4"><strong className="font-medium">{application.jobTitle}</strong><span className="mt-1 block text-xs text-[var(--text-secondary)]">{application.organisationName}</span></td><td className="p-4"><StatusBadge status="active">{application.status}</StatusBadge></td><td className="p-4">{application.nextAction || "Not set"}</td><td className="p-4">{application.nextActionDate || "—"}</td><td className="p-4"><Button size="sm" variant="secondary" onClick={() => setDraft(structuredClone(application))}>Edit</Button></td></tr>)}</tbody></table>
         </div>

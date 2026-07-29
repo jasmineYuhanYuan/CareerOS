@@ -11,10 +11,12 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { jobs } from "@/data/seed";
 import { calculateJobMatch, isJobSuitableForProfile } from "@/lib/match";
 import { useCareerOS } from "@/providers/careeros-provider";
+import { useLanguage } from "@/providers/language-provider";
 import type { Job } from "@/types/domain";
 
 export function JobBrowser() {
   const { activeWorkspace, toggleSavedJob, addJobApplication } = useCareerOS();
+  const { language, t } = useLanguage();
   const profile = activeWorkspace.profile;
   const [query, setQuery] = useState("");
   const [roleFamily, setRoleFamily] = useState("All");
@@ -63,19 +65,19 @@ export function JobBrowser() {
 
   return (
     <div className="page-enter">
-      <PageHeading eyebrow="Curated sample opportunities" title="Find your next direction" description={`Explore roles shaped around ${profile.preferredName || profile.displayName}’s goals. Sample records are not verified active vacancies.`} />
+      <PageHeading eyebrow={t("jobs.eyebrow")} title={t("jobs.title")} description={t("jobs.description", { name: profile.preferredName || profile.displayName })} />
       <div className="mb-4 flex gap-3">
         <label className="flex-1"><span className="sr-only">Search jobs</span><Input type="search" placeholder="Search roles or organisations" value={query} onChange={(e) => setQuery(e.target.value)} className="!mt-0 !bg-[var(--surface)]" /></label>
-        <Button className="md:hidden" variant="secondary" onClick={() => setFiltersOpen(true)}>Filters</Button>
+        <Button className="md:hidden" variant="secondary" onClick={() => setFiltersOpen(true)}>{t("common.filters")}</Button>
       </div>
       <section aria-label="Job filters" className="surface-card mb-7 hidden p-5 md:block">{controls}</section>
       <div className="mb-5 flex items-center justify-between gap-4">
         <p className="text-sm text-[var(--text-secondary)]" aria-live="polite">{visibleJobs.length} curated sample {visibleJobs.length === 1 ? "role" : "roles"}</p>
-        <StatusBadge status="active">Sample planning data</StatusBadge>
+        <StatusBadge status="active">{t("common.sampleNotice")}</StatusBadge>
       </div>
 
       {visibleJobs.length === 0 ? (
-        <p className="surface-card border-dashed p-10 text-center text-sm text-[var(--text-secondary)]">No jobs match these filters. Broaden the search to see more sample roles.</p>
+        <p className="surface-card border-dashed p-10 text-center text-sm text-[var(--text-secondary)]">{t("jobs.empty")}</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {visibleJobs.map((job) => {
@@ -85,13 +87,13 @@ export function JobBrowser() {
             return (
               <article key={job.id} className="interactive-lift surface-card relative flex min-w-0 flex-col p-5 sm:p-6">
                 <button type="button" aria-label={saved ? `Unsave ${job.title}` : `Save ${job.title}`} aria-pressed={saved} onClick={() => toggleSavedJob(job.id)} className={`absolute right-4 top-4 grid size-11 place-items-center rounded-full text-lg ${saved ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-[var(--text-tertiary)] hover:bg-[var(--surface-subtle)]"}`}>{saved ? "●" : "○"}</button>
-                <p className="pr-12 text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[var(--text-tertiary)]">{job.companyName}</p>
+                <p className="pr-12 text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[var(--text-tertiary)]">{job.companyName}</p><div className="mt-2 flex flex-wrap gap-2"><Badge>{t("common.sampleNotice")}</Badge><Badge>{t("common.unverifiedVacancy")}</Badge></div>
                 <h2 className="mt-3 pr-8 font-display text-xl font-medium leading-snug tracking-[-0.03em]">{job.title}</h2>
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">{job.location} · {job.remoteType} · {job.employmentType}</p>
                 <div className="mt-4 flex flex-wrap gap-2">{job.tags.slice(0, 2).map((tag) => <Badge key={tag}>{tag}</Badge>)}</div>
                 <div className="mt-6 flex items-end justify-between gap-3 border-t border-[var(--border)] pt-4">
-                  <div><StatusBadge status="positive">{result.score}% estimated match</StatusBadge><p className="mt-2 text-[0.75rem] text-[var(--text-tertiary)]">Deadline {new Date(`${job.deadline}T00:00:00`).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}</p></div>
-                  <Button size="sm" onClick={() => setSelected(job)}>View role</Button>
+                  <div><StatusBadge status="positive">{result.score}% estimated match</StatusBadge><p className="mt-2 text-[0.75rem] text-[var(--text-tertiary)]">{t("common.syntheticDate")}: {new Date(`${job.deadline}T00:00:00`).toLocaleDateString(language === "zh-CN" ? "zh-CN" : "en-AU", { day: "numeric", month: "short" })}</p></div>
+                  <Button size="sm" onClick={() => setSelected(job)}>{t("jobs.view")}</Button>
                 </div>
                 {applied && <p className="mt-3 text-[0.78rem] font-medium text-[var(--success)]">Added to applications</p>}
               </article>
@@ -107,7 +109,7 @@ export function JobBrowser() {
 
       <Dialog open={selected !== null} title={selected?.title ?? "Job details"} description={selected ? `${selected.companyName} · Sample planning record` : undefined} onClose={() => setSelected(null)}>
         {selected && match && <div className="space-y-6">
-          <div className="flex flex-wrap gap-2"><StatusBadge status="active">Sample—not a verified vacancy</StatusBadge><StatusBadge status="positive">{match.score}% estimated profile match</StatusBadge></div>
+          <div className="flex flex-wrap gap-2"><StatusBadge status="active">{t("common.sampleNotice")}</StatusBadge><StatusBadge status="neutral">{t("common.unverifiedVacancy")}</StatusBadge><Badge>{t("common.syntheticDate")}</Badge><StatusBadge status="positive">{match.score}% estimated profile match</StatusBadge></div>
           <section><h3 className="font-medium">Overview</h3><p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{selected.description}</p></section>
           <div className="grid gap-6 sm:grid-cols-2">
             <section><h3 className="font-medium">Requirements</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">{selected.requirements.map((item) => <li key={item}>{item}</li>)}</ul></section>
@@ -116,7 +118,7 @@ export function JobBrowser() {
             <section><h3 className="font-medium text-[var(--warning)]">Areas to investigate</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">{match.gaps.map((item) => <li key={item}>{item}</li>)}</ul></section>
           </div>
           <p className="rounded-xl bg-[var(--surface-subtle)] p-4 text-xs leading-5 text-[var(--text-secondary)]">{match.explanation}</p>
-          <div className="flex flex-wrap justify-end gap-2"><Button variant="secondary" onClick={() => toggleSavedJob(selected.id)}>{activeWorkspace.savedJobIds.includes(selected.id) ? "Unsave" : "Save role"}</Button><Button onClick={() => addJobApplication(selected.id)}>{activeWorkspace.applications.some((item) => item.jobId === selected.id) ? "In applications" : "Add to applications"}</Button></div>
+          <div className="flex flex-wrap justify-end gap-2"><Button variant="secondary" onClick={() => toggleSavedJob(selected.id)}>{activeWorkspace.savedJobIds.includes(selected.id) ? t("jobs.unsave") : t("jobs.save")}</Button><Button onClick={() => addJobApplication(selected.id)}>{activeWorkspace.applications.some((item) => item.jobId === selected.id) ? t("jobs.inApplications") : t("jobs.addApplication")}</Button></div>
         </div>}
       </Dialog>
     </div>

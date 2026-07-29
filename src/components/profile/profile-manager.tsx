@@ -7,6 +7,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/form-field";
 import { SectionHeader } from "@/components/ui/section-header";
 import { useCareerOS } from "@/providers/careeros-provider";
+import { useLanguage } from "@/providers/language-provider";
 import type { CareerProfile, Project, Skill } from "@/types/domain";
 
 function splitValues(value: string): string[] {
@@ -18,6 +19,7 @@ const emptyProject: Project = { id: "", name: "", role: "", description: "", com
 
 export function ProfileManager() {
   const { activeWorkspace, updateProfile } = useCareerOS();
+  const { t } = useLanguage();
   const profile = activeWorkspace.profile;
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState(profile);
@@ -32,14 +34,14 @@ export function ProfileManager() {
   }
 
   function closeProfileEditor() {
-    if (JSON.stringify(draft) !== JSON.stringify(profile) && !window.confirm("Discard unsaved profile changes?")) return;
+    if (JSON.stringify(draft) !== JSON.stringify(profile) && !window.confirm(t("profile.discardConfirm"))) return;
     setEditOpen(false);
   }
 
   function saveProfile(event: FormEvent) {
     event.preventDefault();
     if (!draft.displayName.trim() || !draft.university.trim() || !draft.location.trim()) {
-      setProfileError("Name, university and location are required.");
+      setProfileError(t("profile.validation"));
       return;
     }
     updateProfile({ ...draft, displayName: draft.displayName.trim() });
@@ -88,13 +90,13 @@ export function ProfileManager() {
             </p>
           </div>
         </div>
-        <Button onClick={openProfileEditor}>Edit profile</Button>
+        <Button onClick={openProfileEditor}>{t("profile.edit")}</Button>
       </header>
 
       <div className="grid gap-x-12 lg:grid-cols-[1.35fr_.65fr]">
         <main>
           <section className="border-b border-[var(--border)] py-9">
-            <SectionHeader title="About" />
+            <SectionHeader title={t("profile.about")} />
             <p className="max-w-3xl text-[0.95rem] leading-7 text-[var(--text-secondary)]">{profile.experienceSummary}</p>
             <dl className="mt-6 grid gap-5 text-sm sm:grid-cols-2">
               {[
@@ -114,7 +116,7 @@ export function ProfileManager() {
           )}
 
           <section className="border-b border-[var(--border)] py-9">
-            <SectionHeader title="Skills" action={<Button size="sm" variant="secondary" onClick={() => setSkillDraft(emptySkill)}>Add skill</Button>} />
+            <SectionHeader title={t("profile.skills")} action={<Button size="sm" variant="secondary" onClick={() => setSkillDraft(emptySkill)}>{t("profile.addSkill")}</Button>} />
             {profile.skills.length === 0 ? <p className="text-sm text-[var(--text-secondary)]">Add skills with evidence to improve transparent matching.</p> : (
               <ul className="divide-y divide-[var(--border)]">{profile.skills.map((skill) => (
                 <li key={skill.id} className="flex flex-col gap-3 py-4 first:pt-0 sm:flex-row sm:items-center">
@@ -126,7 +128,7 @@ export function ProfileManager() {
           </section>
 
           <section className="py-9">
-            <SectionHeader title={profile.discipline === "Chiropractic" ? "Clinical experience & projects" : "Projects"} action={<Button size="sm" variant="secondary" onClick={() => setProjectDraft(emptyProject)}>Add project</Button>} />
+            <SectionHeader title={t("profile.projects")} action={<Button size="sm" variant="secondary" onClick={() => setProjectDraft(emptyProject)}>{t("profile.addProject")}</Button>} />
             {profile.projects.length === 0 ? <p className="text-sm text-[var(--text-secondary)]">No projects or clinical experience records yet. Add one when ready.</p> : (
               <div className="space-y-4">{profile.projects.map((project) => (
                 <article key={project.id} className="interactive-lift surface-card p-5 sm:p-6">
@@ -145,21 +147,21 @@ export function ProfileManager() {
 
         <aside>
           <section className="border-b border-[var(--border)] py-9">
-            <SectionHeader title="Goals" />
+            <SectionHeader title={t("profile.goals")} />
             <ul className="flex flex-wrap gap-2">{profile.careerGoals.map((goal) => <li key={goal}><Badge>{goal}</Badge></li>)}</ul>
           </section>
           <section className="border-b border-[var(--border)] py-9">
-            <SectionHeader title="Experience" />
+            <SectionHeader title={t("profile.experience")} />
             <p className="text-sm leading-6 text-[var(--text-secondary)]">{profile.experienceSummary}</p>
           </section>
           <section className="py-9">
-            <SectionHeader title="Links" />
+            <SectionHeader title={t("profile.links")} />
             {linkItems.length === 0 ? <p className="text-sm text-[var(--text-secondary)]">No links added yet.</p> : <ul className="space-y-2">{linkItems.map(([label, url]) => <li key={label}><a href={url} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-between border-b border-[var(--border)] text-sm font-medium"><span>{label}</span><span className="text-[var(--accent)]">↗</span></a></li>)}</ul>}
           </section>
         </aside>
       </div>
 
-      <Dialog open={editOpen} title="Edit profile" description="Changes apply immediately across your local CareerOS workspace." onClose={closeProfileEditor}>
+      <Dialog open={editOpen} title={t("profile.edit")} description={t("settings.description")} onClose={closeProfileEditor}>
         <form onSubmit={saveProfile} className="grid gap-4 sm:grid-cols-2">
           <Field label="Display name" error={profileError}><Input required value={draft.displayName} onChange={(e) => setDraft({ ...draft, displayName: e.target.value })} /></Field>
           <Field label="Preferred name"><Input value={draft.preferredName} onChange={(e) => setDraft({ ...draft, preferredName: e.target.value })} /></Field>
