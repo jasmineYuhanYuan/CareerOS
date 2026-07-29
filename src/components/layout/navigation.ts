@@ -9,11 +9,13 @@ export interface NavigationItem {
 
 export const navigationItems: readonly NavigationItem[] = [
   { label: "Home", href: "/", shortLabel: "Home", icon: "home" },
+  { label: "Action Centre", href: "/action-centre", shortLabel: "Actions", icon: "clipboard" },
   { label: "Jobs", href: "/jobs", shortLabel: "Jobs", icon: "briefcase" },
   { label: "Opportunities", href: "/opportunities", shortLabel: "Explore", icon: "sparkles" },
   { label: "Intelligence", href: "/intelligence", shortLabel: "Intel", icon: "book" },
   { label: "Knowledge Graph", href: "/knowledge-graph", shortLabel: "Graph", icon: "route" },
   { label: "Gap Analysis", href: "/gap-analysis", shortLabel: "Gaps", icon: "sparkles" },
+  { label: "Recruitment Calendar", href: "/recruitment-calendar", shortLabel: "Calendar", icon: "route" },
   { label: "Applications", href: "/applications", shortLabel: "Apply", icon: "clipboard" },
   { label: "Study", href: "/postgraduate", shortLabel: "Study", icon: "book" },
   { label: "Companies", href: "/companies", shortLabel: "Companies", icon: "building" },
@@ -26,11 +28,13 @@ export const navigationItems: readonly NavigationItem[] = [
 
 const chineseLabels: Record<string, { label: string; shortLabel: string }> = {
   "/": { label: "首页", shortLabel: "首页" },
+  "/action-centre": { label: "行动中心", shortLabel: "行动" },
   "/jobs": { label: "职位", shortLabel: "职位" },
   "/opportunities": { label: "机会", shortLabel: "探索" },
   "/intelligence": { label: "职业知识", shortLabel: "知识" },
   "/knowledge-graph": { label: "知识图谱", shortLabel: "图谱" },
   "/gap-analysis": { label: "差距分析", shortLabel: "差距" },
+  "/recruitment-calendar": { label: "招聘日历", shortLabel: "日历" },
   "/applications": { label: "申请", shortLabel: "申请" },
   "/postgraduate": { label: "深造", shortLabel: "深造" },
   "/companies": { label: "公司与诊所", shortLabel: "公司" },

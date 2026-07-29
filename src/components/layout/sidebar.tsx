@@ -8,7 +8,7 @@ import { LanguageToggle } from "./language-toggle";
 import { getNavigationLabel, navigationItems } from "./navigation";
 import { Icon } from "@/components/ui/icon";
 
-const primaryHrefs = ["/", "/jobs", "/opportunities", "/applications", "/postgraduate"];
+const primaryHrefs = ["/", "/action-centre", "/jobs", "/opportunities", "/applications", "/postgraduate"];
 
 function NavList({ items, pathname, language }: { items: typeof navigationItems; pathname: string; language: "en" | "zh-CN" }) {
   return (

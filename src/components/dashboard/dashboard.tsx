@@ -12,6 +12,9 @@ import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
 import { formatDate, formatPercentage } from "@/i18n/format";
 import type { TranslationKey } from "@/i18n";
+import { TOMMY_ID } from "@/data/seed";
+import { analyseCareerGap, gapTargets } from "@/lib/gap-analysis/engine";
+import { canberraChiropracticEmployers } from "@/data/verified/chiropractic";
 
 function greetingKey(): "dashboard.morning" | "dashboard.afternoon" | "dashboard.evening" {
   const hour = new Date().getHours();
@@ -24,10 +27,14 @@ export function Dashboard() {
   const { activeWorkspace, upsertRoadmapItem } = useCareerOS();
   const { language, t } = useLanguage();
   const profile = activeWorkspace.profile;
+  const isTommy = profile.id === TOMMY_ID;
+  const profileTarget = gapTargets.find((target) => target.profileIds.includes(profile.id));
+  const targetGap = analyseCareerGap(activeWorkspace, profileTarget?.id ?? gapTargets[0].id);
   const deadlines = aggregateDeadlines(activeWorkspace).slice(0, 7);
   const today = new Date().toISOString().slice(0, 10);
   const relevant = opportunities
     .filter((item) => item.suitableProfileIds.includes(profile.id) && !item.archived)
+    .filter((item) => isTommy ? false : ["Australia", "China"].includes(item.country))
     .sort((a, b) => calculateOpportunityMatch(b, profile).score - calculateOpportunityMatch(a, profile).score);
   const recommended = [
     ...relevant.filter((item) => ["Job", "Internship", "Graduate program"].includes(item.category)).slice(0, 3),
@@ -42,7 +49,7 @@ export function Dashboard() {
   const metrics = [
     { label: t("dashboard.activeApplications"), hint: t("dashboard.metricApplicationsHint"), value: activeWorkspace.applications.filter((item) => !["Rejected", "Withdrawn"].includes(item.status)).length, href: "/applications" },
     { label: t("dashboard.upcomingDeadlines"), hint: t("dashboard.metricDeadlinesHint"), value: deadlines.length, href: "/roadmap" },
-    { label: t("dashboard.interviews"), hint: t("dashboard.metricInterviewsHint"), value: activeWorkspace.applications.filter((item) => item.status === "Interview").length, href: "/applications" },
+    { label: t("dashboard.interviews"), hint: t("dashboard.metricInterviewsHint"), value: activeWorkspace.applications.reduce((count, item) => count + (item.sessions ?? []).filter((session) => ["Invited", "Planned"].includes(session.status)).length, 0), href: "/applications" },
     { label: t("dashboard.savedOpportunities"), hint: t("dashboard.metricSavedHint"), value: activeWorkspace.savedJobIds.length + activeWorkspace.savedOpportunityIds.length, href: "/opportunities" },
   ];
   const readinessLabels: Record<(typeof checks)[number]["key"], TranslationKey> = {
@@ -67,10 +74,12 @@ export function Dashboard() {
 
     <section className="my-10"><SectionHeader title={t("dashboard.overview")} /><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{metrics.map((metric) => <Link key={metric.label} href={metric.href} className="interactive-lift surface-card p-5"><strong className="font-display text-2xl font-medium">{metric.value}</strong><span className="mt-2 block text-sm font-medium">{metric.label}</span><span className="mt-1 block text-xs text-[var(--text-secondary)]">{metric.hint}</span></Link>)}</div></section>
 
-    <section className="mb-10"><SectionHeader eyebrow={t("dashboard.curated")} title={t("dashboard.recommended")} action={<Link href="/opportunities" className="text-sm font-medium text-[var(--accent)]">{t("common.viewAll")}</Link>} /><div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 xl:grid-cols-5">{recommended.map((item) => {
+    <section className="mb-10"><SectionHeader eyebrow={language === "zh-CN" ? "个人行动工作区" : "Profile-aware workspace"} title={isTommy ? (language === "zh-CN" ? "Tommy 的注册与诊所行动" : "Tommy's registration and clinic actions") : (language === "zh-CN" ? "Yuhan 的澳洲／中国科技行动" : "Yuhan's Australia / China technology actions")} action={<Link href="/action-centre" className="text-sm font-medium text-[var(--accent)]">{language === "zh-CN" ? "打开行动中心" : "Open action centre"}</Link>} /><div className="grid gap-4 sm:grid-cols-3"><div className="surface-card p-5"><strong className="font-display text-3xl text-[var(--accent)]">{targetGap.overallReadinessScore}%</strong><span className="mt-2 block font-medium">{targetGap.targetName}</span><span className="mt-1 block text-xs text-[var(--text-secondary)]">{targetGap.blockers.length} {language === "zh-CN" ? "个阻碍／确认项" : "blockers / confirmations"}</span></div><div className="surface-card p-5"><strong className="font-display text-3xl">{isTommy ? canberraChiropracticEmployers.length : recommended.filter((item) => item.country === "Australia").length}</strong><span className="mt-2 block font-medium">{isTommy ? (language === "zh-CN" ? "已核验诊所目录" : "Verified clinic directory") : (language === "zh-CN" ? "澳洲目标" : "Australian targets")}</span><span className="mt-1 block text-xs text-[var(--text-secondary)]">{isTommy ? (language === "zh-CN" ? "不代表正在招聘" : "Not current-vacancy claims") : (language === "zh-CN" ? "仅官方来源" : "Official sources only")}</span></div><div className="surface-card p-5"><strong className="font-display text-3xl">{isTommy ? activeWorkspace.contacts.length : recommended.filter((item) => item.country === "China").length}</strong><span className="mt-2 block font-medium">{isTommy ? (language === "zh-CN" ? "联系与跟进" : "Outreach contacts") : (language === "zh-CN" ? "中国目标" : "China targets")}</span><span className="mt-1 block text-xs text-[var(--text-secondary)]">{language === "zh-CN" ? "按当前档案隔离" : "Isolated to this profile"}</span></div></div></section>
+
+    {!isTommy && <section className="mb-10"><SectionHeader eyebrow={t("dashboard.curated")} title={t("dashboard.recommended")} action={<Link href="/opportunities" className="text-sm font-medium text-[var(--accent)]">{t("common.viewAll")}</Link>} /><div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 xl:grid-cols-5">{recommended.map((item) => {
       const match = calculateOpportunityMatch(item, profile);
       return <article key={item.id} className="interactive-lift surface-card flex min-w-[82vw] snap-start flex-col p-5 sm:min-w-0"><div className="flex items-center justify-between gap-2 text-xs text-[var(--text-secondary)]"><span>{item.organisationName}</span><span>{item.category}</span></div><h3 className="mt-3 font-display text-lg font-medium leading-snug">{item.title}</h3><p className="mt-2 text-sm text-[var(--text-secondary)]">{item.locationText}</p><div className="mt-4 flex items-center justify-between"><StatusBadge status={match.confidence === "Limited information" ? "neutral" : "positive"}>{formatPercentage(match.score, language)}</StatusBadge>{item.deadline && <time className="text-xs text-[var(--text-tertiary)]">{formatDate(item.deadline, language, { day: "numeric", month: "short" })}</time>}</div><p className="mt-4 line-clamp-2 text-xs leading-5 text-[var(--text-secondary)]"><strong>{t("dashboard.topReason")}:</strong> {match.strengths[0] ?? t("dashboard.limitedConfidence")}</p><Link href="/opportunities" className="mt-auto pt-4 text-sm font-medium text-[var(--accent)]">{t("opportunities.details")} →</Link></article>;
-    })}</div></section>
+    })}</div></section>}
 
     <div className="grid gap-8 xl:grid-cols-2">
       <section><SectionHeader title={t("dashboard.profileReadiness")} /><div className="surface-card p-6"><div className="flex items-center justify-between gap-4"><strong>{t("dashboard.readinessComplete", { complete: completedChecks, total: checks.length })}</strong><span className="text-sm text-[var(--text-secondary)]">{progress}%</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--surface-subtle)]"><div className="progress-reveal h-full rounded-full bg-[var(--accent)]" style={{ width: `${progress}%` }} /></div><p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">{t("dashboard.readinessIntro")}</p><ul className="mt-5 grid gap-2 sm:grid-cols-2">{checks.map((check) => <li key={check.key} className="flex items-center gap-2 text-sm"><span className={`grid size-5 place-items-center rounded-full ${check.complete ? "bg-[var(--success-soft)] text-[var(--success)]" : "border border-[var(--border-strong)] text-transparent"}`}><Icon name="check" className="size-3" /></span><span className={check.complete ? "" : "text-[var(--text-secondary)]"}>{t(readinessLabels[check.key])}</span></li>)}</ul><Link href="/profiles" className="mt-5 inline-flex min-h-11 items-center text-sm font-medium text-[var(--accent)]">{t("dashboard.editProfile")} →</Link></div></section>
