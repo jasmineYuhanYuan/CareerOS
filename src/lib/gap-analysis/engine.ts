@@ -52,7 +52,7 @@ function requirement(
 
 function hasDocument(workspace: ProfileWorkspace, matcher: RegExp): boolean {
   return workspace.documents.some(
-    (document) => document.status !== "Archived"
+    (document) => document.status === "Ready"
       && matcher.test(`${document.name} ${document.documentType}`),
   );
 }
