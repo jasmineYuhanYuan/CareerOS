@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { Input, Select } from "@/components/ui/form-field";
 import { PageHeading } from "@/components/ui/page-heading";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -46,6 +47,7 @@ export function IntelligenceSearch() {
               <div><dt className="text-[var(--text-tertiary)]">{zh ? "置信度" : "Confidence"}</dt><dd className="mt-1">{record.confidence}</dd></div>
             </dl>
             <a href={record.officialUrl} target="_blank" rel="noreferrer" className="mt-auto inline-flex min-h-11 items-end pt-4 text-sm font-medium text-[var(--accent)]">{zh ? "打开来源" : "Open source"} ↗</a>
+            <Link href={`/knowledge-graph?entity=${encodeURIComponent(record.id)}`} className="inline-flex min-h-11 items-center text-sm font-medium text-[var(--accent)]">{zh ? "查看知识连接" : "View knowledge connections"} →</Link>
           </article>)}
         </div>
       )}
