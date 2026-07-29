@@ -1,5 +1,6 @@
 import type {
   CareerOSState,
+  CareerDocumentRecord,
   CareerProfile,
   Job,
   Organisation,
@@ -192,15 +193,15 @@ export const programs: PostgraduateProgram[] = verifiedProgrammes.map((record) =
   confidence: record.confidence,
 }));
 
-function roadmap(profileId: string, items: string[], category: RoadmapItem["category"]): RoadmapItem[] {
+function roadmap(profileId: string, items: string[], category: RoadmapItem["category"], withPlanningDates = true): RoadmapItem[] {
   return items.map((title, index) => ({
     id: `${profileId}-r${index + 1}`,
     profileId,
     title,
     description: "",
     category,
-    targetDate: `2026-${String(8 + Math.floor(index / 2)).padStart(2, "0")}-${String(10 + index).padStart(2, "0")}`,
-    status: index === 0 ? "In progress" : "Not started",
+    targetDate: withPlanningDates ? `2026-${String(8 + Math.floor(index / 2)).padStart(2, "0")}-${String(10 + index).padStart(2, "0")}` : "",
+    status: "Not started",
     priority: index < 2 ? "High" : "Medium",
   }));
 }
@@ -209,21 +210,21 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
   const items = profile.id === YUHAN_ID
     ? ["Complete CareerOS MVP", "Continue WearAgain iteration", "Finalise English résumé", "Finalise Chinese résumé", "Build SQL fundamentals", "Research postgraduate pathways", "Apply for suitable internships"]
     : [
-      "Confirm qualification completion",
-      "Review Ahpra graduate-registration guidance",
-      "Prepare identity and qualification documents",
-      "Confirm English-language evidence requirements",
-      "Review professional indemnity insurance obligations",
-      "Review CPD and recency-of-practice standards",
-      "Submit or track registration application",
-      "Confirm registration status on the practitioner register",
-      "Prepare clinical résumé and cover letter",
-      "Prepare referee list and clinical case examples",
-      "Build a Canberra clinic target list",
-      "Review current verified vacancies",
-      "Submit targeted applications and schedule follow-ups",
-      "Prepare chiropractic interview questions",
-      "Plan induction, mentoring and professional development",
+      "Stage 1 — Confirm qualification completion",
+      "Stage 1 — Review Ahpra graduate-registration guidance",
+      "Stage 1 — Prepare identity and qualification documents",
+      "Stage 1 — Confirm English-language evidence requirements",
+      "Stage 1 — Review professional indemnity insurance obligations",
+      "Stage 1 — Review CPD and recency-of-practice standards",
+      "Stage 1 — Submit or track registration application",
+      "Stage 1 — Confirm registration status on the practitioner register",
+      "Stage 2 — Prepare clinical résumé and cover letters",
+      "Stage 2 — Prepare referee list and clinical case examples",
+      "Stage 3 — Build a Canberra clinic target list",
+      "Stage 3 — Review current verified vacancies",
+      "Stage 3 — Submit targeted applications and schedule follow-ups",
+      "Stage 3 — Prepare chiropractic interview questions",
+      "Stage 4 — Plan induction, mentoring and professional development",
     ];
   const base: ProfileWorkspace = {
     profile,
@@ -231,7 +232,7 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
     applications: [],
     savedProgramIds: [],
     postgraduateApplications: [],
-    roadmapItems: roadmap(profile.id, items, profile.id === TOMMY_ID ? "Registration" : "Project"),
+    roadmapItems: roadmap(profile.id, items, profile.id === TOMMY_ID ? "Registration" : "Project", profile.id !== TOMMY_ID),
     organisationNotes: {},
     savedOpportunityIds: profile.id === YUHAN_ID ? ["opportunity-atlassian-au-intern-program"] : [],
     contacts: [],
@@ -247,6 +248,27 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
       lastUpdatedAt: "2026-07-28T09:00:00.000Z",
       activity: [{ id: "demo-activity-yuhan", type: "created", label: "Application created", occurredAt: "2026-07-28T09:00:00.000Z" }],
     }];
+  } else {
+    const templates: Array<[string, CareerDocumentRecord["documentType"]]> = [
+      ["Chiropractic résumé", "English résumé"],
+      ["General clinical cover letter", "Cover letter"],
+      ["Canberra clinic cover letter", "Cover letter"],
+      ["Registration evidence/status record", "Other"],
+      ["Academic transcript", "Academic transcript"],
+      ["Clinical-placement summary", "Other"],
+      ["Referee list", "Other"],
+      ["Professional-development record", "Other"],
+    ];
+    base.documents = templates.map(([name, documentType], index) => ({
+      id: `tommy-document-template-${index + 1}`,
+      profileId: TOMMY_ID,
+      documentType,
+      name,
+      version: "Template",
+      updatedAt: "2026-07-29",
+      notes: "Empty template. Add only verified personal details.",
+      status: "Draft",
+    }));
   }
   return base;
 }

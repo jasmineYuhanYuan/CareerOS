@@ -7,6 +7,7 @@ import { useLanguage } from "@/providers/language-provider";
 import { LanguageToggle } from "./language-toggle";
 
 const secondaryLinks = [
+  { href: "/chiropractic", label: "Chiropractic career hub", zhLabel: "脊椎按摩职业中心", description: "Registration, ACT employers and career readiness", zhDescription: "注册路径、ACT 雇主和职业准备" },
   { href: "/opportunities", label: "Opportunities", zhLabel: "机会", description: "Explore jobs, events and professional pathways", zhDescription: "探索职位、活动和职业发展机会" },
   { href: "/companies", label: "Companies", zhLabel: "公司与诊所", description: "Research organisations and clinics", zhDescription: "研究公司、机构与诊所" },
   { href: "/roadmap", label: "Roadmap", zhLabel: "职业规划", description: "Plan milestones and next steps", zhDescription: "规划里程碑和下一步行动" },
