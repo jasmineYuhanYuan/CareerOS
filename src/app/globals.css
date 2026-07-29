@@ -12,13 +12,14 @@
   --accent: #3b82f6;
   --accent-hover: #2563eb;
   --accent-soft: #dbeafe;
-  --success: #25785d;
-  --success-soft: #e9f3ef;
-  --warning: #94601f;
-  --warning-soft: #fbf3e4;
-  --danger: #b23c35;
-  --danger-soft: #fbeceb;
-  --focus: rgba(239, 91, 50, 0.32);
+  --success: #15803d;
+  --success-soft: #dcfce7;
+  --warning: #b45309;
+  --warning-soft: #fef3c7;
+  --danger: #b91c1c;
+  --danger-soft: #fee2e2;
+  --focus: rgba(59, 130, 246, 0.4);
+  --shadow-hover: 0 10px 30px rgba(15, 23, 42, .07);
 }
 
 html[data-theme="dark"] {
@@ -88,14 +89,20 @@ a { color: inherit; text-decoration: none; }
 .surface-card { border: 1px solid var(--border); background: var(--surface); border-radius: 22px; }
 .subtle-text { color: var(--text-secondary); }
 .tertiary-text { color: var(--text-tertiary); }
-.eyebrow { color: var(--accent); font-size: .72rem; font-weight: 650; letter-spacing: .15em; text-transform: uppercase; }
+.eyebrow { color: var(--accent); font-size: .75rem; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; }
+html[lang="zh-CN"] .eyebrow { letter-spacing: 0; text-transform: none; }
 .section-divider { border-color: var(--border); }
-.interactive-lift { transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }
-.interactive-lift:hover { border-color: var(--border-strong); box-shadow: 0 8px 24px rgba(26, 28, 24, .055); transform: translateY(-1px); }
+.interactive-lift { transition: border-color 180ms ease-out, box-shadow 180ms ease-out, transform 180ms ease-out; }
+.interactive-lift:hover { border-color: var(--border-strong); box-shadow: var(--shadow-hover); transform: translateY(-1px); }
+button, a, input, select, textarea { transition-duration: 180ms; transition-timing-function: ease-out; }
+button:active:not(:disabled) { transform: scale(.985); }
+.progress-reveal { transform-origin: left; }
 
 @media (prefers-reduced-motion: no-preference) {
   .page-enter { animation: page-enter 190ms ease-out both; }
+  .progress-reveal { animation: progress-reveal 420ms ease-out both; }
   @keyframes page-enter { from { opacity: 0; transform: translateY(4px); } }
+  @keyframes progress-reveal { from { transform: scaleX(0); } }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
