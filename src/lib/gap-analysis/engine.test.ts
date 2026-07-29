@@ -6,8 +6,8 @@ describe("explainable gap analysis", () => {
   const seed = createSeedState();
 
   it("keeps Tommy's major eligibility facts unknown and caps the score", () => {
-    const result = analyseCareerGap(seed.profiles[TOMMY_ID], "target-graduate-chiropractor");
-    expect(result.targetName).toBe("Graduate Chiropractor");
+    const result = analyseCareerGap(seed.profiles[TOMMY_ID], "occupation:chiropractor");
+    expect(result.targetName).toContain("Chiropractor");
     expect(result.overallReadinessScore).toBeLessThanOrEqual(64);
     expect(result.unknownRequirements.map((item) => item.id)).toEqual(expect.arrayContaining([
       "qualification", "registration", "work-eligibility", "english-evidence",
@@ -18,18 +18,27 @@ describe("explainable gap analysis", () => {
   });
 
   it("does not invent Tommy's placement, techniques, patient experience or referees", () => {
-    const result = analyseCareerGap(seed.profiles[TOMMY_ID], "target-chiropractor");
+    const result = analyseCareerGap(seed.profiles[TOMMY_ID], "occupation:chiropractor");
     expect(result.unknownRequirements.find((item) => item.id === "placement-summary")).toBeTruthy();
     expect(result.missingRequirements.find((item) => item.id === "referees")).toBeTruthy();
   });
 
-  it("preserves Yuhan work rights, graduation and internship experience as unknown", () => {
-    const result = analyseCareerGap(seed.profiles[YUHAN_ID], "target-software-internship");
+  it("analyses an exact Atlassian target and preserves eligibility unknowns", () => {
+    const result = analyseCareerGap(seed.profiles[YUHAN_ID], "opportunity:atlassian-au-intern-program");
+    expect(result.targetName).toContain("Atlassian");
     expect(result.unknownRequirements.map((item) => item.id)).toEqual(expect.arrayContaining([
-      "study-timing", "work-eligibility", "internship",
+      "work-eligibility", "graduation-window",
     ]));
-    expect(result.matchedRequirements.map((item) => item.id)).toContain("technical-evidence");
+    expect(result.matchedRequirements.map((item) => item.id)).toContain("target-lifecycle");
+    expect(result.missingRequirements.map((item) => item.id)).toContain("application-materials");
     expect(result.overallReadinessScore).toBeLessThanOrEqual(64);
+  });
+
+  it("blocks an exact archived opportunity rather than presenting a generic score", () => {
+    const result = analyseCareerGap(seed.profiles[YUHAN_ID], "opportunity:bytedance-2026-campus-programme-archived");
+    expect(result.targetName).toContain("ByteDance");
+    expect(result.blockers.find((item) => item.id === "target-lifecycle")?.status).toBe("blocked");
+    expect(result.overallReadinessScore).toBeLessThanOrEqual(45);
   });
 
   it("raises confidence without hiding a required failure", () => {
@@ -37,14 +46,14 @@ describe("explainable gap analysis", () => {
     workspace.profile.expectedGraduationDate = "2026-12-01";
     workspace.profile.registrationStatus = "Blocked";
     workspace.profile.workEligibility = "Confirmed";
-    const result = analyseCareerGap(workspace, "target-graduate-chiropractor");
+    const result = analyseCareerGap(workspace, "occupation:chiropractor");
     expect(result.overallReadinessScore).toBeLessThanOrEqual(45);
     expect(result.blockers.find((item) => item.id === "registration")?.status).toBe("blocked");
     expect(result.scoreExplanation.join(" ")).toContain("capped");
   });
 
   it("creates actions without invented due dates", () => {
-    const result = analyseCareerGap(seed.profiles[TOMMY_ID], "target-graduate-chiropractor");
+    const result = analyseCareerGap(seed.profiles[TOMMY_ID], "occupation:chiropractor");
     expect(result.recommendedNextActions.length).toBeGreaterThan(0);
     expect(result.recommendedNextActions.every((action) => action.dueDate === "")).toBe(true);
   });

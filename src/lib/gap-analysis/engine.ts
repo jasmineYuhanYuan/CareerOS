@@ -1,5 +1,8 @@
 import { TOMMY_ID, YUHAN_ID } from "@/data/seed";
 import { australianChiropracticRegistration } from "@/data/verified/chiropractic";
+import { verifiedCareerOpportunities } from "@/data/verified/opportunities";
+import { verifiedProgrammes } from "@/data/verified/programmes";
+import { deriveOpportunityLifecycle } from "@/lib/opportunity-lifecycle";
 import type { ProfileWorkspace } from "@/types/domain";
 import type {
   CareerRequirement,
@@ -13,16 +16,16 @@ export interface GapTarget {
   id: string;
   name: string;
   profileIds: string[];
+  kind: "occupation" | "opportunity" | "programme";
+  sourceId: string;
 }
 
 export const gapTargets: GapTarget[] = [
-  { id: "target-graduate-chiropractor", name: "Graduate Chiropractor", profileIds: [TOMMY_ID] },
-  { id: "target-associate-chiropractor", name: "Associate Chiropractor", profileIds: [TOMMY_ID] },
-  { id: "target-chiropractor", name: "Chiropractor", profileIds: [TOMMY_ID] },
-  { id: "target-software-internship", name: "Software Engineering internship", profileIds: [YUHAN_ID] },
-  { id: "target-technical-product-internship", name: "Technical Product internship", profileIds: [YUHAN_ID] },
-  { id: "target-ai-product-internship", name: "AI Product internship", profileIds: [YUHAN_ID] },
-  { id: "target-graduate-technology", name: "Graduate Technology role", profileIds: [YUHAN_ID] },
+  { id: "occupation:chiropractor", name: "Chiropractor — Australian registration pathway", profileIds: [TOMMY_ID], kind: "occupation", sourceId: australianChiropracticRegistration.id },
+  ...verifiedCareerOpportunities
+    .filter((record) => ["Atlassian", "Baidu", "ByteDance"].includes(record.company))
+    .map((record): GapTarget => ({ id: `opportunity:${record.id}`, name: `${record.company} — ${record.title}`, profileIds: [YUHAN_ID], kind: "opportunity", sourceId: record.id })),
+  ...verifiedProgrammes.map((record): GapTarget => ({ id: `programme:${record.id}`, name: `${record.university} — ${record.degree}`, profileIds: [YUHAN_ID], kind: "programme", sourceId: record.id })),
 ];
 
 const weights: Record<RequirementImportance, number> = {
@@ -100,6 +103,50 @@ function yuhanRequirements(workspace: ProfileWorkspace): CareerRequirement[] {
   ];
 }
 
+function opportunityRequirements(workspace: ProfileWorkspace, sourceId: string): CareerRequirement[] {
+  const record = verifiedCareerOpportunities.find((item) => item.id === sourceId);
+  if (!record) return [];
+  const profile = workspace.profile;
+  const source = [`source:${record.id}`];
+  const lifecycle = deriveOpportunityLifecycle(record, "2026-07-30");
+  const workRights = eligibilityStatus(profile.workEligibility);
+  const profileEvidence = new Set([
+    ...profile.skills.map((skill) => skill.name.toLowerCase()),
+    ...profile.projects.flatMap((project) => project.competencies.map((skill) => skill.toLowerCase())),
+  ]);
+  const requirements: CareerRequirement[] = [
+    requirement("target-lifecycle", "Opportunity is accepting or preparing for applications", "required", ["Closed", "Expired", "Archived"].includes(lifecycle) ? "blocked" : lifecycle === "Verification required" ? "unknown" : "confirmed", `Verified lifecycle: ${lifecycle}.`, source),
+    requirement("work-eligibility", "Work eligibility for this employer and location", "required", workRights, workRights === "unknown" ? "Work eligibility is not stored and the source does not establish individual eligibility." : profile.workEligibility, source),
+    requirement("graduation-window", "Published graduation or study-stage eligibility", "required", profile.expectedGraduationDate ? "confirmed" : "unknown", profile.expectedGraduationDate ? `Expected graduation is recorded as ${profile.expectedGraduationDate}; compare it with: ${record.eligibility.join("; ")}.` : `Graduation date is unknown. Published eligibility: ${record.eligibility.join("; ")}.`, source),
+    requirement("preferred-location", `${record.city} location preference`, "helpful", profile.preferredCities.some((city) => record.city.toLowerCase().includes(city.toLowerCase())) ? "confirmed" : "missing", `${record.city} is the published location.`, source),
+    requirement("application-materials", "Ready résumé and application materials", "strongly-preferred", hasDocument(workspace, /résumé|resume|cv/i) ? "confirmed" : "missing", "Only a document marked Ready or Submitted counts as prepared.", source),
+  ];
+  for (const skill of record.skills) {
+    const matched = Array.from(profileEvidence).some((evidence) =>
+      evidence.includes(skill.toLowerCase()) || skill.toLowerCase().includes(evidence),
+    );
+    requirements.push(requirement(`skill-${skill.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, skill, "strongly-preferred", matched ? "confirmed" : "missing", matched ? "Stored profile evidence overlaps this published skill." : "No matching stored skill or project evidence.", source));
+  }
+  if (/citizen/i.test(record.eligibility.join(" "))) {
+    requirements.push(requirement("citizenship", "Australian citizenship", "required", /australian citizen/i.test(profile.workEligibility) ? "confirmed" : /not.*citizen/i.test(profile.workEligibility) ? "blocked" : "unknown", "The official opportunity source explicitly requires Australian citizenship.", source));
+  }
+  return requirements;
+}
+
+function programmeRequirements(workspace: ProfileWorkspace, sourceId: string): CareerRequirement[] {
+  const record = verifiedProgrammes.find((item) => item.id === sourceId);
+  if (!record) return [];
+  const profile = workspace.profile;
+  const source = [`source:${record.id}`];
+  return [
+    requirement("prior-degree", "Published prior-degree entry requirement", "required", profile.degree ? "unknown" : "missing", profile.degree ? `${profile.degree} is stored, but equivalence and weighted-average requirements still require university assessment.` : "No prior degree is stored.", source),
+    requirement("academic-threshold", "Academic average or pathway requirement", "required", "unknown", record.entryRequirements.join("; "), source),
+    requirement("english-requirement", "English-language requirement", "required", "unknown", record.ielts ?? "The official course page did not publish a complete IELTS value in this dataset.", source),
+    requirement("programme-location", `${record.city} study location`, "helpful", profile.preferredCities.some((city) => record.city.toLowerCase().includes(city.toLowerCase())) ? "confirmed" : "missing", `${record.city} is the verified programme location.`, source),
+    requirement("application-deadline", "Current application deadline", "informational", record.deadline ? "confirmed" : "unknown", record.deadline ?? "No current deadline is verified.", source),
+  ];
+}
+
 function actionFor(item: CareerRequirement): GapAction {
   const verification = item.status === "unknown";
   return {
@@ -124,9 +171,13 @@ export function analyseCareerGap(
   const target = gapTargets.find((item) => item.id === targetId)
     ?? gapTargets.find((item) => item.profileIds.includes(workspace.profile.id))
     ?? gapTargets[0];
-  const requirements = workspace.profile.id === TOMMY_ID
-    ? tommyRequirements(workspace)
-    : yuhanRequirements(workspace);
+  const requirements = target.kind === "opportunity"
+    ? opportunityRequirements(workspace, target.sourceId)
+    : target.kind === "programme"
+      ? programmeRequirements(workspace, target.sourceId)
+      : workspace.profile.id === TOMMY_ID
+        ? tommyRequirements(workspace)
+        : yuhanRequirements(workspace);
   const totalWeight = requirements.reduce((sum, item) => sum + weights[item.importance], 0);
   const earnedWeight = requirements.reduce(
     (sum, item) => sum + weights[item.importance] * valueByStatus[item.status],
