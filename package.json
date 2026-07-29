@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run"
-    ,"validate:data": "vitest run src/data/opportunities.test.ts src/data/verified/verified-data.test.ts src/data/intelligence/intelligence.test.ts",
+    ,"validate:data": "vitest run src/data/opportunities.test.ts src/data/verified/verified-data.test.ts src/data/intelligence/intelligence.test.ts src/data/graph/graph.test.ts src/lib/gap-analysis/engine.test.ts",
     "verify": "npm run test && npm run lint && npm run build && npm run validate:data"
   },
   "dependencies": {
