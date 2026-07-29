@@ -2,6 +2,44 @@ import { jobs, programs } from "@/data/seed";
 import { opportunities } from "@/data/opportunities";
 import type { DashboardDeadline, ProfileWorkspace } from "@/types/domain";
 
+export interface ReadinessItem {
+  key: "education" | "goals" | "locations" | "skills" | "projects" | "eligibility" | "links" | "resume";
+  complete: boolean;
+}
+
+export interface RecentActivity {
+  id: string;
+  label: string;
+  occurredAt: string;
+  applicationTitle: string;
+}
+
+export function profileReadiness(workspace: ProfileWorkspace): ReadinessItem[] {
+  const profile = workspace.profile;
+  return [
+    { key: "education", complete: Boolean(profile.university && profile.degree && profile.discipline) },
+    { key: "goals", complete: profile.careerGoals.length > 0 },
+    { key: "locations", complete: profile.preferredCities.length > 0 },
+    { key: "skills", complete: profile.skills.length > 0 },
+    { key: "projects", complete: profile.projects.length > 0 },
+    { key: "eligibility", complete: Boolean(profile.workEligibility && !profile.workEligibility.toLowerCase().includes("confirm")) },
+    { key: "links", complete: Boolean(profile.linkedInUrl || profile.githubUrl || profile.portfolioUrl) },
+    { key: "resume", complete: workspace.documents.some((item) => item.documentType.includes("résumé")) },
+  ];
+}
+
+export function recentApplicationActivity(workspace: ProfileWorkspace, limit = 6): RecentActivity[] {
+  return workspace.applications
+    .flatMap((application) => application.activity.map((event) => ({
+      id: `${application.id}-${event.id}`,
+      label: event.label,
+      occurredAt: event.occurredAt,
+      applicationTitle: application.jobTitle,
+    })))
+    .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
+    .slice(0, limit);
+}
+
 export function aggregateDeadlines(workspace: ProfileWorkspace): DashboardDeadline[] {
   const deadlines: DashboardDeadline[] = [];
   for (const jobId of workspace.savedJobIds) {
