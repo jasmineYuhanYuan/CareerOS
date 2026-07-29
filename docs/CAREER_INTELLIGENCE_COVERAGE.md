@@ -8,7 +8,7 @@ Branch: `feature/career-intelligence-platform`
 | Dataset | Records | Current scope |
 | --- | ---: | --- |
 | Companies and employer directories | 19 | 7 Australian technology employers, 4 China technology employers and 8 Canberra-area chiropractic clinics |
-| Early-career opportunity records | 9 | Official programme-level records; not nine individual live vacancies |
+| Early-career opportunity records | 12 | Nine Australian programme-level records, two current Baidu role records and one archived ByteDance programme |
 | Universities | 5 | Australian postgraduate programmes |
 | Interview records | 5 | Four chiropractic professional-guidance questions and Xero’s official graduate process |
 | Online assessment records | 1 | Xero’s official HackerRank assessment description |
@@ -29,7 +29,8 @@ records.
   programmes, visas, regulated healthcare and Canberra chiropractic employers.
 - Global: four certification records.
 - China: official campus-recruitment portals for ByteDance, Tencent, Alibaba and
-  Baidu.
+  Baidu, including two currently listed Baidu 2027 roles and one explicitly
+  archived ByteDance 2026 programme.
 - Singapore, United States and other requested university regions are not yet
   covered by this branch.
 

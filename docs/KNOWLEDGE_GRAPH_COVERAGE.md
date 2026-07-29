@@ -4,15 +4,15 @@ Last verified: 29 July 2026
 
 ## Current graph
 
-- 69 canonical entities
-- 33 verified relationships
-- 63 traceable source records
+- 72 canonical entities
+- 35 verified relationships
+- 66 traceable source records
 
 Relationship coverage:
 
 | Relationship type | Count | Coverage |
 | --- | ---: | --- |
-| hires-for | 9 | Verified early-career programme records |
+| hires-for | 11 | Verified non-archived early-career programme and role records |
 | regulated-by | 13 | 12 healthcare professions plus chiropractic registration administration |
 | located-in | 8 | Canberra-area chiropractic employer-directory locations |
 | requires-registration | 1 | Australian chiropractor pathway |
