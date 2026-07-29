@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/providers/language-provider";
 import { getNavigationLabel, navigationItems } from "./navigation";
+import { Icon } from "@/components/ui/icon";
 
 const primaryItems = navigationItems.filter((item) =>
   ["/", "/jobs", "/applications", "/postgraduate", "/profiles"].includes(item.href),
@@ -20,7 +21,7 @@ export function MobileNavigation() {
           return (
             <li key={item.href}>
               <Link href={item.href} aria-current={active ? "page" : undefined} className={`flex min-h-[3.35rem] flex-col items-center justify-center gap-0.5 rounded-xl text-[0.66rem] font-medium ${active ? "text-[var(--accent)]" : "text-[var(--text-tertiary)]"}`}>
-                <span aria-hidden="true" className="text-[1.05rem]">{item.icon}</span>
+                <Icon name={item.icon} className="size-[1.1rem]" />
                 {getNavigationLabel(item, language, true)}
               </Link>
             </li>
