@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { opportunities, validateOpportunities } from "@/data/opportunities";
+import { deriveOpportunityLifecycle } from "@/lib/opportunity-lifecycle";
 
 describe("curated opportunity data", () => {
   it("passes runtime validation with unique IDs and valid organisation references", () => {
@@ -17,5 +18,13 @@ describe("curated opportunity data", () => {
   it("rejects duplicate IDs", () => {
     const result = validateOpportunities([opportunities[0], opportunities[0]]);
     expect(result.errors.join(" ")).toContain("Duplicate opportunity ID");
+  });
+
+  it("keeps inactive records archived and exposes verified China targets", () => {
+    const archived = opportunities.filter((item) => item.archived);
+    expect(archived.map((item) => item.organisationName)).toContain("ByteDance");
+    expect(archived.every((item) => deriveOpportunityLifecycle(item, "2026-07-30") === "Archived")).toBe(true);
+    const activeChina = opportunities.filter((item) => item.country === "China" && ["Open", "Closing soon", "Upcoming"].includes(deriveOpportunityLifecycle(item, "2026-07-30")));
+    expect(activeChina.map((item) => item.organisationName)).toEqual(["Baidu", "Baidu"]);
   });
 });

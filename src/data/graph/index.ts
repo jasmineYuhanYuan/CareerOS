@@ -45,7 +45,10 @@ const baseEntities: KnowledgeEntity[] = intelligenceSearchIndex.map((record) => 
   type: record.id === xeroHackerRankAssessment.id ? "oa-process" : entityType(record.domain),
   name: record.title,
   description: record.summary,
-  aliases: aliasesFor(record.title),
+  aliases: [
+    ...aliasesFor(record.title),
+    ...record.title.split("/").map((part) => part.trim()).filter((part) => part && part !== record.title),
+  ],
   sourceIds: [`source:${record.id}`],
   verificationStatus: record.verificationStatus as KnowledgeEntity["verificationStatus"],
   confidence: record.confidence as KnowledgeEntity["confidence"],
@@ -146,7 +149,7 @@ function relationship(
   };
 }
 
-const earlyCareerRelationships = verifiedCareerOpportunities.flatMap((record) => {
+const earlyCareerRelationships = verifiedCareerOpportunities.filter((record) => record.verificationStatus !== "Archived").flatMap((record) => {
   const company = resolveEntity(record.company, knowledgeEntities);
   if (!company) return [];
   return [

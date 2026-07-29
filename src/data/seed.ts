@@ -77,6 +77,8 @@ const verifiedOrganisationSources: Record<string, string> = {
   "Digital Transformation Agency": "https://www.dta.gov.au/join-our-team/graduate-program",
   "Australian Signals Directorate": "https://www.asd.gov.au/careers/im-starting-my-career",
   "Australian Government": "https://content.apsjobs.gov.au/career-pathways/graduate-programs",
+  Baidu: "https://talent.baidu.com/jobs/campus",
+  ByteDance: "https://jobs.bytedance.com/campus/",
 };
 
 export const organisations: Organisation[] = [
@@ -97,6 +99,8 @@ export const organisations: Organisation[] = [
   ["digital-transformation-agency", "Digital Transformation Agency", "Other", "Australian Government digital services", "Canberra", ["Data", "Software Engineering", "Technical Product"]],
   ["australian-signals-directorate", "Australian Signals Directorate", "Other", "National security and cyber security", "Canberra", ["AI", "Data", "Software Engineering"]],
   ["australian-government", "Australian Government", "Other", "Public sector", "Canberra", ["Data", "Technical Product"]],
+  ["baidu", "Baidu", "Technology company", "Internet and AI technology", "Beijing", ["AI", "Product", "Software Engineering"]],
+  ["bytedance", "ByteDance", "Technology company", "Internet technology", "Beijing", ["AI", "Product", "Software Engineering"]],
 ].map(([id, name, organisationType, sector, city, roleFamilies]) => ({
   id: id as string,
   name: name as string,
@@ -126,6 +130,8 @@ const organisationIdByName: Record<string, string> = {
   "Digital Transformation Agency": "digital-transformation-agency",
   "Australian Signals Directorate": "australian-signals-directorate",
   "Australian Government": "australian-government",
+  Baidu: "baidu",
+  ByteDance: "bytedance",
 };
 
 export const jobs: Job[] = verifiedCareerOpportunities.map((record) => ({
@@ -148,7 +154,7 @@ export const jobs: Job[] = verifiedCareerOpportunities.map((record) => ({
   postedDate: record.lastUpdated,
   deadline: record.deadline ?? "",
   sourceUrl: record.officialUrl,
-  suitableProfileIds: record.company === "Atlassian" ? [YUHAN_ID] : [],
+  suitableProfileIds: ["Atlassian", "Baidu", "ByteDance"].includes(record.company) ? [YUHAN_ID] : [],
   tags: [record.earlyCareerType, record.applicationStage],
   salaryText: record.salary ?? undefined,
   sampleData: false,

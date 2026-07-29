@@ -22,14 +22,20 @@ export type OrganisationType =
   | "University"
   | "Other";
 export type ApplicationStatus =
-  | "Saved"
+  | "Interested"
+  | "Researching"
   | "Preparing"
+  | "Ready to apply"
   | "Applied"
-  | "Assessment"
-  | "Interview"
+  | "OA invited"
+  | "OA completed"
+  | "Interview invited"
+  | "Interviewing"
+  | "Reference check"
   | "Offer"
   | "Rejected"
-  | "Withdrawn";
+  | "Withdrawn"
+  | "Archived";
 export type PostgraduateStatus =
   | "Considering"
   | "Researching"
@@ -57,7 +63,31 @@ export type VerificationStatus = "Sample" | "Unverified" | "Official source" | "
 export type SourceType = "Seed" | "Official" | "Government" | "University" | "Employer" | "Professional body" | "Job board" | "Community" | "User";
 export type RelationshipType = "Recruiter" | "Hiring manager" | "University contact" | "Lecturer" | "Alumni" | "Mentor" | "Clinic owner" | "Professional contact" | "Other";
 export type CareerDocumentType = "English résumé" | "Chinese résumé" | "Cover letter" | "Portfolio" | "Academic transcript" | "Personal statement" | "Recommendation materials" | "Other";
-export type CareerDocumentStatus = "Draft" | "Ready" | "Needs update" | "Archived";
+export type CareerDocumentStatus = "Missing" | "Draft" | "Review needed" | "Ready" | "Submitted" | "Outdated" | "Not applicable";
+export type OpportunityLifecycle = "Open" | "Upcoming" | "Closing soon" | "Closed" | "Expired" | "Archived" | "Verification required";
+export type ApplicationMaterialStatus = CareerDocumentStatus;
+export type InterviewSessionType = "Interview" | "Online assessment";
+export type InterviewSessionStatus = "Planned" | "Invited" | "Completed" | "Cancelled";
+
+export interface ApplicationMaterial {
+  id: string;
+  label: string;
+  status: ApplicationMaterialStatus;
+  documentId?: string;
+  notes: string;
+}
+
+export interface InterviewAssessmentSession {
+  id: string;
+  type: InterviewSessionType;
+  provider: string;
+  stage: string;
+  scheduledAt: string;
+  durationMinutes: number | null;
+  status: InterviewSessionStatus;
+  preparationNotes: string;
+  outcomeNotes: string;
+}
 
 export interface Skill {
   id: string;
@@ -177,6 +207,8 @@ export interface JobApplication {
   notes: string;
   lastUpdatedAt: string;
   activity: ActivityEvent[];
+  materials?: ApplicationMaterial[];
+  sessions?: InterviewAssessmentSession[];
 }
 
 export type ProgramDocument =
@@ -269,6 +301,7 @@ export interface Opportunity {
   salaryText?: string;
   sampleData: boolean;
   archived: boolean;
+  applicationStage?: string;
 }
 
 export interface CareerContact {

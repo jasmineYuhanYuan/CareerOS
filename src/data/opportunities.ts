@@ -1,4 +1,5 @@
 import { jobs, organisations } from "@/data/seed";
+import { verifiedCareerOpportunities } from "@/data/verified/opportunities";
 import type { Opportunity, OpportunityCategory, VerificationStatus } from "@/types/domain";
 
 export const opportunityCategories: OpportunityCategory[] = [
@@ -30,7 +31,7 @@ const jobOpportunities: Opportunity[] = jobs.map((job) => ({
   sourceUrl: job.sourceUrl,
   sourceName: `${job.companyName} official careers`,
   sourceType: job.sourceType ?? "Seed",
-  verificationStatus: job.verified ? "Official source" : "Sample",
+  verificationStatus: verifiedCareerOpportunities.find((record) => record.id === job.id)?.verificationStatus === "Archived" ? "Archived" : job.verified ? "Official source" : "Sample",
   lastVerifiedAt: job.lastUpdated,
   dataNotes: job.verified
     ? `Verified programme-level record. Application stage: ${job.applicationStage ?? "Not published"}.`
@@ -38,7 +39,8 @@ const jobOpportunities: Opportunity[] = jobs.map((job) => ({
   eligibilityText: job.requirements.join(". "),
   salaryText: job.salaryText,
   sampleData: job.sampleData,
-  archived: false,
+  archived: verifiedCareerOpportunities.find((record) => record.id === job.id)?.verificationStatus === "Archived",
+  applicationStage: job.applicationStage,
 }));
 
 export const opportunities: Opportunity[] = jobOpportunities;

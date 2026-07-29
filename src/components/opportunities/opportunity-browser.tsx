@@ -14,6 +14,8 @@ import { Input, Select } from "@/components/ui/form-field";
 import { PageHeading } from "@/components/ui/page-heading";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatDate, formatPercentage } from "@/i18n/format";
+import { deriveOpportunityLifecycle } from "@/lib/opportunity-lifecycle";
+import { jobs } from "@/data/seed";
 
 export function OpportunityBrowser() {
   const { activeWorkspace, state, toggleSavedOpportunity, addJobApplication, upsertRoadmapItem } = useCareerOS();
@@ -52,7 +54,8 @@ export function OpportunityBrowser() {
     "Eligibility confidence": t("opportunities.eligibilityConfidence"),
     "Opportunity type preference": t("opportunities.typePreference"),
   };
-  const jobId = selected?.id.startsWith("opportunity-j") ? selected.id.replace("opportunity-", "") : "";
+  const candidateJobId = selected?.id.replace("opportunity-", "") ?? "";
+  const jobId = jobs.some((job) => job.id === candidateJobId) ? candidateJobId : "";
   const addSelectedToRoadmap = () => {
     if (!selected) return;
     upsertRoadmapItem({
@@ -84,9 +87,10 @@ export function OpportunityBrowser() {
           {visible.map((item) => {
             const match = matches.get(item.id);
             const saved = activeWorkspace.savedOpportunityIds.includes(item.id);
+            const lifecycle = deriveOpportunityLifecycle(item, "2026-07-30");
             return <article key={item.id} className="surface-card p-5 sm:p-6">
-              <div className="flex items-start justify-between gap-4"><div><div className="flex flex-wrap gap-2"><Badge>{item.category}</Badge><StatusBadge status={item.verificationStatus === "Official source" ? "positive" : "neutral"}>{item.verificationStatus}</StatusBadge>{item.sampleData && <Badge>{t("common.sampleNotice")}</Badge>}</div><h2 className="mt-4 font-display text-xl font-medium">{item.title}</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">{item.organisationName} · {item.locationText}</p>{item.sampleData && <p className="mt-2 text-xs font-medium text-[var(--warning)]">{t("common.unverifiedVacancy")}</p>}</div><button type="button" className="min-h-11 px-2 text-[var(--accent)]" onClick={() => toggleSavedOpportunity(item.id)} aria-pressed={saved} aria-label={saved ? t("opportunities.unsave") : t("opportunities.save")}>{saved ? "●" : "○"}</button></div>
-              <div className="mt-5 flex items-end justify-between gap-4 border-t border-[var(--border)] pt-4"><div><p className="text-xs text-[var(--text-secondary)]">{t("opportunities.match")}</p><strong>{match ? formatPercentage(match.score, language) : "—"}</strong></div><div className="text-right">{item.deadline && <p className="text-xs text-[var(--text-secondary)]">{t("common.syntheticDate")}: {formatDate(item.deadline, language)}</p>}<Button size="sm" variant="secondary" onClick={() => setSelected(item)}>{t("opportunities.details")}</Button></div></div>
+              <div className="flex items-start justify-between gap-4"><div><div className="flex flex-wrap gap-2"><Badge>{item.category}</Badge><StatusBadge status={item.verificationStatus === "Official source" ? "positive" : "neutral"}>{item.verificationStatus}</StatusBadge><StatusBadge status={["Open", "Closing soon"].includes(lifecycle) ? "positive" : lifecycle === "Upcoming" ? "active" : "warning"}>{lifecycle}</StatusBadge>{item.sampleData && <Badge>{t("common.sampleNotice")}</Badge>}</div><h2 className="mt-4 font-display text-xl font-medium">{item.title}</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">{item.organisationName} · {item.locationText}</p>{item.sampleData && <p className="mt-2 text-xs font-medium text-[var(--warning)]">{t("common.unverifiedVacancy")}</p>}</div><button type="button" className="min-h-11 px-2 text-[var(--accent)]" onClick={() => toggleSavedOpportunity(item.id)} aria-pressed={saved} aria-label={saved ? t("opportunities.unsave") : t("opportunities.save")}>{saved ? "●" : "○"}</button></div>
+              <div className="mt-5 flex items-end justify-between gap-4 border-t border-[var(--border)] pt-4"><div><p className="text-xs text-[var(--text-secondary)]">{t("opportunities.match")}</p><strong>{match ? formatPercentage(match.score, language) : "—"}</strong></div><div className="text-right">{item.deadline && <p className="text-xs text-[var(--text-secondary)]">{formatDate(item.deadline, language)}</p>}<Button size="sm" variant="secondary" onClick={() => setSelected(item)}>{t("opportunities.details")}</Button></div></div>
             </article>;
           })}
         </div>
