@@ -48,23 +48,22 @@ const tommy: CareerProfile = {
   id: TOMMY_ID,
   displayName: "Taicheng Guo (Tommy)",
   preferredName: "Tommy",
-  university: "Australian National University",
-  degree: "ANU graduate",
-  discipline: "Cyber Security and Data Analytics",
+  university: "Macquarie University",
+  degree: "Postgraduate degree",
+  discipline: "Chiropractic",
   studyLevel: "Postgraduate",
   location: "Canberra, Australia",
   expectedGraduationDate: "",
-  workEligibility: "Australian citizen",
-  registrationStatus: "Not applicable",
-  careerGoals: ["Public sector", "Cyber Security", "Data Analytics", "Defence", "Government Digital", "Australian Graduate Program"],
-  preferredCities: ["Canberra"],
+  workEligibility: "To be confirmed",
+  registrationStatus: "To be confirmed",
+  careerGoals: ["Graduate Chiropractor", "Associate Chiropractor", "Chiropractor", "Early-career clinical chiropractic role", "Chiropractic assistant"],
+  preferredCities: ["Canberra", "Sydney"],
   skills: [
-    { id: "ts1", name: "Cyber security", category: "Technology", proficiency: "Working", evidence: "ANU study" },
-    { id: "ts2", name: "Data analysis", category: "Data", proficiency: "Working", evidence: "ANU study" },
-    { id: "ts3", name: "Policy analysis", category: "Public sector", proficiency: "Learning", evidence: "Career planning focus" },
+    { id: "ts1", name: "Patient communication", category: "Clinical practice", proficiency: "Learning", evidence: "" },
+    { id: "ts2", name: "Clinical reasoning", category: "Clinical practice", proficiency: "Learning", evidence: "" },
   ],
   projects: [],
-  experienceSummary: "ANU graduate exploring Canberra-based public sector, defence, cyber security and data opportunities.",
+  experienceSummary: "Seeking early-career chiropractic work in Canberra/ACT, with Sydney/NSW as a secondary location. Clinical experience details are not yet recorded.",
   linkedInUrl: "",
   githubUrl: "",
   portfolioUrl: "",
@@ -148,7 +147,7 @@ export const jobs: Job[] = verifiedCareerOpportunities.map((record) => ({
   postedDate: record.lastUpdated,
   deadline: record.deadline ?? "",
   sourceUrl: record.officialUrl,
-  suitableProfileIds: record.company === "Atlassian" ? [YUHAN_ID] : [TOMMY_ID],
+  suitableProfileIds: record.company === "Atlassian" ? [YUHAN_ID] : [],
   tags: [record.earlyCareerType, record.applicationStage],
   salaryText: record.salary ?? undefined,
   sampleData: false,
@@ -182,7 +181,7 @@ export const programs: PostgraduateProgram[] = verifiedProgrammes.map((record) =
   recommendationLetters: "Not published",
   requiredDocuments: ["Academic transcript", "CV or résumé", "Personal statement"],
   applicationUrl: record.officialUrl,
-  suitableProfileIds: record.id.includes("anu") ? [TOMMY_ID] : [YUHAN_ID],
+  suitableProfileIds: [YUHAN_ID],
   sampleData: false,
   verified: record.verified,
   sourceType: record.sourceType,
@@ -209,7 +208,23 @@ function roadmap(profileId: string, items: string[], category: RoadmapItem["cate
 function workspace(profile: CareerProfile): ProfileWorkspace {
   const items = profile.id === YUHAN_ID
     ? ["Complete CareerOS MVP", "Continue WearAgain iteration", "Finalise English résumé", "Finalise Chinese résumé", "Build SQL fundamentals", "Research postgraduate pathways", "Apply for suitable internships"]
-    : ["Review APS graduate eligibility", "Prepare security-clearance documentation", "Build a Canberra public-sector résumé", "Practise cyber and data interview examples", "Track 2027 government graduate applications"];
+    : [
+      "Confirm qualification completion",
+      "Review Ahpra graduate-registration guidance",
+      "Prepare identity and qualification documents",
+      "Confirm English-language evidence requirements",
+      "Review professional indemnity insurance obligations",
+      "Review CPD and recency-of-practice standards",
+      "Submit or track registration application",
+      "Confirm registration status on the practitioner register",
+      "Prepare clinical résumé and cover letter",
+      "Prepare referee list and clinical case examples",
+      "Build a Canberra clinic target list",
+      "Review current verified vacancies",
+      "Submit targeted applications and schedule follow-ups",
+      "Prepare chiropractic interview questions",
+      "Plan induction, mentoring and professional development",
+    ];
   const base: ProfileWorkspace = {
     profile,
     savedJobIds: [],
@@ -218,7 +233,7 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
     postgraduateApplications: [],
     roadmapItems: roadmap(profile.id, items, profile.id === TOMMY_ID ? "Registration" : "Project"),
     organisationNotes: {},
-    savedOpportunityIds: profile.id === YUHAN_ID ? ["opportunity-atlassian-au-intern-program"] : ["opportunity-dta-2027-digital"],
+    savedOpportunityIds: profile.id === YUHAN_ID ? ["opportunity-atlassian-au-intern-program"] : [],
     contacts: [],
     documents: [],
   };
@@ -232,8 +247,6 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
       lastUpdatedAt: "2026-07-28T09:00:00.000Z",
       activity: [{ id: "demo-activity-yuhan", type: "created", label: "Application created", occurredAt: "2026-07-28T09:00:00.000Z" }],
     }];
-  } else {
-    base.organisationNotes["digital-transformation-agency"] = "Canberra public-sector digital graduate pathway.";
   }
   return base;
 }

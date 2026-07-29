@@ -18,12 +18,16 @@ describe("profile-aware job filtering", () => {
     expect(relevant.every((job) => job.discipline !== "Chiropractic")).toBe(true);
   });
 
-  it("shows Tommy relevant Canberra government and technology roles", () => {
+  it("keeps Tommy focused on chiropractic and excludes government technology roles", () => {
     const state = createSeedState();
     const profile = state.profiles[TOMMY_ID].profile;
     const relevant = jobs.filter((job) => isJobSuitableForProfile(job, profile));
-    expect(relevant.length).toBeGreaterThan(0);
-    expect(jobs.filter((job) => job.suitableProfileIds.includes(TOMMY_ID)).every((job) => job.location === "Canberra" && job.country === "Australia")).toBe(true);
+    expect(profile.university).toBe("Macquarie University");
+    expect(profile.discipline).toBe("Chiropractic");
+    expect(profile.workEligibility).toBe("To be confirmed");
+    expect(profile.registrationStatus).toBe("To be confirmed");
+    expect(profile.careerGoals).toContain("Graduate Chiropractor");
+    expect(relevant).toHaveLength(0);
   });
 });
 
