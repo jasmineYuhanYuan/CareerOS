@@ -204,7 +204,7 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
   const items = profile.id === YUHAN_ID
     ? ["Complete CareerOS MVP", "Continue WearAgain iteration", "Finalise English résumé", "Finalise Chinese résumé", "Build SQL fundamentals", "Research postgraduate pathways", "Apply for suitable internships"]
     : ["Finalise chiropractic résumé", "Identify suitable clinics", "Confirm registration or eligibility requirements", "Prepare clinical interview examples", "Submit targeted applications"];
-  return {
+  const base: ProfileWorkspace = {
     profile,
     savedJobIds: [],
     applications: [],
@@ -212,10 +212,24 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
     postgraduateApplications: [],
     roadmapItems: roadmap(profile.id, items, profile.id === TOMMY_ID ? "Registration" : "Project"),
     organisationNotes: {},
-    savedOpportunityIds: [],
+    savedOpportunityIds: profile.id === YUHAN_ID ? ["opportunity-j1"] : ["opportunity-j11"],
     contacts: [],
     documents: [],
   };
+  if (profile.id === YUHAN_ID) {
+    base.savedJobIds = ["j1"];
+    base.applications = [{
+      id: "demo-application-yuhan", profileId: YUHAN_ID, jobId: "j1",
+      organisationName: "Canva", jobTitle: "Graduate Product Associate", status: "Preparing",
+      savedAt: "2026-07-28T09:00:00.000Z", appliedAt: "", nextAction: "Review sample role requirements",
+      nextActionDate: "2026-08-03", cvVersion: "English résumé v1", notes: "Sample planning record.",
+      lastUpdatedAt: "2026-07-28T09:00:00.000Z",
+      activity: [{ id: "demo-activity-yuhan", type: "created", label: "Application created", occurredAt: "2026-07-28T09:00:00.000Z" }],
+    }];
+  } else {
+    base.organisationNotes["harbour-clinic"] = "Saved clinic for sample career planning.";
+  }
+  return base;
 }
 
 export function createSeedState(): CareerOSState {
@@ -229,6 +243,7 @@ export function createSeedState(): CareerOSState {
       defaultRegion: "Australia",
       showSampleData: true,
       showArchivedOpportunities: false,
+      demoMode: false,
     },
     profiles: {
       [YUHAN_ID]: workspace(structuredClone(yuhan)),

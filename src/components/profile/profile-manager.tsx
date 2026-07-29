@@ -9,6 +9,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { CareerProfile, Project, Skill } from "@/types/domain";
+import { useToast } from "@/providers/toast-provider";
 
 function splitValues(value: string): string[] {
   return value.split(",").map((item) => item.trim()).filter(Boolean);
@@ -20,6 +21,7 @@ const emptyProject: Project = { id: "", name: "", role: "", description: "", com
 export function ProfileManager() {
   const { activeWorkspace, updateProfile } = useCareerOS();
   const { t } = useLanguage();
+  const { notify } = useToast();
   const profile = activeWorkspace.profile;
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState(profile);
@@ -45,6 +47,7 @@ export function ProfileManager() {
       return;
     }
     updateProfile({ ...draft, displayName: draft.displayName.trim() });
+    notify(t("feedback.profileSaved"));
     setEditOpen(false);
   }
 

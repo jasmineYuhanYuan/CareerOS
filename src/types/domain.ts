@@ -278,6 +278,7 @@ export interface DashboardPreferences {
   defaultRegion: string;
   showSampleData: boolean;
   showArchivedOpportunities: boolean;
+  demoMode: boolean;
 }
 
 export interface ProfileWorkspace {

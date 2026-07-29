@@ -7,6 +7,7 @@ import { Field, Input, Select, Textarea } from "@/components/ui/form-field";
 import { PageHeading } from "@/components/ui/page-heading";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useToast } from "@/providers/toast-provider";
 import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { ApplicationStatus, JobApplication } from "@/types/domain";
@@ -28,6 +29,7 @@ function emptyApplication(profileId: string): JobApplication {
 export function ApplicationTracker() {
   const { activeWorkspace, createApplication, updateApplication, deleteApplication } = useCareerOS();
   const { t } = useLanguage();
+  const { notify } = useToast();
   const [view, setView] = useState<"Board" | "List">("Board");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -53,7 +55,7 @@ export function ApplicationTracker() {
     if (previous && (previous.nextAction !== draft.nextAction || previous.nextActionDate !== draft.nextActionDate)) activity.push({ id: `activity-${Date.now()}-next`, type: "next_action_updated", label: "Next action updated", occurredAt: at });
     const ready = { ...draft, id: draft.id || `manual-${Date.now()}`, lastUpdatedAt: at, activity };
     if (previous) updateApplication(ready);
-    else createApplication(ready);
+    else { createApplication(ready); notify(t("feedback.applicationCreated")); }
     setDraft(null);
     setError("");
   }

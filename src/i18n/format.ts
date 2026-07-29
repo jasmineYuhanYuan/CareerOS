@@ -7,7 +7,7 @@ export function localeCode(locale: AppLocale): "en-AU" | "zh-CN" {
 export function formatDate(value: string, locale: AppLocale, options?: Intl.DateTimeFormatOptions): string {
   if (!value) return "";
   return new Intl.DateTimeFormat(localeCode(locale), options ?? { day: "numeric", month: "short", year: "numeric" })
-    .format(new Date(`${value}T00:00:00`));
+    .format(new Date(value.includes("T") ? value : `${value}T00:00:00`));
 }
 
 export function formatPercentage(value: number, locale: AppLocale): string {
