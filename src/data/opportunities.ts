@@ -1,4 +1,4 @@
-import { jobs, organisations, TOMMY_ID, YUHAN_ID } from "@/data/seed";
+import { jobs, organisations } from "@/data/seed";
 import type { Opportunity, OpportunityCategory, VerificationStatus } from "@/types/domain";
 
 export const opportunityCategories: OpportunityCategory[] = [
@@ -25,93 +25,23 @@ const jobOpportunities: Opportunity[] = jobs.map((job) => ({
   locationText: `${job.location}, ${job.country}`,
   remoteType: job.remoteType,
   employmentType: job.employmentType,
-  deadline: job.deadline,
+  deadline: job.deadline || undefined,
   publishedDate: job.postedDate,
-  sourceName: "CareerOS sample data",
-  sourceType: "Seed",
-  verificationStatus: "Sample",
-  dataNotes: "Sample planning record. Not a verified active vacancy.",
+  sourceUrl: job.sourceUrl,
+  sourceName: `${job.companyName} official careers`,
+  sourceType: job.sourceType ?? "Seed",
+  verificationStatus: job.verified ? "Official source" : "Sample",
+  lastVerifiedAt: job.lastUpdated,
+  dataNotes: job.verified
+    ? `Verified programme-level record. Application stage: ${job.applicationStage ?? "Not published"}.`
+    : "Sample planning record. Not a verified active vacancy.",
   eligibilityText: job.requirements.join(". "),
   salaryText: job.salaryText,
-  sampleData: true,
+  sampleData: job.sampleData,
   archived: false,
 }));
 
-const curated: Opportunity[] = [
-  {
-    id: "opportunity-product-hackathon",
-    category: "Hackathon",
-    title: "Student Product Build Weekend",
-    organisationId: "atlassian",
-    organisationName: "Atlassian",
-    description: "Sample planning record for a collaborative student product challenge.",
-    disciplineTags: ["Computer Science", "Product"],
-    roleFamilyTags: ["Product", "Software Engineering"],
-    skillTags: ["Product discovery", "React"],
-    suitableProfileIds: [YUHAN_ID],
-    country: "Australia",
-    city: "Sydney",
-    locationText: "Sydney, Australia",
-    remoteType: "Hybrid",
-    deadline: "2026-10-08",
-    sourceName: "CareerOS sample data",
-    sourceType: "Seed",
-    verificationStatus: "Sample",
-    dataNotes: "Illustrative only; no live event is claimed.",
-    eligibilityText: "Confirm any real event eligibility with the organiser.",
-    sampleData: true,
-    archived: false,
-  },
-  {
-    id: "opportunity-clinical-networking",
-    category: "Networking event",
-    title: "Early-career Allied Health Networking Evening",
-    organisationId: "sports-rehab",
-    organisationName: "Sydney Sports & Rehab Clinic (Sample)",
-    description: "Sample networking record for planning professional outreach.",
-    disciplineTags: ["Chiropractic", "Allied health"],
-    roleFamilyTags: ["Chiropractic", "Clinical Healthcare"],
-    skillTags: ["Patient communication"],
-    suitableProfileIds: [TOMMY_ID],
-    country: "Australia",
-    city: "Sydney",
-    locationText: "Sydney, Australia",
-    remoteType: "On-site",
-    deadline: "2026-09-18",
-    sourceName: "CareerOS sample data",
-    sourceType: "Seed",
-    verificationStatus: "Sample",
-    dataNotes: "Illustrative only; no live event is claimed.",
-    eligibilityText: "Confirm any real event details with the organiser.",
-    sampleData: true,
-    archived: false,
-  },
-  {
-    id: "opportunity-registration-planning",
-    category: "Professional registration",
-    title: "Chiropractic Registration Preparation",
-    organisationId: "harbour-clinic",
-    organisationName: "Harbour Chiropractic Clinic (Sample)",
-    description: "A sample planning prompt to research current professional registration pathways.",
-    disciplineTags: ["Chiropractic"],
-    roleFamilyTags: ["Chiropractic"],
-    skillTags: [],
-    suitableProfileIds: [TOMMY_ID],
-    country: "Australia",
-    city: "Sydney",
-    locationText: "Australia",
-    remoteType: "Remote",
-    sourceName: "CareerOS sample data",
-    sourceType: "Seed",
-    verificationStatus: "Sample",
-    dataNotes: "CareerOS does not state registration requirements. Consult the relevant regulator.",
-    eligibilityText: "Unknown; verify with the relevant official regulator.",
-    sampleData: true,
-    archived: false,
-  },
-];
-
-export const opportunities: Opportunity[] = [...jobOpportunities, ...curated];
+export const opportunities: Opportunity[] = jobOpportunities;
 
 function validDate(value: string | undefined): boolean {
   return value === undefined || /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00`));

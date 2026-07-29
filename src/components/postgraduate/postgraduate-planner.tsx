@@ -3,13 +3,12 @@
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { Input, Select, Textarea } from "@/components/ui/form-field";
 import { PageHeading } from "@/components/ui/page-heading";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { programs, TOMMY_ID } from "@/data/seed";
+import { programs } from "@/data/seed";
 import { calculateProgramMatch } from "@/lib/match";
 import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
@@ -37,17 +36,6 @@ export function PostgraduatePlanner() {
     (degree === "All" || program.degreeLevel === degree) &&
     (tab !== "Saved" || activeWorkspace.savedProgramIds.includes(program.id))
   ).sort((a, b) => a.deadline.localeCompare(b.deadline)), [activeWorkspace.savedProgramIds, country, degree, discipline, query, tab]);
-
-  if (activeWorkspace.profile.id === TOMMY_ID) {
-    return (
-      <div className="page-enter">
-        <PageHeading eyebrow={t("study.optional")} title={t("study.continuing")} description={t("study.description")} />
-        <Card title={t("study.clinicalFocus")}>
-          <p className="text-sm leading-7 text-[var(--text-secondary)]">{t("study.clinicalBody")}</p>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="page-enter">

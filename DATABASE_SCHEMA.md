@@ -192,6 +192,26 @@ Supports companies, clinics, universities and other institutions.
 - deadline, source_url, source_name, source_type
 - verification_status, last_verified_at, sample_data, archived
 
+## verified source metadata
+
+Reusable local datasets use a shared provenance contract so they can later be
+replaced by API-backed records without changing the UI model.
+
+- source
+- official_url
+- source_type: Official, Government, University, Community
+- verified
+- last_updated
+- next_review_date
+- confidence: High, Medium, Low
+- country
+- region
+- language
+
+Unknown salary, deadline, sponsorship, tuition, test requirement, duration or
+application-stage values remain null or explicitly "Not published". They are
+never inferred.
+
 ## contacts
 
 - id, profile_id, name, organisation, role, email, linkedin_url

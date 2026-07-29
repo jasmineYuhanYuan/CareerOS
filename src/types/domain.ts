@@ -4,7 +4,7 @@ export type AppLocale = "en" | "zh-CN";
 export type StudyLevel = "Undergraduate" | "Postgraduate";
 export type Proficiency = "Learning" | "Working" | "Confident" | "Advanced";
 export type EmploymentType = "Internship" | "Graduate" | "Full-time" | "Part-time" | "Contract";
-export type RemoteType = "On-site" | "Hybrid" | "Remote";
+export type RemoteType = "On-site" | "Hybrid" | "Remote" | "Not published";
 export type RoleFamily =
   | "Product"
   | "Technical Product"
@@ -54,7 +54,7 @@ export type Priority = "Low" | "Medium" | "High";
 export type ThemePreference = "System" | "Light" | "Dark";
 export type OpportunityCategory = "Job" | "Internship" | "Graduate program" | "Research opportunity" | "Scholarship" | "Hackathon" | "Competition" | "Networking event" | "Career event" | "Continuing education" | "Professional registration" | "Other";
 export type VerificationStatus = "Sample" | "Unverified" | "Official source" | "Expired" | "Archived";
-export type SourceType = "Seed" | "Official" | "User";
+export type SourceType = "Seed" | "Official" | "Government" | "University" | "Community" | "User";
 export type RelationshipType = "Recruiter" | "Hiring manager" | "University contact" | "Lecturer" | "Alumni" | "Mentor" | "Clinic owner" | "Professional contact" | "Other";
 export type CareerDocumentType = "English résumé" | "Chinese résumé" | "Cover letter" | "Portfolio" | "Academic transcript" | "Personal statement" | "Recommendation materials" | "Other";
 export type CareerDocumentStatus = "Draft" | "Ready" | "Needs update" | "Archived";
@@ -120,7 +120,17 @@ export interface Job {
   tags: string[];
   salaryText?: string;
   registrationRequirement?: string;
-  sampleData: true;
+  sampleData: boolean;
+  verified?: boolean;
+  sourceType?: SourceType;
+  lastUpdated?: string;
+  nextReviewDate?: string;
+  language?: AppLocale;
+  region?: string;
+  confidence?: "High" | "Medium" | "Low";
+  careersUrl?: string;
+  visaSponsorship?: string;
+  applicationStage?: string;
 }
 
 export interface Organisation {
@@ -134,7 +144,15 @@ export interface Organisation {
   careersUrl: string;
   description: string;
   roleFamilies: RoleFamily[];
-  sampleData: true;
+  sampleData: boolean;
+  verified?: boolean;
+  sourceType?: SourceType;
+  officialUrl?: string;
+  lastUpdated?: string;
+  nextReviewDate?: string;
+  language?: AppLocale;
+  region?: string;
+  confidence?: "High" | "Medium" | "Low";
 }
 
 export interface ActivityEvent {
@@ -189,7 +207,14 @@ export interface PostgraduateProgram {
   requiredDocuments: ProgramDocument[];
   applicationUrl: string;
   suitableProfileIds: string[];
-  sampleData: true;
+  sampleData: boolean;
+  verified?: boolean;
+  sourceType?: SourceType;
+  lastUpdated?: string;
+  nextReviewDate?: string;
+  language?: AppLocale;
+  region?: string;
+  confidence?: "High" | "Medium" | "Low";
 }
 
 export interface PostgraduateApplication {

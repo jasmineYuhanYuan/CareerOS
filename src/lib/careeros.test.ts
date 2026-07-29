@@ -18,11 +18,12 @@ describe("profile-aware job filtering", () => {
     expect(relevant.every((job) => job.discipline !== "Chiropractic")).toBe(true);
   });
 
-  it("shows Tommy relevant clinical roles", () => {
+  it("shows Tommy relevant Canberra government and technology roles", () => {
     const state = createSeedState();
     const profile = state.profiles[TOMMY_ID].profile;
     const relevant = jobs.filter((job) => isJobSuitableForProfile(job, profile));
-    expect(relevant.every((job) => ["Chiropractic", "Clinical Healthcare"].includes(job.roleFamily))).toBe(true);
+    expect(relevant.length).toBeGreaterThan(0);
+    expect(jobs.filter((job) => job.suitableProfileIds.includes(TOMMY_ID)).every((job) => job.location === "Canberra" && job.country === "Australia")).toBe(true);
   });
 });
 
