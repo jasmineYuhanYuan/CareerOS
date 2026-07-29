@@ -8,7 +8,8 @@ import { LanguageToggle } from "./language-toggle";
 
 const secondaryLinks = [
   { href: "/intelligence", label: "Career Intelligence", zhLabel: "职业知识库", description: "Search verified career knowledge", zhDescription: "搜索已核验职业知识" },
-  { href: "/chiropractic", label: "Chiropractic career hub", zhLabel: "脊椎按摩职业中心", description: "Registration, ACT employers and career readiness", zhDescription: "注册路径、ACT 雇主和职业准备" },
+  { href: "/knowledge-graph", label: "Knowledge graph", zhLabel: "职业知识图谱", description: "Explore verified career connections", zhDescription: "探索已核验的职业关系" },
+  { href: "/gap-analysis", label: "Gap analysis", zhLabel: "职业差距分析", description: "Profile-aware readiness and next actions", zhDescription: "按个人档案分析准备度和下一步行动" },
   { href: "/opportunities", label: "Opportunities", zhLabel: "机会", description: "Explore jobs, events and professional pathways", zhDescription: "探索职位、活动和职业发展机会" },
   { href: "/companies", label: "Companies", zhLabel: "公司与诊所", description: "Research organisations and clinics", zhDescription: "研究公司、机构与诊所" },
   { href: "/roadmap", label: "Roadmap", zhLabel: "职业规划", description: "Plan milestones and next steps", zhDescription: "规划里程碑和下一步行动" },

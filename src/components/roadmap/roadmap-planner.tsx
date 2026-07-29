@@ -6,6 +6,8 @@ import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/form-field";
 import { PageHeading } from "@/components/ui/page-heading";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { ChiropracticCareerHub } from "@/components/chiropractic/chiropractic-career-hub";
+import { TOMMY_ID } from "@/data/seed";
 import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { Priority, RoadmapCategory, RoadmapItem, RoadmapStatus } from "@/types/domain";
@@ -56,6 +58,7 @@ export function RoadmapPlanner() {
       <Dialog open={draft !== null} title={draft?.id ? t("roadmap.edit") : t("roadmap.add")} onClose={() => setDraft(null)}>
         {draft && <form onSubmit={save} className="space-y-4"><Field label="Title" error={error}><Input required value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></Field><Field label="Description"><Textarea value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></Field><div className="grid gap-4 sm:grid-cols-2"><Field label="Category"><Select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value as RoadmapCategory })}>{categories.map((value) => <option key={value}>{value}</option>)}</Select></Field><Field label="Target date"><Input type="date" value={draft.targetDate} onChange={(e) => setDraft({ ...draft, targetDate: e.target.value })} /></Field><Field label="Status"><Select value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value as RoadmapStatus })}>{statuses.map((value) => <option key={value}>{value}</option>)}</Select></Field><Field label="Priority"><Select value={draft.priority} onChange={(e) => setDraft({ ...draft, priority: e.target.value as Priority })}>{priorities.map((value) => <option key={value}>{value}</option>)}</Select></Field></div><div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setDraft(null)}>Cancel</Button><Button type="submit">Save item</Button></div></form>}
       </Dialog>
+      {activeWorkspace.profile.id === TOMMY_ID && <div className="mt-14 border-t border-[var(--border)] pt-10"><ChiropracticCareerHub /></div>}
     </div>
   );
 }

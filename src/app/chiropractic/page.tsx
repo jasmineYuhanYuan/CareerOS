@@ -1,5 +1,5 @@
-import { ChiropracticCareerHub } from "@/components/chiropractic/chiropractic-career-hub";
+import { redirect } from "next/navigation";
 
 export default function ChiropracticPage() {
-  return <ChiropracticCareerHub />;
+  redirect("/roadmap");
 }
