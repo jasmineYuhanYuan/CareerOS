@@ -76,6 +76,23 @@ describe("local storage parsing and fallback", () => {
     const state = parseStoredState(JSON.stringify({ version: 999 }));
     expect(state.version).toBe(3);
   });
+
+  it("normalises legacy application and material workflow states", () => {
+    const legacy = createSeedState();
+    legacy.profiles[YUHAN_ID].applications[0].status = "Interviewing";
+    const raw = JSON.parse(JSON.stringify(legacy)) as typeof legacy;
+    (raw.profiles[YUHAN_ID].applications[0] as unknown as { status: string }).status = "Assessment";
+    raw.profiles[YUHAN_ID].documents.push({
+      id: "legacy-doc", profileId: YUHAN_ID, documentType: "English résumé",
+      name: "Legacy CV", version: "v1", updatedAt: "2026-07-29", notes: "",
+      status: "Review needed",
+    });
+    (raw.profiles[YUHAN_ID].documents[0] as unknown as { status: string }).status = "Needs update";
+    const migrated = parseStoredState(JSON.stringify(raw));
+    expect(migrated.profiles[YUHAN_ID].applications[0].status).toBe("OA invited");
+    expect(migrated.profiles[YUHAN_ID].applications[0].materials).toEqual([]);
+    expect(migrated.profiles[YUHAN_ID].documents[0].status).toBe("Review needed");
+  });
 });
 
 describe("profile data separation", () => {
@@ -84,6 +101,13 @@ describe("profile data separation", () => {
     state.profiles[YUHAN_ID].savedJobIds.push("j2");
     expect(getProfileWorkspace(state, YUHAN_ID)?.savedJobIds).toContain("j2");
     expect(getProfileWorkspace(state, TOMMY_ID)?.savedJobIds).toEqual([]);
+  });
+
+  it("keeps Sprint 8 targets separated by profile", () => {
+    const yuhanTargets = opportunities.filter((item) => item.suitableProfileIds.includes(YUHAN_ID));
+    const tommyTargets = opportunities.filter((item) => item.suitableProfileIds.includes(TOMMY_ID));
+    expect(yuhanTargets.some((item) => item.country === "China")).toBe(true);
+    expect(tommyTargets).toEqual([]);
   });
 });
 

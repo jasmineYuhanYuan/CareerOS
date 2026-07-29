@@ -87,12 +87,43 @@ export function validateState(value: unknown): value is CareerOSState {
   );
 }
 
+function normaliseSprint8State(state: CareerOSState): CareerOSState {
+  const applicationStatuses: Record<string, CareerOSState["profiles"][string]["applications"][number]["status"]> = {
+    Saved: "Interested",
+    Assessment: "OA invited",
+    Interview: "Interviewing",
+  };
+  const documentStatuses: Record<string, CareerOSState["profiles"][string]["documents"][number]["status"]> = {
+    "Needs update": "Review needed",
+    Archived: "Outdated",
+  };
+  return {
+    ...state,
+    profiles: Object.fromEntries(Object.entries(state.profiles).map(([profileId, workspace]) => [
+      profileId,
+      {
+        ...workspace,
+        applications: workspace.applications.map((application) => ({
+          ...application,
+          status: applicationStatuses[application.status] ?? application.status,
+          materials: application.materials ?? [],
+          sessions: application.sessions ?? [],
+        })),
+        documents: workspace.documents.map((document) => ({
+          ...document,
+          status: documentStatuses[document.status] ?? document.status,
+        })),
+      },
+    ])),
+  };
+}
+
 export function migrateState(value: unknown): CareerOSState | null {
   if (validateState(value)) {
     const profile = value.profiles["taicheng-guo-tommy"]?.profile;
     if (profile?.university === "Australian National University" && profile.discipline === "Cyber Security and Data Analytics") {
       const corrected = createSeedState().profiles["taicheng-guo-tommy"];
-      return {
+      return normaliseSprint8State({
         ...value,
         profiles: {
           ...value.profiles,
@@ -105,9 +136,9 @@ export function migrateState(value: unknown): CareerOSState | null {
             organisationNotes: {},
           },
         },
-      };
+      });
     }
-    return value;
+    return normaliseSprint8State(value);
   }
   if (typeof value !== "object" || value === null) return null;
   const legacy = value as Record<string, unknown>;

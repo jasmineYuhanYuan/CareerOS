@@ -13,7 +13,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { formatDate } from "@/i18n/format";
 
 const documentTypes: CareerDocumentType[] = ["English résumé", "Chinese résumé", "Cover letter", "Portfolio", "Academic transcript", "Personal statement", "Recommendation materials", "Other"];
-const statuses: CareerDocumentStatus[] = ["Draft", "Ready", "Needs update", "Archived"];
+const statuses: CareerDocumentStatus[] = ["Missing", "Draft", "Review needed", "Ready", "Submitted", "Outdated", "Not applicable"];
 function blank(profileId: string): CareerDocumentRecord { return { id: `document-${Date.now()}`, profileId, documentType: "English résumé", name: "", version: "v1", updatedAt: new Date().toISOString().slice(0, 10), notes: "", status: "Draft" }; }
 
 export function DocumentManager() {

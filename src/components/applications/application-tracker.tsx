@@ -10,19 +10,25 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/providers/toast-provider";
 import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
-import type { ApplicationStatus, JobApplication } from "@/types/domain";
+import type { ApplicationMaterialStatus, ApplicationStatus, InterviewSessionStatus, InterviewSessionType, JobApplication } from "@/types/domain";
 
-const statuses: ApplicationStatus[] = ["Saved", "Preparing", "Applied", "Assessment", "Interview", "Offer", "Rejected", "Withdrawn"];
+const statuses: ApplicationStatus[] = ["Interested", "Researching", "Preparing", "Ready to apply", "Applied", "OA invited", "OA completed", "Interview invited", "Interviewing", "Reference check", "Offer", "Rejected", "Withdrawn", "Archived"];
+const materialStatuses: ApplicationMaterialStatus[] = ["Missing", "Draft", "Review needed", "Ready", "Submitted", "Outdated", "Not applicable"];
 
 function timestamp(): string { return new Date().toISOString(); }
 
 function emptyApplication(profileId: string): JobApplication {
   const createdAt = timestamp();
   return {
-    id: "", profileId, jobId: "", organisationName: "", jobTitle: "", status: "Preparing",
+    id: "", profileId, jobId: "", organisationName: "", jobTitle: "", status: "Interested",
     savedAt: createdAt, appliedAt: "", nextAction: "", nextActionDate: "", cvVersion: "",
     notes: "", lastUpdatedAt: createdAt,
     activity: [{ id: `activity-${Date.now()}`, type: "created", label: "Application created", occurredAt: createdAt }],
+    materials: [
+      { id: `material-resume-${Date.now()}`, label: "Résumé / CV", status: "Missing", notes: "" },
+      { id: `material-cover-${Date.now()}`, label: "Cover letter", status: "Missing", notes: "" },
+    ],
+    sessions: [],
   };
 }
 
@@ -73,6 +79,15 @@ export function ApplicationTracker() {
           <Field label="CV version"><Input value={draft.cvVersion} onChange={(e) => setDraft({ ...draft, cvVersion: e.target.value })} /></Field>
         </div>
         <Field label="Notes"><Textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
+        <section>
+          <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-medium">Application materials</h3><Button type="button" size="sm" variant="secondary" onClick={() => setDraft({ ...draft, materials: [...(draft.materials ?? []), { id: `material-${Date.now()}`, label: "New material", status: "Missing", notes: "" }] })}>Add material</Button></div>
+          <div className="mt-3 space-y-3">{(draft.materials ?? []).map((material, index) => <div key={material.id} className="grid gap-3 rounded-xl border border-[var(--border)] p-3 sm:grid-cols-[1fr_12rem_auto]"><Input aria-label="Material name" value={material.label} onChange={(event) => setDraft({ ...draft, materials: (draft.materials ?? []).map((item, itemIndex) => itemIndex === index ? { ...item, label: event.target.value } : item) })} /><Select aria-label={`${material.label} readiness`} value={material.status} onChange={(event) => setDraft({ ...draft, materials: (draft.materials ?? []).map((item, itemIndex) => itemIndex === index ? { ...item, status: event.target.value as ApplicationMaterialStatus } : item) })}>{materialStatuses.map((status) => <option key={status}>{status}</option>)}</Select><Button type="button" size="sm" variant="ghost" onClick={() => setDraft({ ...draft, materials: (draft.materials ?? []).filter((item) => item.id !== material.id) })}>Remove</Button></div>)}</div>
+          <p className="mt-2 text-xs text-[var(--text-tertiary)]">Draft and Review needed never count as Ready.</p>
+        </section>
+        <section>
+          <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-medium">Interview and OA sessions</h3><Button type="button" size="sm" variant="secondary" onClick={() => setDraft({ ...draft, sessions: [...(draft.sessions ?? []), { id: `session-${Date.now()}`, type: "Interview", provider: "", stage: "", scheduledAt: "", durationMinutes: null, status: "Planned", preparationNotes: "", outcomeNotes: "" }] })}>Add session</Button></div>
+          <div className="mt-3 space-y-3">{(draft.sessions ?? []).map((session, index) => <div key={session.id} className="grid gap-3 rounded-xl border border-[var(--border)] p-3 sm:grid-cols-2"><Select aria-label="Session type" value={session.type} onChange={(event) => setDraft({ ...draft, sessions: (draft.sessions ?? []).map((item, itemIndex) => itemIndex === index ? { ...item, type: event.target.value as InterviewSessionType } : item) })}><option>Interview</option><option>Online assessment</option></Select><Select aria-label="Session status" value={session.status} onChange={(event) => setDraft({ ...draft, sessions: (draft.sessions ?? []).map((item, itemIndex) => itemIndex === index ? { ...item, status: event.target.value as InterviewSessionStatus } : item) })}>{(["Planned", "Invited", "Completed", "Cancelled"] as InterviewSessionStatus[]).map((status) => <option key={status}>{status}</option>)}</Select><Input aria-label="Provider or interviewer" placeholder="Provider or interviewer" value={session.provider} onChange={(event) => setDraft({ ...draft, sessions: (draft.sessions ?? []).map((item, itemIndex) => itemIndex === index ? { ...item, provider: event.target.value } : item) })} /><Input aria-label="Stage" placeholder="Stage" value={session.stage} onChange={(event) => setDraft({ ...draft, sessions: (draft.sessions ?? []).map((item, itemIndex) => itemIndex === index ? { ...item, stage: event.target.value } : item) })} /><Input aria-label="Scheduled time" type="datetime-local" value={session.scheduledAt} onChange={(event) => setDraft({ ...draft, sessions: (draft.sessions ?? []).map((item, itemIndex) => itemIndex === index ? { ...item, scheduledAt: event.target.value } : item) })} /><Button type="button" size="sm" variant="ghost" onClick={() => setDraft({ ...draft, sessions: (draft.sessions ?? []).filter((item) => item.id !== session.id) })}>Remove session</Button></div>)}</div>
+        </section>
         {draft.id && <section><h3 className="text-sm font-medium">Activity history</h3><ol className="mt-2 divide-y divide-[var(--border)]">{draft.activity.slice().reverse().map((event) => <li key={event.id} className="flex justify-between gap-3 py-3 text-xs"><span className="font-medium">{event.label}</span><time dateTime={event.occurredAt} className="text-[var(--text-tertiary)]">{new Date(event.occurredAt).toLocaleDateString("en-AU")}</time></li>)}</ol></section>}
         <div className="flex flex-wrap justify-between gap-2">
           {draft.id ? <Button type="button" variant="danger" onClick={() => { if (window.confirm(t("applications.deleteConfirm"))) { deleteApplication(draft.id); setDraft(null); } }}>{t("common.delete")}</Button> : <span />}

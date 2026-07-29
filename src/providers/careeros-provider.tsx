@@ -162,6 +162,11 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
         notes: "",
         lastUpdatedAt: timestamp,
         activity: [{ id: `activity-${Date.now()}`, type: "created", label: "Application created", occurredAt: timestamp }],
+        materials: [
+          { id: `material-resume-${Date.now()}`, label: "Résumé / CV", status: "Missing", notes: "" },
+          { id: `material-cover-${Date.now()}`, label: "Cover letter", status: "Missing", notes: "" },
+        ],
+        sessions: [],
       };
       return {
         ...workspace,
