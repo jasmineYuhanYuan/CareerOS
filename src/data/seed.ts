@@ -73,7 +73,15 @@ const tommy: CareerProfile = {
 export const seedProfiles = [yuhan, tommy] as const;
 
 const verifiedOrganisationSources: Record<string, string> = {
+  Canva: "https://www.canva.com/careers/",
   Atlassian: "https://www.atlassian.com/company/careers/earlycareers",
+  Google: "https://www.google.com/about/careers/applications/locations/australia",
+  Microsoft: "https://careers.microsoft.com/",
+  Amazon: "https://www.amazon.jobs/en/locations/australia",
+  TikTok: "https://lifeattiktok.com/search?keyword=&location=Australia",
+  "REA Group": "https://www.rea-group.com/careers/",
+  "Commonwealth Bank": "https://www.commbank.com.au/about-us/careers.html",
+  "Macquarie Group": "https://www.macquarie.com/au/en/careers.html",
   "Digital Transformation Agency": "https://www.dta.gov.au/join-our-team/graduate-program",
   "Australian Signals Directorate": "https://www.asd.gov.au/careers/im-starting-my-career",
   "Australian Government": "https://content.apsjobs.gov.au/career-pathways/graduate-programs",
@@ -106,7 +114,7 @@ export const organisations: Organisation[] = [
   name: name as string,
   organisationType: organisationType as Organisation["organisationType"],
   sector: sector as string,
-  country: "Australia",
+  country: ["Baidu", "ByteDance"].includes(name as string) ? "China" : "Australia",
   city: city as string,
   websiteUrl: "",
   careersUrl: verifiedOrganisationSources[name as string] ?? "",
@@ -120,8 +128,8 @@ export const organisations: Organisation[] = [
   officialUrl: verifiedOrganisationSources[name as string],
   lastUpdated: verifiedOrganisationSources[name as string] ? "2026-07-29" : undefined,
   nextReviewDate: verifiedOrganisationSources[name as string] ? "2026-08-29" : undefined,
-  language: verifiedOrganisationSources[name as string] ? "en" : undefined,
-  region: verifiedOrganisationSources[name as string] ? "Australia" : undefined,
+  language: verifiedOrganisationSources[name as string] ? (["Baidu", "ByteDance"].includes(name as string) ? "zh-CN" : "en") : undefined,
+  region: verifiedOrganisationSources[name as string] ? (["Baidu", "ByteDance"].includes(name as string) ? "China" : "Australia") : undefined,
   confidence: verifiedOrganisationSources[name as string] ? "High" : undefined,
 }));
 

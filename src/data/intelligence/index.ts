@@ -4,6 +4,7 @@ import { certifications } from "./certifications/core";
 import { australiaRegulatedHealthcareProfessions } from "./healthcare/australia";
 import { australiaVisas } from "./visa/australia";
 import { xeroGraduateInterview, xeroHackerRankAssessment } from "./interviews/xero";
+import { assessmentProviderGuides } from "./assessments/providers";
 import { canberraChiropracticEmployers, chiropracticInterviewQuestions } from "@/data/verified/chiropractic";
 import { verifiedCareerOpportunities } from "@/data/verified/opportunities";
 import { verifiedProgrammes } from "@/data/verified/programmes";
@@ -17,6 +18,7 @@ export {
   certifications,
   xeroGraduateInterview,
   xeroHackerRankAssessment,
+  assessmentProviderGuides,
 };
 
 export const intelligenceRecords: IntelligenceRecord[] = [
@@ -27,6 +29,7 @@ export const intelligenceRecords: IntelligenceRecord[] = [
   ...australiaRegulatedHealthcareProfessions,
   xeroGraduateInterview,
   xeroHackerRankAssessment,
+  ...assessmentProviderGuides,
 ];
 
 export const intelligenceCoverage = {
@@ -34,7 +37,7 @@ export const intelligenceCoverage = {
   jobs: verifiedCareerOpportunities.length,
   universities: new Set(verifiedProgrammes.map((record) => record.university)).size,
   interviews: chiropracticInterviewQuestions.length + 1,
-  onlineAssessments: 1,
+  onlineAssessments: assessmentProviderGuides.length,
   certifications: certifications.length,
   careerPaths: 0,
   registrationAuthorities: new Set(australiaRegulatedHealthcareProfessions.map((record) => record.authority)).size,

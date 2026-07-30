@@ -1,6 +1,43 @@
 import { verifiedSource } from "@/data/intelligence/source";
 import type { CompanyIntelligenceRecord } from "@/data/intelligence/types";
 
+function officialEmployer(
+  id: string,
+  name: string,
+  industry: string,
+  careerPage: string,
+): CompanyIntelligenceRecord {
+  return {
+    ...verifiedSource({
+      source: `${name} official careers`,
+      officialUrl: careerPage,
+      sourceType: "Employer",
+      country: "Australia",
+      region: "Australia",
+      nextReviewDate: "2026-08-13",
+    }),
+    id,
+    domain: "Company",
+    name,
+    industry,
+    careerPage,
+    graduateProgram: null,
+    internship: null,
+    officeLocations: [],
+    visaPolicy: null,
+    technologyStack: [],
+    interviewStages: [],
+    recruitmentSeason: null,
+    unknownFields: [
+      "Current early-career vacancies",
+      "Current programme dates",
+      "Role-level eligibility",
+      "Public visa policy",
+      "Interview stages",
+    ],
+  };
+}
+
 export const australiaTechnologyCompanies: CompanyIntelligenceRecord[] = [
   {
     ...verifiedSource({ source: "Atlassian Early Careers", officialUrl: "https://www.atlassian.com/company/careers/earlycareers", sourceType: "Employer", country: "Australia", region: "Australia and New Zealand" }),
@@ -61,4 +98,24 @@ export const australiaTechnologyCompanies: CompanyIntelligenceRecord[] = [
     officeLocations: ["Sydney"], visaPolicy: null, technologyStack: [], interviewStages: [], recruitmentSeason: null,
     unknownFields: ["Official graduate program", "Official internship program", "Program-wide visa policy", "Interview stages", "Recruitment dates"],
   },
+  officialEmployer("company-google-au", "Google Australia", "Technology", "https://www.google.com/about/careers/applications/locations/australia"),
+  officialEmployer("company-tiktok-au", "TikTok Australia", "Consumer technology", "https://lifeattiktok.com/search?keyword=&location=Australia"),
+  officialEmployer("company-safetyculture-au", "SafetyCulture", "Workplace technology", "https://safetyculture.com/careers/"),
+  officialEmployer("company-rea-au", "REA Group", "Property technology", "https://www.rea-group.com/careers/"),
+  officialEmployer("company-cba-au", "Commonwealth Bank", "Financial services", "https://www.commbank.com.au/about-us/careers.html"),
+  officialEmployer("company-anz-au", "ANZ", "Financial services", "https://www.anz.com.au/careers/"),
+  officialEmployer("company-nab-au", "NAB", "Financial services", "https://www.nab.com.au/about-us/careers"),
+  officialEmployer("company-westpac-au", "Westpac", "Financial services", "https://www.westpac.com.au/about-westpac/careers/"),
+  officialEmployer("company-macquarie-au", "Macquarie Group", "Financial services", "https://www.macquarie.com/au/en/careers.html"),
+  officialEmployer("company-telstra-au", "Telstra", "Telecommunications", "https://careers.telstra.com/"),
+  officialEmployer("company-optus-au", "Optus", "Telecommunications", "https://www.optus.com.au/about/careers"),
+  officialEmployer("company-woolworths-au", "Woolworths Group", "Retail and technology", "https://www.wowcareers.com.au/"),
+  officialEmployer("company-coles-au", "Coles Group", "Retail and technology", "https://colescareers.com.au/"),
+  officialEmployer("company-deloitte-au", "Deloitte Australia", "Professional services", "https://jobs.deloitte.com.au/"),
+  officialEmployer("company-pwc-au", "PwC Australia", "Professional services", "https://jobs-au.pwc.com/au/en"),
+  officialEmployer("company-ey-au", "EY Australia", "Professional services", "https://careers.ey.com/ey/go/Australia/790001/"),
+  officialEmployer("company-kpmg-au", "KPMG Australia", "Professional services", "https://kpmg.com/au/en/home/careers.html"),
+  officialEmployer("company-accenture-au", "Accenture Australia", "Technology consulting", "https://www.accenture.com/au-en/careers"),
+  officialEmployer("company-ibm-au", "IBM Australia", "Technology", "https://www.ibm.com/careers/search?field_keyword_08%5B0%5D=Australia"),
+  officialEmployer("company-capgemini-au", "Capgemini Australia", "Technology consulting", "https://www.capgemini.com/au-en/careers/"),
 ];

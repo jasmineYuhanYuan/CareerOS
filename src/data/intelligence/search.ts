@@ -47,6 +47,11 @@ const modularResults: IntelligenceSearchResult[] = intelligenceRecords.map((reco
     summary: record.stages.join(" → "),
     keywords: [record.company, ...record.stages, ...record.preparation, record.onlineAssessment ?? ""],
   };
+  if (record.domain === "Interview" && "candidateGuideUrl" in record) return {
+    ...record, title: `${record.platform} candidate guide`, subtitle: "Assessment provider",
+    summary: record.assessmentCategories.join(" · "),
+    keywords: [record.platform, ...record.assessmentCategories, ...record.supportedFormats],
+  };
   if (record.domain === "Interview") return {
     ...record, title: `${record.company} — ${record.platform}`, subtitle: "Online assessment",
     summary: [record.duration, record.questionType, record.programmingLanguage].filter(Boolean).join(" · "),

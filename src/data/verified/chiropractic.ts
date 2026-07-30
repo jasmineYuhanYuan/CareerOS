@@ -137,6 +137,8 @@ export const canberraChiropracticEmployers: VerifiedEmployerDirectoryRecord[] = 
   employer("enhance-healthcare-canberra", "Enhance Healthcare Canberra", "Mitchell", "https://www.enhance.com.au/", "Chiropractic, massage and exercise physiology", "Yes—multiple allied-health services are stated", "Use the official website contact details"),
   employer("canberra-spine-centre", "Canberra Spine Centre", "Canberra", "https://www.spinecentre.com.au/", "Chiropractic care", "Not stated", "Use the official website contact details"),
   employer("queanbeyan-chiropractic", "Queanbeyan Chiropractic", "Queanbeyan", "https://www.queanbeyanchiropractic.com.au/", "Chiropractic care and biofeedback services", "Shares rooms with another health service; integration not stated", "Use the official website contact details"),
+  employer("kambah-chiropractic", "Kambah Chiropractic", "Kambah", "https://www.kambahchiro.com.au/", "Chiropractic care", "Not stated", "Use the official website contact details"),
+  employer("forrest-chiropractic", "Forrest Chiropractic", "Deakin", "https://www.forrestchiro.com.au/", "Chiropractic care", "Not stated", "Use the official website contact details"),
 ];
 
 const seekSearchUrl = "https://www.seek.com.au/chiro-jobs/in-All-Canberra-ACT";

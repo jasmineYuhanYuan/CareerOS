@@ -36,6 +36,9 @@ export function validateIntelligenceRecords(records: IntelligenceRecord[]): stri
       if (!record.company) errors.push(`${record.id}: interview company is required`);
       if ("stages" in record && record.stages.length === 0) errors.push(`${record.id}: interview stages are required`);
       if ("platform" in record && !record.platform) errors.push(`${record.id}: assessment platform is required`);
+      if ("candidateGuideUrl" in record && (!isHttps(record.candidateGuideUrl) || !record.privacyUrl || !isHttps(record.privacyUrl))) {
+        errors.push(`${record.id}: assessment provider requires official candidate and privacy guidance`);
+      }
     }
   }
   return errors;

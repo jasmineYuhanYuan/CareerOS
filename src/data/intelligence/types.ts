@@ -111,6 +111,21 @@ export interface OnlineAssessmentRecord extends SourceMetadata {
   evidence: string;
 }
 
+export interface AssessmentProviderGuide extends SourceMetadata {
+  id: string;
+  domain: "Interview";
+  platform: string;
+  company: string;
+  candidateGuideUrl: string;
+  assessmentCategories: string[];
+  browserAndDeviceRequirements: string | null;
+  accessibilityUrl: string | null;
+  privacyUrl: string | null;
+  practiceUrl: string | null;
+  supportedFormats: string[];
+  limitations: string[];
+}
+
 export type IntelligenceRecord =
   | CompanyIntelligenceRecord
   | CertificationIntelligenceRecord
@@ -118,4 +133,5 @@ export type IntelligenceRecord =
   | HealthcareProfessionRecord
   | CareerPathwayRecord
   | CompanyInterviewRecord
-  | OnlineAssessmentRecord;
+  | OnlineAssessmentRecord
+  | AssessmentProviderGuide;
