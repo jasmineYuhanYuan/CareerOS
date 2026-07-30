@@ -7,14 +7,13 @@ import { useLanguage } from "@/providers/language-provider";
 import { LanguageToggle } from "./language-toggle";
 
 const secondaryLinks = [
-  { href: "/action-centre", label: "Action centre", zhLabel: "行动中心", description: "Today, applications, gaps and follow-ups", zhDescription: "今天、申请、差距和跟进" },
+  { href: "/roadmap", label: "Roadmap", zhLabel: "职业规划", description: "Plan milestones and next steps", zhDescription: "规划里程碑和下一步行动" },
   { href: "/intelligence", label: "Career Intelligence", zhLabel: "职业知识库", description: "Search verified career knowledge", zhDescription: "搜索已核验职业知识" },
   { href: "/knowledge-graph", label: "Knowledge graph", zhLabel: "职业知识图谱", description: "Explore verified career connections", zhDescription: "探索已核验的职业关系" },
   { href: "/gap-analysis", label: "Gap analysis", zhLabel: "职业差距分析", description: "Profile-aware readiness and next actions", zhDescription: "按个人档案分析准备度和下一步行动" },
   { href: "/recruitment-calendar", label: "Recruitment calendar", zhLabel: "招聘日历", description: "Verified deadlines and interview sessions", zhDescription: "已核验截止日期和面试安排" },
-  { href: "/opportunities", label: "Opportunities", zhLabel: "机会", description: "Explore jobs, events and professional pathways", zhDescription: "探索职位、活动和职业发展机会" },
+  { href: "/jobs", label: "Jobs", zhLabel: "职位", description: "Programme-level opportunity records", zhDescription: "查看项目级机会记录" },
   { href: "/companies", label: "Companies", zhLabel: "公司与诊所", description: "Research organisations and clinics", zhDescription: "研究公司、机构与诊所" },
-  { href: "/roadmap", label: "Roadmap", zhLabel: "职业规划", description: "Plan milestones and next steps", zhDescription: "规划里程碑和下一步行动" },
   { href: "/contacts", label: "Contacts", zhLabel: "人脉", description: "Manage professional relationships", zhDescription: "管理职业联系人与跟进" },
   { href: "/documents", label: "Documents", zhLabel: "文档", description: "Track résumé and career document versions", zhDescription: "追踪简历与职业文档版本" },
   { href: "/settings", label: "Settings", zhLabel: "设置", description: "Theme, backup and local data", zhDescription: "主题、备份与本地数据" },

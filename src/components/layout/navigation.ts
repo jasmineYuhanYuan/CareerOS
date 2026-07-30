@@ -5,25 +5,26 @@ export interface NavigationItem {
   href: string;
   shortLabel: string;
   icon: IconName;
+  group: "primary" | "research" | "workspace";
 }
 
 export const navigationItems: readonly NavigationItem[] = [
-  { label: "Home", href: "/", shortLabel: "Home", icon: "home" },
-  { label: "Action Centre", href: "/action-centre", shortLabel: "Actions", icon: "clipboard" },
-  { label: "Jobs", href: "/jobs", shortLabel: "Jobs", icon: "briefcase" },
-  { label: "Opportunities", href: "/opportunities", shortLabel: "Explore", icon: "sparkles" },
-  { label: "Intelligence", href: "/intelligence", shortLabel: "Intel", icon: "book" },
-  { label: "Knowledge Graph", href: "/knowledge-graph", shortLabel: "Graph", icon: "route" },
-  { label: "Gap Analysis", href: "/gap-analysis", shortLabel: "Gaps", icon: "sparkles" },
-  { label: "Recruitment Calendar", href: "/recruitment-calendar", shortLabel: "Calendar", icon: "route" },
-  { label: "Applications", href: "/applications", shortLabel: "Apply", icon: "clipboard" },
-  { label: "Study", href: "/postgraduate", shortLabel: "Study", icon: "book" },
-  { label: "Companies", href: "/companies", shortLabel: "Companies", icon: "building" },
-  { label: "Roadmap", href: "/roadmap", shortLabel: "Plan", icon: "route" },
-  { label: "Contacts", href: "/contacts", shortLabel: "Contacts", icon: "users" },
-  { label: "Documents", href: "/documents", shortLabel: "Documents", icon: "document" },
-  { label: "Profile", href: "/profiles", shortLabel: "Profile", icon: "user" },
-  { label: "Settings", href: "/settings", shortLabel: "Settings", icon: "settings" },
+  { label: "Home", href: "/", shortLabel: "Home", icon: "home", group: "primary" },
+  { label: "Opportunities", href: "/opportunities", shortLabel: "Explore", icon: "sparkles", group: "primary" },
+  { label: "Applications", href: "/applications", shortLabel: "Apply", icon: "clipboard", group: "primary" },
+  { label: "Action Centre", href: "/action-centre", shortLabel: "Actions", icon: "clipboard", group: "primary" },
+  { label: "Roadmap", href: "/roadmap", shortLabel: "Plan", icon: "route", group: "primary" },
+  { label: "Intelligence", href: "/intelligence", shortLabel: "Intel", icon: "book", group: "primary" },
+  { label: "Profile", href: "/profiles", shortLabel: "Profile", icon: "user", group: "primary" },
+  { label: "Jobs", href: "/jobs", shortLabel: "Jobs", icon: "briefcase", group: "research" },
+  { label: "Knowledge Graph", href: "/knowledge-graph", shortLabel: "Graph", icon: "route", group: "research" },
+  { label: "Gap Analysis", href: "/gap-analysis", shortLabel: "Gaps", icon: "sparkles", group: "research" },
+  { label: "Recruitment Calendar", href: "/recruitment-calendar", shortLabel: "Calendar", icon: "route", group: "research" },
+  { label: "Study", href: "/postgraduate", shortLabel: "Study", icon: "book", group: "research" },
+  { label: "Companies", href: "/companies", shortLabel: "Companies", icon: "building", group: "research" },
+  { label: "Contacts", href: "/contacts", shortLabel: "Contacts", icon: "users", group: "workspace" },
+  { label: "Documents", href: "/documents", shortLabel: "Documents", icon: "document", group: "workspace" },
+  { label: "Settings", href: "/settings", shortLabel: "Settings", icon: "settings", group: "workspace" },
 ];
 
 const chineseLabels: Record<string, { label: string; shortLabel: string }> = {

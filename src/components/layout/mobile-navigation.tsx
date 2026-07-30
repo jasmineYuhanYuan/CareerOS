@@ -7,7 +7,7 @@ import { getNavigationLabel, navigationItems } from "./navigation";
 import { Icon } from "@/components/ui/icon";
 
 const primaryItems = navigationItems.filter((item) =>
-  ["/", "/jobs", "/applications", "/postgraduate", "/profiles"].includes(item.href),
+  ["/", "/opportunities", "/applications", "/action-centre", "/profiles"].includes(item.href),
 );
 
 export function MobileNavigation() {

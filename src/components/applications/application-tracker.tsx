@@ -11,6 +11,7 @@ import { useToast } from "@/providers/toast-provider";
 import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { ApplicationMaterialStatus, ApplicationStatus, InterviewSessionStatus, InterviewSessionType, JobApplication } from "@/types/domain";
+import { applicationAnalytics } from "@/lib/application-pipeline";
 
 const statuses: ApplicationStatus[] = ["Interested", "Researching", "Preparing", "Ready to apply", "Applied", "OA invited", "OA completed", "Interview invited", "Interviewing", "Reference check", "Offer", "Rejected", "Withdrawn", "Archived"];
 const materialStatuses: ApplicationMaterialStatus[] = ["Missing", "Draft", "Review needed", "Ready", "Submitted", "Outdated", "Not applicable"];
@@ -46,6 +47,7 @@ export function ApplicationTracker() {
     `${application.organisationName} ${application.jobTitle}`.toLowerCase().includes(query.toLowerCase()) &&
     (statusFilter === "All" || application.status === statusFilter)
   ), [activeWorkspace.applications, query, statusFilter]);
+  const analytics = applicationAnalytics(activeWorkspace.applications);
 
   function save(event: FormEvent) {
     event.preventDefault();
@@ -110,6 +112,16 @@ export function ApplicationTracker() {
           {(["Board", "List"] as const).map((mode) => <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={`min-h-10 flex-1 rounded-lg px-4 text-sm font-medium ${view === mode ? "bg-[var(--surface)] text-[var(--accent)] shadow-sm" : "text-[var(--text-secondary)]"}`}>{mode}</button>)}
         </div>
       </div>
+      <section aria-label="Application analytics" className="mb-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {[
+          ["Submitted", analytics.submitted],
+          ["Awaiting response", analytics.awaitingResponse],
+          ["Interviews", analytics.interviews],
+          ["Offers", analytics.offers],
+          ["Rejections", analytics.rejections],
+        ].map(([label, value]) => <div key={label} className="surface-card p-4"><strong className="font-display text-2xl">{value}</strong><span className="mt-1 block text-xs text-[var(--text-secondary)]">{label}</span></div>)}
+        <p className="text-xs text-[var(--text-tertiary)] sm:col-span-2 lg:col-span-5">Counts use user-created records only. Average response time remains hidden until at least three valid response intervals exist.</p>
+      </section>
 
       {visible.length === 0 ? <EmptyState icon="▤" title={t("applications.emptyTitle")} description={t("applications.emptyBody")} actionLabel={t("applications.create")} actionOnClick={() => setDraft(emptyApplication(activeWorkspace.profile.id))} secondaryLabel={t("applications.browseJobs")} secondaryHref="/jobs" /> : view === "List" ? (
         <div className="hidden overflow-x-auto rounded-[1.35rem] border border-[var(--border)] bg-[var(--surface)] md:block">

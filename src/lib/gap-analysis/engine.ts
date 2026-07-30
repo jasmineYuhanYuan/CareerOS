@@ -213,6 +213,14 @@ export function analyseCareerGap(
       .map(actionFor)
       .sort((a, b) => ({ High: 0, Medium: 1, Low: 2 })[a.priority] - ({ High: 0, Medium: 1, Low: 2 })[b.priority]),
     evidenceSourceIds: Array.from(new Set(requirements.flatMap((item) => item.evidenceSourceIds))),
+    evidenceCount: requirements.filter((item) => item.status === "confirmed").length,
+    unknownCount,
+    scoreCap: cap,
+    scoreCapReason: requiredFailure
+      ? "At least one required fact is missing or blocked."
+      : requiredUnknown
+        ? `${requiredUnknown} required fact(s) remain unknown.`
+        : "No score cap is currently applied.",
     scoreExplanation: [
       "Required items carry weight 4, strongly preferred 3, helpful 2 and informational 1.",
       "Confirmed items receive full weight, unknown items half weight, and missing or blocked items no weight.",

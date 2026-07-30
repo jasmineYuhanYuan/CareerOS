@@ -93,7 +93,7 @@ export function JobBrowser() {
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">{job.location} · {job.remoteType} · {job.employmentType}</p>
                 <div className="mt-4 flex flex-wrap gap-2">{job.tags.slice(0, 2).map((tag) => <Badge key={tag}>{tag}</Badge>)}</div>
                 <div className="mt-6 flex items-end justify-between gap-3 border-t border-[var(--border)] pt-4">
-                  <div><StatusBadge status="positive">{result.score}% estimated match</StatusBadge><p className="mt-2 text-[0.75rem] text-[var(--text-tertiary)]">{job.deadline ? new Date(`${job.deadline}T00:00:00`).toLocaleDateString(language === "zh-CN" ? "zh-CN" : "en-AU", { day: "numeric", month: "short" }) : job.applicationStage}</p></div>
+                  <div><StatusBadge status="active">{result.score}% planning alignment</StatusBadge><p className="mt-2 text-[0.75rem] text-[var(--text-tertiary)]">{job.deadline ? new Date(`${job.deadline}T00:00:00`).toLocaleDateString(language === "zh-CN" ? "zh-CN" : "en-AU", { day: "numeric", month: "short" }) : job.applicationStage}</p></div>
                   <Button size="sm" onClick={() => setSelected(job)}>{t("jobs.view")}</Button>
                 </div>
                 {applied && <p className="mt-3 text-[0.78rem] font-medium text-[var(--success)]">Added to applications</p>}
@@ -110,7 +110,7 @@ export function JobBrowser() {
 
       <Dialog open={selected !== null} title={selected?.title ?? "Job details"} description={selected ? `${displayOrganisationName(selected.companyName)} · ${selected.sampleData ? sampleStatus(language) : t("jobs.officialSource")}` : undefined} onClose={() => setSelected(null)}>
         {selected && match && <div className="space-y-6">
-          <div className="flex flex-wrap gap-2">{selected.sampleData ? <StatusBadge status="active">{sampleStatus(language)}</StatusBadge> : <StatusBadge status="positive">{t("jobs.officialSource")}</StatusBadge>}<StatusBadge status="positive">{match.score}% estimated profile match</StatusBadge></div>
+          <div className="flex flex-wrap gap-2">{selected.sampleData ? <StatusBadge status="active">{sampleStatus(language)}</StatusBadge> : <StatusBadge status="positive">{t("jobs.officialSource")}</StatusBadge>}<StatusBadge status="active">{match.score}% planning alignment</StatusBadge></div>
           <section><h3 className="font-medium">Overview</h3><p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{selected.description}</p></section>
           {selected.sourceUrl && (
             <p className="text-sm">
@@ -126,7 +126,7 @@ export function JobBrowser() {
             <section><h3 className="font-medium text-[var(--success)]">Matching strengths</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">{match.strengths.map((item) => <li key={item}>{item}</li>)}</ul></section>
             <section><h3 className="font-medium text-[var(--warning)]">Areas to investigate</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">{match.gaps.map((item) => <li key={item}>{item}</li>)}</ul></section>
           </div>
-          <p className="rounded-xl bg-[var(--surface-subtle)] p-4 text-xs leading-5 text-[var(--text-secondary)]">{match.explanation}</p>
+          <p className="rounded-xl bg-[var(--surface-subtle)] p-4 text-xs leading-5 text-[var(--text-secondary)]">{match.explanation} It does not measure employability, selection likelihood or hiring probability. Evidence: {match.strengths.length} item(s); unknowns or gaps: {match.gaps.length}.</p>
           <div className="flex flex-wrap justify-end gap-2"><Button variant="secondary" onClick={() => toggleSavedJob(selected.id)}>{activeWorkspace.savedJobIds.includes(selected.id) ? t("jobs.unsave") : t("jobs.save")}</Button><Button onClick={() => addJobApplication(selected.id)}>{activeWorkspace.applications.some((item) => item.jobId === selected.id) ? t("jobs.inApplications") : t("jobs.addApplication")}</Button></div>
         </div>}
       </Dialog>

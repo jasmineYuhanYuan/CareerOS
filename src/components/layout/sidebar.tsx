@@ -8,8 +8,6 @@ import { LanguageToggle } from "./language-toggle";
 import { getNavigationLabel, navigationItems } from "./navigation";
 import { Icon } from "@/components/ui/icon";
 
-const primaryHrefs = ["/", "/action-centre", "/jobs", "/opportunities", "/applications", "/postgraduate"];
-
 function NavList({ items, pathname, language }: { items: typeof navigationItems; pathname: string; language: "en" | "zh-CN" }) {
   return (
     <ul className="space-y-1">
@@ -40,8 +38,9 @@ function NavList({ items, pathname, language }: { items: typeof navigationItems;
 export function Sidebar() {
   const pathname = usePathname();
   const { language } = useLanguage();
-  const primary = navigationItems.filter((item) => primaryHrefs.includes(item.href));
-  const secondary = navigationItems.filter((item) => !primaryHrefs.includes(item.href));
+  const primary = navigationItems.filter((item) => item.group === "primary");
+  const research = navigationItems.filter((item) => item.group === "research");
+  const workspace = navigationItems.filter((item) => item.group === "workspace");
 
   return (
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-[13rem] flex-col border-r border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-6 lg:flex">
@@ -50,8 +49,18 @@ export function Sidebar() {
       </Link>
       <nav className="mt-10 flex-1" aria-label={language === "zh-CN" ? "主导航" : "Primary navigation"}>
         <NavList items={primary} pathname={pathname} language={language} />
-        <div className="my-5 border-t border-[var(--border)]" />
-        <NavList items={secondary} pathname={pathname} language={language} />
+        <details className="group mt-4" open={research.some((item) => pathname.startsWith(item.href))}>
+          <summary className="min-h-10 cursor-pointer list-none rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)] hover:bg-[var(--surface-subtle)]">
+            {language === "zh-CN" ? "研究工具" : "Research tools"}
+          </summary>
+          <div className="mt-1"><NavList items={research} pathname={pathname} language={language} /></div>
+        </details>
+        <details className="group mt-2" open={workspace.some((item) => pathname.startsWith(item.href))}>
+          <summary className="min-h-10 cursor-pointer list-none rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)] hover:bg-[var(--surface-subtle)]">
+            {language === "zh-CN" ? "工作区" : "Workspace"}
+          </summary>
+          <div className="mt-1"><NavList items={workspace} pathname={pathname} language={language} /></div>
+        </details>
       </nav>
       <div className="mb-3">
         <LanguageToggle />

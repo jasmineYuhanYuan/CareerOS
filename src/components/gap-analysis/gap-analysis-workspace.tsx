@@ -66,6 +66,15 @@ export function GapAnalysisWorkspace() {
           <div><h2 className="font-display text-2xl font-medium">{analysis.targetName}</h2><ul className="mt-3 space-y-1 text-sm leading-6 text-[var(--text-secondary)]">{analysis.scoreExplanation.map((line) => <li key={line}>• {line}</li>)}</ul></div>
         </div>
       </section>
+      <section className="surface-card mb-6 p-5" aria-labelledby="score-method-heading">
+        <h2 id="score-method-heading" className="font-display text-lg font-medium">{zh ? "这个分数代表什么" : "What this score means"}</h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div><p className="text-xs text-[var(--text-tertiary)]">{zh ? "衡量内容" : "Measures"}</p><p className="mt-1 text-sm">{zh ? "当前档案对这个精确目标的规划准备度。" : "Planning readiness for this exact target using stored profile facts."}</p></div>
+          <div><p className="text-xs text-[var(--text-tertiary)]">{zh ? "不衡量" : "Does not measure"}</p><p className="mt-1 text-sm">{zh ? "就业能力、录用概率或雇主判断。" : "Employability, hiring probability or an employer decision."}</p></div>
+          <div><p className="text-xs text-[var(--text-tertiary)]">{zh ? "证据与未知项" : "Evidence and unknowns"}</p><p className="mt-1 text-sm">{analysis.evidenceCount} {zh ? "项已确认" : "confirmed"} · {analysis.unknownCount} {zh ? "项未知" : "unknown"}</p></div>
+          <div><p className="text-xs text-[var(--text-tertiary)]">{zh ? "分数上限" : "Score cap"}</p><p className="mt-1 text-sm">{analysis.scoreCap}% · {analysis.scoreCapReason}</p></div>
+        </div>
+      </section>
 
       <section className="surface-card mb-6 p-5">
         <h2 className="font-display text-lg font-medium">{zh ? "可编辑的关键档案事实" : "Editable profile facts"}</h2>

@@ -44,4 +44,8 @@ export interface GapAnalysisResult {
   recommendedNextActions: GapAction[];
   evidenceSourceIds: string[];
   scoreExplanation: string[];
+  evidenceCount: number;
+  unknownCount: number;
+  scoreCap: number;
+  scoreCapReason: string;
 }
