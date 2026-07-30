@@ -4,7 +4,7 @@ import { deriveOpportunityLifecycle, materialIsReady } from "./opportunity-lifec
 describe("verified opportunity lifecycle", () => {
   const base = {
     verificationStatus: "Verified" as const,
-    applicationStage: "Open",
+    applicationStage: "Open" as const,
     deadline: null,
   };
 
