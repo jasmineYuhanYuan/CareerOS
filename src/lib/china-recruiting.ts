@@ -28,6 +28,15 @@ export function createChinaApplicationRecord(opportunity: ChinaCampusOpportunity
     notes: opportunity.notes,
     lastUpdatedAt: timestamp,
     activity: [{ id: `activity-${opportunity.id}`, type: "created", label: "China opportunity added to application pipeline", occurredAt: timestamp }],
+    sourceSnapshot: {
+      location: opportunity.location,
+      officialUrl: opportunity.officialApplyLink,
+      deadline: opportunity.deadline,
+      recruitingBatch: opportunity.recruitingBatch,
+      title: opportunity.position,
+      company: opportunity.company,
+      capturedAt: timestamp,
+    },
     materials: [{ id: `material-resume-${opportunity.id}`, label: opportunity.resumeVersion, status: "Missing", notes: "Readiness must be confirmed by the user." }],
     sessions: [],
   };

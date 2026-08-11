@@ -72,6 +72,7 @@ export type ChinaSourceType = "Official" | "Aggregator" | "Community" | "Manual"
 
 export interface ChinaCampusOpportunity {
   id: string;
+  jobId?: string;
   profileId: string;
   company: string;
   position: string;
@@ -83,12 +84,17 @@ export interface ChinaCampusOpportunity {
   targetGraduationYear: string | null;
   roleFamily: ChinaRoleFamily;
   businessUnit: string | null;
+  headcount?: number | null;
+  responsibilities?: string[];
+  requirements?: string[];
   officialApplyLink: string;
   officialCareersLink: string;
   sourceName: string;
   sourceUrl: string;
   sourceType: ChinaSourceType;
   lastVerifiedAt: string;
+  nextReviewDate?: string;
+  sourceStatus?: string;
   verificationStatus: OpportunityLifecycle;
   verificationConfidence: "High" | "Medium" | "Low";
   publishedDate: string | null;
@@ -283,6 +289,15 @@ export interface JobApplication {
   notes: string;
   lastUpdatedAt: string;
   activity: ActivityEvent[];
+  sourceSnapshot?: {
+    location: string;
+    officialUrl: string;
+    deadline: string | null;
+    recruitingBatch: string;
+    title: string;
+    company: string;
+    capturedAt: string;
+  };
   materials?: ApplicationMaterial[];
   sessions?: InterviewAssessmentSession[];
 }
