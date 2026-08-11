@@ -5,7 +5,7 @@ The China Campus Recruiting workspace is available at `/china-recruiting`. It re
 ## Data integrity
 
 - China opportunities are profile-specific and do not change Australian opportunity metrics.
-- The initial target-company directory is tracking metadata only. It is not counted as active recruitment.
+- The target-company directory is tracking metadata only. It is not counted as active recruitment.
 - CareerOS ships with no invented China vacancies, deadlines, or application links.
 - Expired and archived records are excluded from daily recommendations and active metrics.
 - Official, aggregator, community, and manual sources remain visibly distinct.
