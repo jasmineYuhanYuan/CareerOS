@@ -27,4 +27,6 @@ Capture the official title, job ID when present, employer, business group, locat
 6. If a listing disappears, determine whether the official source says Closed; otherwise use Verification required, then Archive once confirmed historical.
 7. Preserve the application source snapshot even if the live listing later changes.
 
+For Australia, also compare the advertised commencement window with the review date. A reachable page with an already-passed start window is not automatically current. Government `Upcoming` records require an explicitly published future opening date and retain citizenship and clearance wording exactly as published.
+
 Community material may inform interview preparation but cannot establish that a vacancy is open. Interview intelligence is reviewed every 90 days and must retain its evidence class.

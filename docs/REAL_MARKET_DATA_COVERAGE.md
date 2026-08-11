@@ -21,13 +21,13 @@ The active records use job-specific official Baidu or Xiaohongshu pages. Target-
 
 ## Australia
 
-- Strictly active, job-specific verified vacancies: 0
-- Upcoming with an official opening date: 0
+- Strictly active, job-specific verified vacancies: 1 (Amazon Software Development Engineer Intern, Sydney, Job ID 3204846)
+- Upcoming with an official opening date: 2 (2027 AGGP Digital and Data streams; opening 1 March 2027)
 - Programme pages requiring re-verification: 2 Atlassian early-career programme records
 - Closed Australian records retained: 4 (three ASD streams and one APS finance stream)
 - Australian programme records with timing not published: 3 Digital Transformation Agency streams
 
-No Australian programme homepage is promoted as an active vacancy. The Commonwealth Bank graduate/intern page was checked and states that applications are closed; Atlassian retains programme information but no current job-specific opening was confirmed in this review.
+No Australian programme homepage is promoted as an active vacancy. The Commonwealth Bank graduate/intern page was checked and states that applications are closed; Atlassian retains programme information but no current job-specific opening was confirmed in this review. Work rights and sponsorship for the active Amazon role remain unknown because the official vacancy does not publish them.
 
 ## Rejected or archived evidence
 
