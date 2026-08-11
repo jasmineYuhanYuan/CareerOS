@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createSeedState, jobs, programs } from "@/data/seed";
 import { parseStoredState, readState, saveState, serialiseState, validateState } from "@/lib/storage";
+import { importChinaOpportunityJson } from "@/lib/china-recruiting";
 import type {
   CareerOSState,
   CareerProfile,
@@ -18,6 +19,7 @@ import type {
   CareerDocumentRecord,
   DashboardPreferences,
   JobApplication,
+  ChinaCampusOpportunity,
   PostgraduateApplication,
   RoadmapItem,
   ThemePreference,
@@ -56,6 +58,8 @@ interface CareerOSContextValue {
   resetAll: () => void;
   exportData: () => string;
   importData: (raw: string) => { ok: boolean; message: string };
+  importChinaCampusOpportunities: (raw: string, forceStatus?: boolean) => { ok: boolean; message: string; inserted: number; updated: number; skipped: number };
+  updateChinaCampusOpportunity: (opportunity: ChinaCampusOpportunity) => void;
 }
 
 const CareerOSContext = createContext<CareerOSContextValue | null>(null);
@@ -119,6 +123,7 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
           savedOpportunityIds: [],
           contacts: [],
           documents: [],
+          chinaCampusOpportunities: [],
         };
       return {
         ...current,
@@ -290,6 +295,32 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
       return { ok: false, message: "The selected file is not valid JSON." };
     }
   }, []);
+  const importChinaCampusOpportunities = useCallback((raw: string, forceStatus = false) => {
+    const workspace = state.profiles[state.activeProfileId];
+    const result = importChinaOpportunityJson(raw, workspace.chinaCampusOpportunities, workspace.profile.id, { forceStatus });
+    if (result.inserted + result.updated > 0) {
+      setState((current) => ({
+        ...current,
+        profiles: {
+          ...current.profiles,
+          [workspace.profile.id]: { ...workspace, chinaCampusOpportunities: result.records },
+        },
+      }));
+    }
+    return {
+      ok: result.errors.length === 0 || result.inserted + result.updated > 0,
+      message: result.errors.length ? result.errors.join(" ") : `Imported ${result.inserted}; updated ${result.updated}; skipped ${result.skipped}.`,
+      inserted: result.inserted,
+      updated: result.updated,
+      skipped: result.skipped,
+    };
+  }, [state]);
+  const updateChinaCampusOpportunity = useCallback((opportunity: ChinaCampusOpportunity) => {
+    updateActive((workspace) => ({
+      ...workspace,
+      chinaCampusOpportunities: workspace.chinaCampusOpportunities.map((item) => item.id === opportunity.id ? opportunity : item),
+    }));
+  }, [updateActive]);
 
   const activeWorkspace = state.profiles[state.activeProfileId];
   const value = useMemo<CareerOSContextValue>(() => ({
@@ -299,7 +330,8 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
     upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage,
     updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact,
     upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData,
-  }), [state, activeWorkspace, hydrated, storageError, setActiveProfileId, updateProfile, upsertProfile, toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication, toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication, upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage, updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact, upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData]);
+    importChinaCampusOpportunities, updateChinaCampusOpportunity,
+  }), [state, activeWorkspace, hydrated, storageError, setActiveProfileId, updateProfile, upsertProfile, toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication, toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication, upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage, updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact, upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData, importChinaCampusOpportunities, updateChinaCampusOpportunity]);
 
   return (
     <CareerOSContext.Provider value={value}>

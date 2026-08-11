@@ -13,6 +13,7 @@ const secondaryLinks = [
   { href: "/gap-analysis", label: "Gap analysis", zhLabel: "职业差距分析", description: "Profile-aware readiness and next actions", zhDescription: "按个人档案分析准备度和下一步行动" },
   { href: "/recruitment-calendar", label: "Recruitment calendar", zhLabel: "招聘日历", description: "Verified deadlines and interview sessions", zhDescription: "已核验截止日期和面试安排" },
   { href: "/jobs", label: "Jobs", zhLabel: "职位", description: "Programme-level opportunity records", zhDescription: "查看项目级机会记录" },
+  { href: "/china-recruiting", label: "China Recruiting", zhLabel: "中国秋招", description: "Daily applications, OA and interview tracking", zhDescription: "每日投递、OA 与面试追踪" },
   { href: "/companies", label: "Companies", zhLabel: "公司与诊所", description: "Research organisations and clinics", zhDescription: "研究公司、机构与诊所" },
   { href: "/contacts", label: "Contacts", zhLabel: "人脉", description: "Manage professional relationships", zhDescription: "管理职业联系人与跟进" },
   { href: "/documents", label: "Documents", zhLabel: "文档", description: "Track résumé and career document versions", zhDescription: "追踪简历与职业文档版本" },

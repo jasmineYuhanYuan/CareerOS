@@ -251,6 +251,7 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
     savedOpportunityIds: profile.id === YUHAN_ID ? ["opportunity-atlassian-au-intern-program"] : [],
     contacts: [],
     documents: [],
+    chinaCampusOpportunities: [],
   };
   if (profile.id === YUHAN_ID) {
     base.savedJobIds = ["atlassian-au-intern-program"];

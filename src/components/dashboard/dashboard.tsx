@@ -15,6 +15,7 @@ import type { TranslationKey } from "@/i18n";
 import { TOMMY_ID } from "@/data/seed";
 import { analyseCareerGap, gapTargets } from "@/lib/gap-analysis/engine";
 import { canberraChiropracticEmployers } from "@/data/verified/chiropractic";
+import { chinaPipelineMetrics } from "@/lib/china-recruiting";
 
 function greetingKey(): "dashboard.morning" | "dashboard.afternoon" | "dashboard.evening" {
   const hour = new Date().getHours();
@@ -46,6 +47,7 @@ export function Dashboard() {
   const completedChecks = checks.filter((item) => item.complete).length;
   const progress = Math.round(completedChecks / checks.length * 100);
   const activity = recentApplicationActivity(activeWorkspace);
+  const chinaMetrics = chinaPipelineMetrics(activeWorkspace.chinaCampusOpportunities, today);
   const metrics = [
     { label: t("dashboard.activeApplications"), hint: t("dashboard.metricApplicationsHint"), value: activeWorkspace.applications.filter((item) => !["Rejected", "Withdrawn"].includes(item.status)).length, href: "/applications" },
     { label: t("dashboard.upcomingDeadlines"), hint: t("dashboard.metricDeadlinesHint"), value: deadlines.length, href: "/roadmap" },
@@ -73,6 +75,11 @@ export function Dashboard() {
     </section>
 
     <section className="my-10"><SectionHeader title={t("dashboard.overview")} /><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{metrics.map((metric) => <Link key={metric.label} href={metric.href} className="interactive-lift surface-card p-5"><strong className="font-display text-2xl font-medium">{metric.value}</strong><span className="mt-2 block text-sm font-medium">{metric.label}</span><span className="mt-1 block text-xs text-[var(--text-secondary)]">{metric.hint}</span></Link>)}</div></section>
+
+    {!isTommy && <section className="mb-10"><SectionHeader eyebrow="CN · 2027 秋招" title={language === "zh-CN" ? "中国秋招进度" : "China recruiting progress"} action={<Link href="/china-recruiting" className="text-sm font-medium text-[var(--accent)]">{language === "zh-CN" ? "打开中国秋招" : "Open China Recruiting"} →</Link>} /><div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">{[
+      ["China To Apply", chinaMetrics.toApply], ["China Applied", chinaMetrics.applied], ["China OA", chinaMetrics.oa],
+      ["China Interviews", chinaMetrics.interview], ["China Offers", chinaMetrics.offer], ["Closing in 7 Days", chinaMetrics.closingIn7Days],
+    ].map(([label, value]) => <Link key={label} href="/china-recruiting" className="interactive-lift surface-card p-4"><strong className="font-display text-2xl">{value}</strong><span className="mt-1 block text-xs text-[var(--text-secondary)]">{label}</span></Link>)}</div><p className="mt-2 text-xs text-[var(--text-tertiary)]">{language === "zh-CN" ? "仅统计当前档案内未归档、未过期的中国岗位；不影响澳洲指标。" : "Counts only non-archived, non-expired China records in this profile and does not change Australia metrics."}</p></section>}
 
     <section className="mb-10"><SectionHeader eyebrow={language === "zh-CN" ? "个人行动工作区" : "Profile-aware workspace"} title={isTommy ? (language === "zh-CN" ? "Tommy 的注册与诊所行动" : "Tommy's registration and clinic actions") : (language === "zh-CN" ? "Yuhan 的澳洲／中国科技行动" : "Yuhan's Australia / China technology actions")} action={<Link href="/action-centre" className="text-sm font-medium text-[var(--accent)]">{language === "zh-CN" ? "打开行动中心" : "Open action centre"}</Link>} /><div className="grid gap-4 sm:grid-cols-3"><div className="surface-card p-5"><strong className="font-display text-3xl text-[var(--accent)]">{targetGap.overallReadinessScore}%</strong><span className="mt-2 block font-medium">{targetGap.targetName}</span><span className="mt-1 block text-xs text-[var(--text-secondary)]">{targetGap.blockers.length} {language === "zh-CN" ? "个阻碍／确认项" : "blockers / confirmations"}</span></div><div className="surface-card p-5"><strong className="font-display text-3xl">{isTommy ? canberraChiropracticEmployers.length : recommended.filter((item) => item.country === "Australia").length}</strong><span className="mt-2 block font-medium">{isTommy ? (language === "zh-CN" ? "已核验诊所目录" : "Verified clinic directory") : (language === "zh-CN" ? "澳洲目标" : "Australian targets")}</span><span className="mt-1 block text-xs text-[var(--text-secondary)]">{isTommy ? (language === "zh-CN" ? "不代表正在招聘" : "Not current-vacancy claims") : (language === "zh-CN" ? "仅官方来源" : "Official sources only")}</span></div><div className="surface-card p-5"><strong className="font-display text-3xl">{isTommy ? activeWorkspace.contacts.length : recommended.filter((item) => item.country === "China").length}</strong><span className="mt-2 block font-medium">{isTommy ? (language === "zh-CN" ? "联系与跟进" : "Outreach contacts") : (language === "zh-CN" ? "中国目标" : "China targets")}</span><span className="mt-1 block text-xs text-[var(--text-secondary)]">{language === "zh-CN" ? "按当前档案隔离" : "Isolated to this profile"}</span></div></div></section>
 

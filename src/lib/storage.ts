@@ -56,6 +56,12 @@ function isWorkspace(value: unknown, profileId: string): value is ProfileWorkspa
       if (typeof item !== "object" || item === null) return false;
       const record = item as Record<string, unknown>;
       return record.profileId === profileId && typeof record.id === "string" && typeof record.name === "string";
+    }) &&
+    Array.isArray(workspace.chinaCampusOpportunities) &&
+    workspace.chinaCampusOpportunities.every((item) => {
+      if (typeof item !== "object" || item === null) return false;
+      const record = item as Record<string, unknown>;
+      return record.profileId === profileId && record.country === "China" && typeof record.id === "string" && typeof record.status === "string";
     })
   );
 }
@@ -146,7 +152,15 @@ export function migrateState(value: unknown): CareerOSState | null {
     const preferences = typeof legacy.dashboardPreferences === "object" && legacy.dashboardPreferences !== null
       ? legacy.dashboardPreferences as Record<string, unknown>
       : {};
-    const migrated = { ...legacy, dashboardPreferences: { ...preferences, demoMode: false } };
+    const migrated = {
+      ...legacy,
+      version: STORAGE_VERSION,
+      dashboardPreferences: { ...preferences, demoMode: false },
+      profiles: Object.fromEntries(Object.entries(legacy.profiles as Record<string, unknown>).map(([id, workspace]) => [
+        id,
+        { ...(workspace as Record<string, unknown>), chinaCampusOpportunities: [] },
+      ])),
+    };
     return validateState(migrated) ? migrated : null;
   }
   if (legacy.version !== 2 || typeof legacy.profiles !== "object" || legacy.profiles === null) return null;
@@ -158,6 +172,7 @@ export function migrateState(value: unknown): CareerOSState | null {
       savedOpportunityIds: [],
       contacts: [],
       documents: [],
+      chinaCampusOpportunities: [],
     };
   }
   const migrated = {
