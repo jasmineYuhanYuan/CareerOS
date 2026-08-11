@@ -20,11 +20,11 @@ describe("curated opportunity data", () => {
     expect(result.errors.join(" ")).toContain("Duplicate opportunity ID");
   });
 
-  it("keeps inactive records archived and exposes verified China targets", () => {
+  it("keeps inactive records archived and excludes programme-only China records from active opportunities", () => {
     const archived = opportunities.filter((item) => item.archived);
     expect(archived.map((item) => item.organisationName)).toContain("ByteDance");
     expect(archived.every((item) => deriveOpportunityLifecycle(item, "2026-07-30") === "Archived")).toBe(true);
     const activeChina = opportunities.filter((item) => item.country === "China" && ["Open", "Closing soon", "Upcoming"].includes(deriveOpportunityLifecycle(item, "2026-07-30")));
-    expect(activeChina.map((item) => item.organisationName)).toEqual(["Baidu", "Baidu"]);
+    expect(activeChina).toEqual([]);
   });
 });

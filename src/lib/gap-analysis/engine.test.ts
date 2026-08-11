@@ -29,7 +29,7 @@ describe("explainable gap analysis", () => {
     expect(result.unknownRequirements.map((item) => item.id)).toEqual(expect.arrayContaining([
       "work-eligibility", "graduation-window",
     ]));
-    expect(result.matchedRequirements.map((item) => item.id)).toContain("target-lifecycle");
+    expect(result.unknownRequirements.map((item) => item.id)).toContain("target-lifecycle");
     expect(result.missingRequirements.map((item) => item.id)).toContain("application-materials");
     expect(result.overallReadinessScore).toBeLessThanOrEqual(64);
   });
