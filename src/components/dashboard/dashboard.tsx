@@ -19,8 +19,12 @@ import type { TranslationKey } from "@/i18n";
 import { TOMMY_ID } from "@/data/seed";
 import { analyseCareerGap, gapTargets } from "@/lib/gap-analysis/engine";
 import { canberraChiropracticEmployers } from "@/data/verified/chiropractic";
-import { chinaPipelineMetrics, selectTodayRecommendations } from "@/lib/china-recruiting";
+import {
+  chinaPipelineMetrics,
+  selectTodayRecommendations,
+} from "@/lib/china-recruiting";
 import { displayCompanyName, displayUiValue } from "@/i18n/presentation";
+import { deriveOpportunityLifecycle } from "@/lib/opportunity-lifecycle";
 
 function greetingKey():
   "dashboard.morning" | "dashboard.afternoon" | "dashboard.evening" {
@@ -71,6 +75,13 @@ export function Dashboard() {
   ];
   const focusItems = activeWorkspace.roadmapItems
     .filter((item) => item.status !== "Completed")
+    .filter(
+      (item) =>
+        isTommy ||
+        !["Complete CareerOS MVP", "Continue WearAgain iteration"].includes(
+          item.title,
+        ),
+    )
     .sort((a, b) =>
       (a.targetDate || "9999").localeCompare(b.targetDate || "9999"),
     )
@@ -83,7 +94,19 @@ export function Dashboard() {
     activeWorkspace.chinaCampusOpportunities,
     today,
   );
-  const chinaToday = selectTodayRecommendations(activeWorkspace.chinaCampusOpportunities, today, 3);
+  const chinaToday = selectTodayRecommendations(
+    activeWorkspace.chinaCampusOpportunities,
+    today,
+    3,
+  );
+  const australiaToday = relevant
+    .filter((item) => item.country === "Australia")
+    .filter((item) =>
+      ["Open", "Closing soon"].includes(
+        deriveOpportunityLifecycle(item, today),
+      ),
+    )
+    .slice(0, 3);
   const metrics = [
     {
       label: t("dashboard.activeApplications"),
@@ -244,7 +267,112 @@ export function Dashboard() {
         )}
       </section>
 
-      {!isTommy && <section className="my-10"><SectionHeader eyebrow={language === "zh-CN" ? "今天值得关注" : "Worth attention today"} title={language === "zh-CN" ? "我今天应该投什么？" : "What should I apply to today?"} action={<Link href="/china-recruiting" className="text-sm font-medium text-[var(--accent)]">{language === "zh-CN" ? "查看中国秋招" : "Open China Recruiting"}</Link>} /><div className="grid gap-4 md:grid-cols-3">{chinaToday.map((item, index) => <article key={item.id} className="surface-card p-5"><span className="text-xs text-[var(--text-tertiary)]">0{index + 1}</span><h3 className="mt-2 font-display text-lg font-medium">{displayCompanyName(item.company, language)} · {item.position}</h3><p className="mt-2 text-sm text-[var(--text-secondary)]">{language === "zh-CN" ? "官方仍开放 · 暂无公开截止日期，建议尽早投递" : "Official role open · no public deadline; apply early"}</p><Link href={`/china-recruiting/${item.id}`} className="mt-4 inline-flex text-sm font-semibold text-[var(--accent)]">{language === "zh-CN" ? "查看岗位" : "View role"} →</Link></article>)}</div></section>}
+      {!isTommy && (
+        <section className="my-10">
+          <SectionHeader
+            eyebrow={
+              language === "zh-CN" ? "今天值得关注" : "Worth attention today"
+            }
+            title={
+              language === "zh-CN"
+                ? "我今天应该投什么？"
+                : "What should I apply to today?"
+            }
+            action={
+              <Link
+                href="/action-centre"
+                className="text-sm font-medium text-[var(--accent)]"
+              >
+                {language === "zh-CN" ? "打开行动中心" : "Open action centre"}
+              </Link>
+            }
+          />
+          {australiaToday.length === 0 && (
+            <div className="surface-card mb-4 p-5">
+              <p className="font-medium">
+                {language === "zh-CN"
+                  ? "今天暂未发现新的澳洲已核验岗位。"
+                  : "No new verified Australian role was found today."}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-4 text-sm font-medium text-[var(--accent)]">
+                <Link href="/recruitment-calendar">
+                  {language === "zh-CN"
+                    ? "查看即将开放项目"
+                    : "View upcoming programs"}
+                </Link>
+                <Link href="/china-recruiting">
+                  {language === "zh-CN"
+                    ? "查看中国秋招"
+                    : "View China recruiting"}
+                </Link>
+                <Link href="/profiles">
+                  {language === "zh-CN" ? "完善资料" : "Complete profile"}
+                </Link>
+              </div>
+            </div>
+          )}
+          <div className="grid gap-4 md:grid-cols-3">
+            {australiaToday.map((item, index) => (
+              <article key={item.id} className="surface-card p-5">
+                <span className="text-xs text-[var(--text-tertiary)]">
+                  AU 0{index + 1}
+                </span>
+                <h3 className="mt-2 font-display text-lg font-medium">
+                  {item.organisationName} · {item.title}
+                </h3>
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                  {item.city} ·{" "}
+                  {displayUiValue(
+                    item.employmentType ?? item.category,
+                    language,
+                  )}{" "}
+                  · {language === "zh-CN" ? "官方仍开放" : "Official role open"}
+                </p>
+                <p className="mt-3 text-xs text-[var(--text-secondary)]">
+                  {language === "zh-CN"
+                    ? "推荐原因：与软件工程方向匹配；工作资格与签证支持仍待确认。"
+                    : "Why: relevant to software engineering; work rights and sponsorship remain unconfirmed."}
+                </p>
+                <a
+                  href={item.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 inline-flex text-sm font-semibold text-[var(--accent)]"
+                >
+                  {language === "zh-CN"
+                    ? "官方网站投递"
+                    : "Apply on official site"}{" "}
+                  ↗
+                </a>
+              </article>
+            ))}
+            {chinaToday
+              .slice(0, Math.max(0, 3 - australiaToday.length))
+              .map((item, index) => (
+                <article key={item.id} className="surface-card p-5">
+                  <span className="text-xs text-[var(--text-tertiary)]">
+                    CN 0{index + 1}
+                  </span>
+                  <h3 className="mt-2 font-display text-lg font-medium">
+                    {displayCompanyName(item.company, language)} ·{" "}
+                    {item.position}
+                  </h3>
+                  <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                    {language === "zh-CN"
+                      ? "官方仍开放 · 暂无公开截止日期，建议尽早投递"
+                      : "Official role open · no public deadline; apply early"}
+                  </p>
+                  <Link
+                    href={`/china-recruiting/${item.id}`}
+                    className="mt-4 inline-flex text-sm font-semibold text-[var(--accent)]"
+                  >
+                    {language === "zh-CN" ? "查看岗位" : "View role"} →
+                  </Link>
+                </article>
+              ))}
+          </div>
+        </section>
+      )}
 
       <section className="my-10">
         <SectionHeader title={t("dashboard.overview")} />
@@ -292,12 +420,27 @@ export function Dashboard() {
           />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
             {[
-              [language === "zh-CN" ? "中国待投递" : "China To Apply", chinaMetrics.toApply],
-              [language === "zh-CN" ? "中国已投递" : "China Applied", chinaMetrics.applied],
+              [
+                language === "zh-CN" ? "中国待投递" : "China To Apply",
+                chinaMetrics.toApply,
+              ],
+              [
+                language === "zh-CN" ? "中国已投递" : "China Applied",
+                chinaMetrics.applied,
+              ],
               [language === "zh-CN" ? "中国笔试" : "China OA", chinaMetrics.oa],
-              [language === "zh-CN" ? "中国面试" : "China Interviews", chinaMetrics.interview],
-              [language === "zh-CN" ? "中国录用" : "China Offers", chinaMetrics.offer],
-              [language === "zh-CN" ? "7天内截止" : "Closing in 7 Days", chinaMetrics.closingIn7Days],
+              [
+                language === "zh-CN" ? "中国面试" : "China Interviews",
+                chinaMetrics.interview,
+              ],
+              [
+                language === "zh-CN" ? "中国录用" : "China Offers",
+                chinaMetrics.offer,
+              ],
+              [
+                language === "zh-CN" ? "7天内截止" : "Closing in 7 Days",
+                chinaMetrics.closingIn7Days,
+              ],
             ].map(([label, value]) => (
               <Link
                 key={label}
