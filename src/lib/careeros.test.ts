@@ -8,6 +8,7 @@ import { calculateOpportunityMatch } from "@/lib/opportunity-match";
 import { opportunities } from "@/data/opportunities";
 import { formatDate } from "@/i18n/format";
 import { en, getTranslation, missingChineseKeys, zhCN } from "@/i18n";
+import { STORAGE_VERSION } from "@/types/domain";
 
 describe("profile-aware job filtering", () => {
   it("keeps chiropractic jobs out of Yuhan's relevant results", () => {
@@ -56,7 +57,7 @@ describe("deterministic match scoring", () => {
 describe("local storage parsing and fallback", () => {
   it("falls back to seed data for malformed JSON", () => {
     const state = parseStoredState("{not-json");
-    expect(state.version).toBe(3);
+    expect(state.version).toBe(STORAGE_VERSION);
     expect(state.profiles[YUHAN_ID].profile.displayName).toBe("Yuhan Yuan");
   });
 
@@ -74,7 +75,7 @@ describe("local storage parsing and fallback", () => {
 
   it("falls back for unsupported versions", () => {
     const state = parseStoredState(JSON.stringify({ version: 999 }));
-    expect(state.version).toBe(3);
+    expect(state.version).toBe(STORAGE_VERSION);
   });
 
   it("normalises legacy application and material workflow states", () => {
@@ -166,7 +167,7 @@ describe("Sprint 3 storage migration", () => {
       delete workspace.documents;
     }
     const migrated = parseStoredState(JSON.stringify(legacy));
-    expect(migrated.version).toBe(3);
+    expect(migrated.version).toBe(STORAGE_VERSION);
     expect(migrated.profiles[YUHAN_ID].profile.displayName).toBe("Yuhan Yuan");
     expect(migrated.profiles[YUHAN_ID].contacts).toEqual([]);
   });
