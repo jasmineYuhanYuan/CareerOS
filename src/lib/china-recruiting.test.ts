@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { chinaTrackingTargets } from "@/data/china-recruiting/targets";
+import { chinaAssessmentIntelligence, chinaInterviewIntelligence } from "@/data/china-recruiting/intelligence";
+import { verifiedChinaCampusOpportunities } from "@/data/china-recruiting/verified-opportunities";
 import { createSeedState, YUHAN_ID } from "@/data/seed";
 import { applicationAnalytics } from "@/lib/application-pipeline";
 import type { ChinaCampusOpportunity } from "@/types/domain";
 import {
   activeChinaOpportunities,
+  calculateChinaPriority,
   chinaPipelineMetrics,
+  createChinaApplicationRecord,
   importChinaOpportunityJson,
   recommendationScore,
   selectTodayRecommendations,
@@ -17,8 +21,11 @@ function opportunity(overrides: Partial<ChinaCampusOpportunity> = {}): ChinaCamp
   return {
     id: "china-one", profileId: YUHAN_ID, company: "Verified Company", position: "Software Engineer",
     category: "Software Engineering", location: "Shanghai", country: "China", hiringSeason: "2027 秋招",
+    recruitingBatch: "秋招", targetGraduationYear: "2027", roleFamily: "Software Engineering", businessUnit: null,
     officialApplyLink: "https://careers.example.org/jobs/one", sourceName: "Official careers",
+    officialCareersLink: "https://careers.example.org",
     sourceUrl: "https://careers.example.org/jobs/one", sourceType: "Official", lastVerifiedAt: today,
+    verificationStatus: "Open", verificationConfidence: "High", publishedDate: null, sampleData: false,
     openDate: null, deadline: "2026-08-18", resumeVersion: "Chinese", status: "To Apply",
     priority: "P1", fitScore: 85, deadlineUrgency: "Closing in 7 days", notes: "",
     createdAt: `${today}T00:00:00.000Z`, updatedAt: `${today}T00:00:00.000Z`, ...overrides,
@@ -34,6 +41,10 @@ const importPayload = {
 };
 
 describe("China campus recruiting", () => {
+  it("ships only evidence-backed non-sample current China records", () => {
+    expect(verifiedChinaCampusOpportunities).toHaveLength(5);
+    expect(verifiedChinaCampusOpportunities.every((item) => item.sourceType === "Official" && item.sampleData === false && item.officialApplyLink === item.sourceUrl && item.verificationStatus === "Open")).toBe(true);
+  });
   it("does not affect Australia application metrics", () => {
     const workspace = createSeedState().profiles[YUHAN_ID];
     const before = applicationAnalytics(workspace.applications);
@@ -83,9 +94,37 @@ describe("China campus recruiting", () => {
   });
 
   it("never counts tracking targets as active opportunities", () => {
-    expect(chinaTrackingTargets).toHaveLength(23);
+    expect(chinaTrackingTargets).toHaveLength(33);
     expect(chinaPipelineMetrics([], today).toApply).toBe(0);
     expect(chinaTrackingTargets.every((target) => target.trackingOnly)).toBe(true);
+  });
+
+  it("requires a current lifecycle before recommending a role", () => {
+    expect(selectTodayRecommendations([opportunity({ verificationStatus: "Verification required" })], today)).toEqual([]);
+    expect(selectTodayRecommendations([opportunity({ verificationStatus: "Closed" })], today)).toEqual([]);
+  });
+
+  it("rejects active imports without an official HTTPS application link", () => {
+    const result = importChinaOpportunityJson(JSON.stringify({ ...importPayload, officialApplyLink: "" }), [], YUHAN_ID);
+    expect(result.inserted).toBe(0);
+    expect(result.errors).toHaveLength(1);
+  });
+
+  it("keeps Fit Score separate from the transparent priority score", () => {
+    const record = opportunity({ fitScore: 63 });
+    expect(record.fitScore).toBe(63);
+    expect(calculateChinaPriority(record).score).not.toBe(record.fitScore);
+  });
+
+  it("persists the selected China résumé version without marking it ready", () => {
+    const application = createChinaApplicationRecord(opportunity({ resumeVersion: "中文产品简历" }));
+    expect(application.cvVersion).toBe("中文产品简历");
+    expect(application.materials?.[0].status).toBe("Missing");
+  });
+
+  it("keeps OA and interview provenance explicit", () => {
+    expect(chinaAssessmentIntelligence.every((item) => item.sourceUrl.startsWith("https://") && item.sourceType !== "Community")).toBe(true);
+    expect(chinaInterviewIntelligence.every((item) => item.sourceUrl.startsWith("https://") && ["Official", "Community", "Unknown"].includes(item.sourceType))).toBe(true);
   });
 
   it("calculates dashboard China scope from the unified active dataset", () => {
