@@ -1,0 +1,177 @@
+import type { AppLocale } from "@/types/domain";
+
+const zhValues: Record<string, string> = {
+  All: "全部",
+  Board: "看板",
+  List: "列表",
+  Submitted: "已提交",
+  "Awaiting response": "等待回复",
+  Interviews: "面试",
+  Offers: "录用",
+  Rejections: "未通过",
+  "Official source": "官方来源",
+  Upcoming: "即将开放",
+  Open: "开放",
+  "Closing soon": "即将截止",
+  Closed: "已关闭",
+  Archived: "已归档",
+  "Verification required": "待重新核验",
+  Internship: "实习",
+  Graduate: "毕业生项目",
+  "Graduate program": "毕业生项目",
+  "Relevant to active profile": "与当前资料相关",
+  "Saved only": "仅显示已收藏",
+  "Most relevant": "最相关",
+  "Role family": "职位类别",
+  "Employment type": "雇佣类型",
+  Location: "地点",
+  "Work style": "工作方式",
+  Details: "详情",
+  Save: "收藏",
+  "Track application": "追踪申请",
+  Match: "匹配度",
+  Confidence: "置信度",
+  Evidence: "依据",
+  Unknown: "未知",
+  Blocked: "受阻",
+  Priority: "优先级",
+  Deadline: "截止日期",
+  "Last updated": "最近更新",
+  Source: "来源",
+  Interview: "面试",
+  OA: "在线测评",
+  Resume: "简历",
+  Application: "申请",
+  Company: "公司",
+  University: "大学",
+  Career: "职业",
+  Skills: "技能",
+  "Not published": "未公开",
+  "On-site": "现场办公",
+  Hybrid: "混合办公",
+  Remote: "远程办公",
+  Wishlist: "愿望清单",
+  "To Apply": "待投递",
+  Applied: "已投递",
+  Offer: "录用",
+  Rejected: "未通过",
+  Withdrawn: "已撤回",
+  "Software Engineering": "软件工程",
+  Backend: "后端",
+  Product: "产品",
+  Data: "数据",
+  Other: "其他",
+  "AI Product": "AI 产品",
+  "AI / ML": "AI／机器学习",
+  Growth: "增长",
+  Operations: "运营",
+  Frontend: "前端",
+  "Technical Product": "技术产品",
+  Preparing: "准备中",
+  Interested: "感兴趣",
+  Researching: "调研中",
+  "Ready to apply": "可以投递",
+  "OA invited": "收到笔试邀请",
+  "OA completed": "笔试已完成",
+  "Interview invited": "收到面试邀请",
+  Interviewing: "面试中",
+  "Reference check": "背景调查",
+  "Daily Internship": "日常实习",
+  "Summer Internship": "暑期实习",
+  "Campus Recruitment": "校园招聘",
+  "Autumn Recruitment": "秋招",
+  "Spring Recruitment": "春招",
+  "Early Batch": "提前批",
+  "Supplementary Recruitment": "补录",
+  High: "高",
+  Medium: "中",
+  Low: "低",
+  Official: "官方",
+  Provider: "测评平台官方",
+  Community: "社区经验",
+  Manual: "手动录入",
+  "Closing in 7 days": "7 天内截止",
+  "Closing in 14 days": "14 天内截止",
+  Expired: "已过期",
+  Category: "类别",
+  Status: "状态",
+  Sort: "排序",
+  "Fit Score": "匹配度",
+  "Updated Date": "最近更新",
+  "Resume Version": "简历版本",
+  Chinese: "中文",
+  English: "英文",
+  Both: "中英文",
+  "Official action": "官方投递",
+  "Add application": "加入申请",
+  "Gap analysis": "差距分析",
+  "Assessment type": "测评类型",
+  "Typical duration": "常见时长",
+  Difficulty: "难度",
+  "Company-provided": "企业说明",
+  "Community report": "社区经验",
+  "No deadline": "未公开截止日期",
+  Current: "当前有效",
+  "Partially verified": "部分核验",
+  Verified: "已核验",
+};
+
+const zhCompanies: Record<string, string> = {
+  ByteDance: "字节跳动",
+  "ByteDance / 字节跳动": "字节跳动",
+  Tencent: "腾讯",
+  "Tencent / 腾讯": "腾讯",
+  Alibaba: "阿里巴巴",
+  "Alibaba / 阿里巴巴": "阿里巴巴",
+  Baidu: "百度",
+  "Baidu / 百度": "百度",
+  Meituan: "美团",
+  "Meituan / 美团": "美团",
+  JD: "京东",
+  "JD.com / 京东": "京东",
+  Huawei: "华为",
+  Xiaomi: "小米",
+  "RED / 小红书": "小红书",
+  Xiaohongshu: "小红书",
+  Pinduoduo: "拼多多",
+  Kuaishou: "快手",
+  NetEase: "网易",
+  Dewu: "得物",
+  "Li Auto / 理想汽车": "理想汽车",
+  "NIO / 蔚来": "蔚来",
+  "XPeng / 小鹏汽车": "小鹏汽车",
+  "DJI / 大疆": "大疆",
+};
+
+export function displayUiValue(value: string, locale: AppLocale): string {
+  return locale === "zh-CN" ? (zhValues[value] ?? value) : value;
+}
+
+export function displayCompanyName(value: string, locale: AppLocale): string {
+  return locale === "zh-CN" ? (zhCompanies[value] ?? value) : value;
+}
+
+export function formatRelativeDate(
+  value: string,
+  locale: AppLocale,
+  today = new Date().toISOString().slice(0, 10),
+): string {
+  const difference = Math.round(
+    (Date.parse(`${value}T00:00:00`) - Date.parse(`${today}T00:00:00`)) /
+      86_400_000,
+  );
+  if (locale !== "zh-CN")
+    return difference === 0
+      ? "Today"
+      : difference === 1
+        ? "Tomorrow"
+        : difference < 0
+          ? `${Math.abs(difference)} days overdue`
+          : `In ${difference} days`;
+  if (difference === 0) return "今天";
+  if (difference === 1) return "明天";
+  if (difference < 0) return `已逾期${Math.abs(difference)}天`;
+  return `${difference}天后`;
+}
+
+export const knownEnglishUiLabels = Object.keys(zhValues);
