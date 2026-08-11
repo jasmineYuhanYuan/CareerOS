@@ -6,7 +6,32 @@ import type {
   ChinaResumeVersion,
   ChinaSourceType,
   DeadlineUrgency,
+  ChinaRecruitingBatch,
+  ChinaRoleFamily,
+  OpportunityLifecycle,
+  JobApplication,
 } from "@/types/domain";
+
+export function createChinaApplicationRecord(opportunity: ChinaCampusOpportunity, timestamp = new Date().toISOString()): JobApplication {
+  return {
+    id: `application-china-${opportunity.id}`,
+    profileId: opportunity.profileId,
+    jobId: `china:${opportunity.id}`,
+    organisationName: opportunity.company,
+    jobTitle: opportunity.position,
+    status: "Preparing",
+    savedAt: timestamp,
+    appliedAt: "",
+    nextAction: "Review the official role and prepare application materials",
+    nextActionDate: opportunity.deadline ?? "",
+    cvVersion: opportunity.resumeVersion,
+    notes: opportunity.notes,
+    lastUpdatedAt: timestamp,
+    activity: [{ id: `activity-${opportunity.id}`, type: "created", label: "China opportunity added to application pipeline", occurredAt: timestamp }],
+    materials: [{ id: `material-resume-${opportunity.id}`, label: opportunity.resumeVersion, status: "Missing", notes: "Readiness must be confirmed by the user." }],
+    sessions: [],
+  };
+}
 
 export interface ChinaOpportunityImportInput {
   id?: string;
@@ -16,11 +41,19 @@ export interface ChinaOpportunityImportInput {
   location: string;
   country?: "China";
   hiringSeason: string;
+  recruitingBatch?: ChinaRecruitingBatch;
+  targetGraduationYear?: string | null;
+  roleFamily?: ChinaRoleFamily;
+  businessUnit?: string | null;
   officialApplyLink: string;
+  officialCareersLink?: string;
   sourceName: string;
   sourceUrl: string;
   sourceType: ChinaSourceType;
   lastVerifiedAt?: string;
+  verificationStatus?: OpportunityLifecycle;
+  verificationConfidence?: "High" | "Medium" | "Low";
+  publishedDate?: string | null;
   openDate?: string | null;
   deadline?: string | null;
   resumeVersion: ChinaResumeVersion;
@@ -41,7 +74,7 @@ export interface ChinaImportResult {
 const categories = new Set<ChinaOpportunityCategory>(["Backend", "Software Engineering", "AI", "AI Product", "Product", "Data", "Other"]);
 const statuses = new Set<ChinaRecruitingStatus>(["Wishlist", "To Apply", "Applied", "OA", "Interview", "Offer", "Rejected", "Withdrawn", "Archived"]);
 const priorities = new Set<ChinaRecruitingPriority>(["P1", "P2", "P3"]);
-const resumes = new Set<ChinaResumeVersion>(["Chinese", "English", "Both"]);
+const resumes = new Set<ChinaResumeVersion>(["Chinese", "English", "Both", "中文产品简历", "中文技术简历", "英文产品简历", "英文技术简历", "通用校招简历"]);
 const sourceTypes = new Set<ChinaSourceType>(["Official", "Aggregator", "Community", "Manual"]);
 
 function validHttps(value: string): boolean {
@@ -62,6 +95,7 @@ export function deriveDeadlineUrgency(deadline: string | null, today: string): D
 }
 
 export function recommendationScore(record: ChinaCampusOpportunity, today: string): number {
+  if (!["Open", "Upcoming", "Closing soon"].includes(record.verificationStatus)) return -1;
   if (["Applied", "OA", "Interview", "Offer", "Rejected", "Withdrawn", "Archived"].includes(record.status)) return -1;
   const urgency = deriveDeadlineUrgency(record.deadline, today);
   if (urgency === "Expired") return -1;
@@ -72,17 +106,46 @@ export function recommendationScore(record: ChinaCampusOpportunity, today: strin
     + (record.sourceType === "Official" ? 5 : 0);
 }
 
+export interface ChinaPriorityBreakdown {
+  score: number;
+  openStatus: number;
+  deadlineUrgency: number;
+  roleRelevance: number;
+  cityPreference: number;
+  graduationCompatibility: number;
+  applicationReadiness: number;
+  officialLink: number;
+}
+
+export function calculateChinaPriority(record: ChinaCampusOpportunity): ChinaPriorityBreakdown {
+  const openStatus = record.verificationStatus === "Open" ? 25 : record.verificationStatus === "Closing soon" ? 22 : record.verificationStatus === "Upcoming" ? 10 : 0;
+  const deadlineUrgency = record.deadlineUrgency === "Closing in 7 days" ? 15 : record.deadlineUrgency === "Closing in 14 days" ? 8 : 0;
+  const roleRelevance = ["Product", "AI Product", "Technical Product", "Software Engineering"].includes(record.roleFamily) ? 20 : 10;
+  const cityPreference = ["Shanghai", "Beijing", "Shenzhen", "Hangzhou"].includes(record.location) ? 10 : 5;
+  const graduationCompatibility = record.targetGraduationYear ? 8 : 0;
+  const applicationReadiness = record.status === "To Apply" ? 12 : record.status === "Wishlist" ? 5 : 0;
+  const officialLink = record.sourceType === "Official" && validHttps(record.officialApplyLink) ? 10 : 0;
+  return { score: openStatus + deadlineUrgency + roleRelevance + cityPreference + graduationCompatibility + applicationReadiness + officialLink, openStatus, deadlineUrgency, roleRelevance, cityPreference, graduationCompatibility, applicationReadiness, officialLink };
+}
+
 export function selectTodayRecommendations(records: ChinaCampusOpportunity[], today: string, limit = 5): ChinaCampusOpportunity[] {
-  return records
+  const ranked = records
     .map((record) => ({ record, score: recommendationScore(record, today) }))
     .filter((item) => item.score >= 0)
     .sort((a, b) => b.score - a.score || b.record.fitScore - a.record.fitScore || (a.record.deadline ?? "9999").localeCompare(b.record.deadline ?? "9999"))
-    .slice(0, Math.max(3, Math.min(5, limit)))
     .map((item) => item.record);
+  const selected: ChinaCampusOpportunity[] = [];
+  for (const record of ranked) {
+    const sameCompany = selected.filter((item) => item.company === record.company);
+    if (sameCompany.length > 0 && sameCompany.some((item) => item.roleFamily === record.roleFamily)) continue;
+    selected.push(record);
+    if (selected.length >= Math.max(3, Math.min(5, limit))) break;
+  }
+  return selected;
 }
 
 export function activeChinaOpportunities(records: ChinaCampusOpportunity[], today: string): ChinaCampusOpportunity[] {
-  return records.filter((record) => record.status !== "Archived" && deriveDeadlineUrgency(record.deadline, today) !== "Expired");
+  return records.filter((record) => record.status !== "Archived" && ["Open", "Upcoming", "Closing soon"].includes(record.verificationStatus) && deriveDeadlineUrgency(record.deadline, today) !== "Expired");
 }
 
 export function chinaPipelineMetrics(records: ChinaCampusOpportunity[], today: string) {
@@ -156,6 +219,14 @@ export function importChinaOpportunityJson(
         sourceUrl: input.sourceUrl,
         sourceType: input.sourceType,
         lastVerifiedAt: input.lastVerifiedAt ?? today,
+        verificationStatus: input.verificationStatus ?? current.verificationStatus,
+        verificationConfidence: input.verificationConfidence ?? current.verificationConfidence,
+        publishedDate: input.publishedDate ?? current.publishedDate,
+        recruitingBatch: input.recruitingBatch ?? current.recruitingBatch,
+        targetGraduationYear: input.targetGraduationYear ?? current.targetGraduationYear,
+        roleFamily: input.roleFamily ?? current.roleFamily,
+        businessUnit: input.businessUnit ?? current.businessUnit,
+        officialCareersLink: input.officialCareersLink ?? current.officialCareersLink,
         fitScore: input.fitScore,
         priority: input.priority,
         resumeVersion: input.resumeVersion,
@@ -171,8 +242,13 @@ export function importChinaOpportunityJson(
       id: input.id ?? `china-${crypto.randomUUID()}`,
       profileId, company: input.company.trim(), position: input.position.trim(), category: input.category,
       location: input.location.trim(), country: "China", hiringSeason: input.hiringSeason.trim(),
+      recruitingBatch: input.recruitingBatch ?? "日常实习", targetGraduationYear: input.targetGraduationYear ?? null,
+      roleFamily: input.roleFamily ?? (input.category === "AI" ? "AI / ML" : input.category), businessUnit: input.businessUnit ?? null,
       officialApplyLink: input.officialApplyLink, sourceName: input.sourceName.trim(), sourceUrl: input.sourceUrl,
+      officialCareersLink: input.officialCareersLink ?? input.sourceUrl,
       sourceType: input.sourceType, lastVerifiedAt: input.lastVerifiedAt ?? today,
+      verificationStatus: input.verificationStatus ?? "Verification required", verificationConfidence: input.verificationConfidence ?? "Low",
+      publishedDate: input.publishedDate ?? null, sampleData: false,
       openDate: input.openDate ?? null, deadline: input.deadline ?? null, resumeVersion: input.resumeVersion,
       status: input.status, priority: input.priority, fitScore: input.fitScore,
       deadlineUrgency: deriveDeadlineUrgency(input.deadline ?? null, today), notes: input.notes ?? "",

@@ -148,6 +148,30 @@ export function migrateState(value: unknown): CareerOSState | null {
   }
   if (typeof value !== "object" || value === null) return null;
   const legacy = value as Record<string, unknown>;
+  if (legacy.version === 4 && typeof legacy.profiles === "object" && legacy.profiles !== null) {
+    const seed = createSeedState();
+    const migratedProfiles = Object.fromEntries(Object.entries(legacy.profiles as Record<string, unknown>).map(([id, workspaceValue]) => {
+      const workspace = workspaceValue as Record<string, unknown>;
+      const oldRecords = Array.isArray(workspace.chinaCampusOpportunities) ? workspace.chinaCampusOpportunities as Record<string, unknown>[] : [];
+      const upgraded: Record<string, unknown>[] = oldRecords.map((record) => ({
+        ...record,
+        recruitingBatch: record.recruitingBatch ?? "日常实习",
+        targetGraduationYear: record.targetGraduationYear ?? null,
+        roleFamily: record.roleFamily ?? record.category ?? "Other",
+        businessUnit: record.businessUnit ?? null,
+        officialCareersLink: record.officialCareersLink ?? record.sourceUrl,
+        verificationStatus: record.verificationStatus ?? "Verification required",
+        verificationConfidence: record.verificationConfidence ?? "Low",
+        publishedDate: record.publishedDate ?? null,
+        sampleData: false,
+      }));
+      const seedRecords = seed.profiles[id]?.chinaCampusOpportunities ?? [];
+      const existingIds = new Set(upgraded.map((record) => String(record.id ?? "")));
+      return [id, { ...workspace, chinaCampusOpportunities: [...upgraded, ...seedRecords.filter((record) => !existingIds.has(record.id))] }];
+    }));
+    const migrated = { ...legacy, version: STORAGE_VERSION, profiles: migratedProfiles };
+    return validateState(migrated) ? normaliseSprint8State(migrated as CareerOSState) : null;
+  }
   if (legacy.version === 3 && typeof legacy.profiles === "object" && legacy.profiles !== null) {
     const preferences = typeof legacy.dashboardPreferences === "object" && legacy.dashboardPreferences !== null
       ? legacy.dashboardPreferences as Record<string, unknown>
