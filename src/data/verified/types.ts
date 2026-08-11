@@ -31,7 +31,14 @@ export interface VerifiedCareerOpportunity extends SourceMetadata {
   skills: string[];
   workStyle: "On-site" | "Hybrid" | "Remote" | "Not published";
   visaSponsorship: string | null;
-  applicationStage: "Open" | "Upcoming" | "Closed" | "Register interest" | "Not published";
+  applicationStage:
+    | "Open"
+    | "Upcoming"
+    | "Closed"
+    | "Register interest"
+    | "Not published"
+    | "Archived"
+    | "Verification required";
   eligibility: string[];
 }
 
