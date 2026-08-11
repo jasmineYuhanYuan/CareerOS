@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "validate:data": "vitest run src/data/opportunities.test.ts src/data/verified/verified-data.test.ts src/data/intelligence/intelligence.test.ts src/data/graph/graph.test.ts src/data/release-quality.test.ts src/lib/gap-analysis/engine.test.ts src/lib/opportunity-lifecycle.test.ts src/lib/china-recruiting.test.ts src/i18n/localisation.test.ts",
+    "validate:data": "vitest run src/data/opportunities.test.ts src/data/australia-market.test.ts src/data/verified/verified-data.test.ts src/data/intelligence/intelligence.test.ts src/data/graph/graph.test.ts src/data/release-quality.test.ts src/lib/gap-analysis/engine.test.ts src/lib/opportunity-lifecycle.test.ts src/lib/china-recruiting.test.ts src/i18n/localisation.test.ts",
     "verify": "npm run test && npm run lint && npm run typecheck && npm run build && npm run validate:data",
     "verify:rc": "npm run verify"
   },

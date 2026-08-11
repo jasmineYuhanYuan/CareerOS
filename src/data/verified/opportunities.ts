@@ -21,6 +21,116 @@ const reviewedAugust = {
 export const verifiedCareerOpportunities: VerifiedCareerOpportunity[] = [
   {
     ...reviewedAugust,
+    id: "amazon-au-sde-intern-3204846",
+    jobId: "3204846",
+    profileScope: ["yuhan-yuan"],
+    title: "2026 Software Dev Engineer Intern (Location: Sydney)",
+    company: "Amazon",
+    city: "Sydney",
+    country: "Australia",
+    employmentType: "Internship",
+    earlyCareerType: "Intern",
+    salary: null,
+    workStyle: "On-site",
+    visaSponsorship: null,
+    visaStatement: null,
+    deadline: null,
+    applicationStage: "Open",
+    publishedDate: "2026-03-14",
+    openingDate: null,
+    roleFamily: "Software Engineering",
+    graduationCohort: "Graduating after February 2027",
+    skills: [
+      "Java",
+      "Python",
+      "C++",
+      "TypeScript",
+      "Data structures",
+      "Algorithms",
+      "Object-oriented design",
+    ],
+    coreRequirements: [
+      "Current penultimate-year student pursuing a bachelor degree or higher",
+      "Graduating after February 2027",
+      "Available full-time from December 2026 to February 2027",
+      "Studying Computer Science, Computer Engineering, Data Science, Information Systems or a related STEM field",
+    ],
+    eligibility: [
+      "At least 18 years old",
+      "At least one study period remaining after the internship",
+      "Australian work rights and sponsorship are not stated on the vacancy page",
+    ],
+    careersUrl: "https://www.amazon.jobs/en/locations/australia",
+    officialApplyUrl:
+      "https://www.amazon.jobs/en/jobs/3204846/2026-software-dev-engineer-intern-location-sydney",
+    source: "Amazon Jobs — Job ID 3204846",
+    officialUrl:
+      "https://www.amazon.jobs/en/jobs/3204846/2026-software-dev-engineer-intern-location-sydney",
+    sourceType: "Employer",
+  },
+  ...(["Digital", "Data / AI"] as const).map(
+    (roleFamily): VerifiedCareerOpportunity => ({
+      ...reviewedAugust,
+      id: `agggp-2027-${roleFamily === "Digital" ? "digital" : "data"}-stream`,
+      profileScope: ["yuhan-yuan"],
+      title: `2027 Australian Government Graduate Program — ${roleFamily === "Digital" ? "Digital" : "Data"} Stream`,
+      company: "Australian Government",
+      city:
+        roleFamily === "Digital"
+          ? "Canberra; limited nationwide positions"
+          : "Australia-wide major cities",
+      country: "Australia",
+      employmentType: "Graduate",
+      earlyCareerType: "Graduate",
+      salary:
+        roleFamily === "Digital"
+          ? "A$68,000–A$89,000 depending on placement agency"
+          : "A$69,761–A$94,270 depending on placement agency",
+      workStyle: "Not published",
+      visaSponsorship: "Australian citizenship required",
+      visaStatement:
+        "Australian citizenship is required at the time of application; sponsorship is not applicable.",
+      deadline: null,
+      applicationStage: "Upcoming",
+      openingDate: "2027-03-01",
+      publishedDate: null,
+      roleFamily,
+      graduationCohort:
+        "Degree completed between 1 January 2022 and 31 December 2026",
+      skills:
+        roleFamily === "Digital"
+          ? [
+              "Digital technology",
+              "Software engineering",
+              "Data",
+              "Product management",
+            ]
+          : ["Data analysis", "Data science", "Statistics", "Communication"],
+      coreRequirements: [
+        "Australian citizen at the time of application",
+        "Bachelor degree or higher completed within the published qualification window",
+        "Able to obtain and maintain an Australian Government security clearance if required",
+      ],
+      eligibility: [
+        "Australian citizen",
+        "Degree completed between 1 January 2022 and 31 December 2026",
+        "Security-clearance eligibility where required",
+      ],
+      careersUrl:
+        roleFamily === "Digital"
+          ? "https://content.apsjobs.gov.au/career-pathways/graduate-programs/digital-stream"
+          : "https://content.apsjobs.gov.au/career-pathways/graduate-programs/data-stream",
+      officialApplyUrl: undefined,
+      source: `APSJobs 2027 ${roleFamily === "Digital" ? "Digital" : "Data"} Stream`,
+      officialUrl:
+        roleFamily === "Digital"
+          ? "https://content.apsjobs.gov.au/career-pathways/graduate-programs/digital-stream"
+          : "https://content.apsjobs.gov.au/career-pathways/graduate-programs/data-stream",
+      sourceType: "Government",
+    }),
+  ),
+  {
+    ...reviewedAugust,
     id: "atlassian-au-intern-program",
     title: "Australia Internship Program",
     company: "Atlassian",

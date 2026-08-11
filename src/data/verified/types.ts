@@ -1,7 +1,15 @@
-export type VerifiedSourceType = "Official" | "Government" | "University" | "Employer" | "Professional body" | "Job board" | "Community";
+export type VerifiedSourceType =
+  | "Official"
+  | "Government"
+  | "University"
+  | "Employer"
+  | "Professional body"
+  | "Job board"
+  | "Community";
 export type DataConfidence = "High" | "Medium" | "Low";
 export type DatasetLanguage = "en" | "zh-CN";
-export type DataVerificationStatus = "Verified" | "Partially verified" | "Archived" | "Unknown";
+export type DataVerificationStatus =
+  "Verified" | "Partially verified" | "Archived" | "Unknown";
 
 export interface SourceMetadata {
   source: string;
@@ -20,13 +28,30 @@ export interface SourceMetadata {
 
 export interface VerifiedCareerOpportunity extends SourceMetadata {
   id: string;
+  jobId?: string;
+  profileScope?: string[];
   title: string;
   company: string;
   city: string;
-  employmentType: "Internship" | "Graduate" | "Full-time" | "Part-time" | "Casual";
+  employmentType:
+    "Internship" | "Graduate" | "Full-time" | "Part-time" | "Casual";
   earlyCareerType: "Graduate" | "Intern" | "Cadet" | "Entry level";
   salary: string | null;
   careersUrl: string;
+  officialApplyUrl?: string;
+  publishedDate?: string | null;
+  openingDate?: string | null;
+  roleFamily?:
+    | "Product"
+    | "AI Product"
+    | "Software Engineering"
+    | "Backend"
+    | "Data / AI"
+    | "Digital"
+    | "Other";
+  graduationCohort?: string | null;
+  coreRequirements?: string[];
+  visaStatement?: string | null;
   deadline: string | null;
   skills: string[];
   workStyle: "On-site" | "Hybrid" | "Remote" | "Not published";
@@ -94,7 +119,11 @@ export interface AssessmentPlatformGuide extends SourceMetadata {
   platform: string;
   typicalDuration: string | null;
   difficulty: string | null;
-  companies: Array<{ company: string; evidenceUrl: string; confidence: DataConfidence }>;
+  companies: Array<{
+    company: string;
+    evidenceUrl: string;
+    confidence: DataConfidence;
+  }>;
   notes: string[];
 }
 
@@ -106,8 +135,14 @@ export interface CareerReference extends SourceMetadata {
   summary: string[];
 }
 
-export type ChecklistStatus = "Not started" | "In progress" | "Completed" | "Not applicable" | "Blocked";
-export type VacancyVerificationStatus = "Current" | "Expired" | "Archived" | "Expression of interest" | "Employer directory only";
+export type ChecklistStatus =
+  "Not started" | "In progress" | "Completed" | "Not applicable" | "Blocked";
+export type VacancyVerificationStatus =
+  | "Current"
+  | "Expired"
+  | "Archived"
+  | "Expression of interest"
+  | "Employer directory only";
 
 export interface RegistrationRequirement {
   label: string;

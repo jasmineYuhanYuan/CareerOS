@@ -1,13 +1,4 @@
-import type {
-  CareerOSState,
-  CareerDocumentRecord,
-  CareerProfile,
-  Job,
-  Organisation,
-  PostgraduateProgram,
-  ProfileWorkspace,
-  RoadmapItem,
-} from "@/types/domain";
+import type { CareerOSState, CareerDocumentRecord, CareerProfile, Job, Organisation, PostgraduateProgram, ProfileWorkspace, RoadmapItem } from "@/types/domain";
 import { STORAGE_VERSION } from "@/types/domain";
 import { verifiedCareerOpportunities } from "@/data/verified/opportunities";
 import { verifiedProgrammes } from "@/data/verified/programmes";
@@ -31,14 +22,56 @@ const yuhan: CareerProfile = {
   careerGoals: ["AI Product Manager", "Technical Product Manager", "Software Engineer", "Postgraduate study"],
   preferredCities: ["Sydney"],
   skills: [
-    { id: "ys1", name: "TypeScript", category: "Software", proficiency: "Working", evidence: "CareerOS" },
-    { id: "ys2", name: "Product discovery", category: "Product", proficiency: "Working", evidence: "WearAgain and Unify" },
-    { id: "ys3", name: "React", category: "Software", proficiency: "Working", evidence: "CareerOS" },
+    {
+      id: "ys1",
+      name: "TypeScript",
+      category: "Software",
+      proficiency: "Working",
+      evidence: "CareerOS",
+    },
+    {
+      id: "ys2",
+      name: "Product discovery",
+      category: "Product",
+      proficiency: "Working",
+      evidence: "WearAgain and Unify",
+    },
+    {
+      id: "ys3",
+      name: "React",
+      category: "Software",
+      proficiency: "Working",
+      evidence: "CareerOS",
+    },
   ],
   projects: [
-    { id: "yp1", name: "WearAgain", role: "", description: "", competencies: ["Product"], repositoryUrl: "", liveUrl: "" },
-    { id: "yp2", name: "Unify", role: "", description: "", competencies: ["Product"], repositoryUrl: "", liveUrl: "" },
-    { id: "yp3", name: "CareerOS", role: "", description: "A local-first career planning workspace.", competencies: ["TypeScript", "React"], repositoryUrl: "https://github.com/jasmineYuhanYuan/CareerOS", liveUrl: "" },
+    {
+      id: "yp1",
+      name: "WearAgain",
+      role: "",
+      description: "",
+      competencies: ["Product"],
+      repositoryUrl: "",
+      liveUrl: "",
+    },
+    {
+      id: "yp2",
+      name: "Unify",
+      role: "",
+      description: "",
+      competencies: ["Product"],
+      repositoryUrl: "",
+      liveUrl: "",
+    },
+    {
+      id: "yp3",
+      name: "CareerOS",
+      role: "",
+      description: "A local-first career planning workspace.",
+      competencies: ["TypeScript", "React"],
+      repositoryUrl: "https://github.com/jasmineYuhanYuan/CareerOS",
+      liveUrl: "",
+    },
   ],
   experienceSummary: "Add internship and work experience details.",
   linkedInUrl: "",
@@ -61,8 +94,20 @@ const tommy: CareerProfile = {
   careerGoals: ["Graduate Chiropractor", "Associate Chiropractor", "Chiropractor", "Early-career clinical chiropractic role", "Chiropractic assistant"],
   preferredCities: ["Canberra", "Sydney"],
   skills: [
-    { id: "ts1", name: "Patient communication", category: "Clinical practice", proficiency: "Learning", evidence: "" },
-    { id: "ts2", name: "Clinical reasoning", category: "Clinical practice", proficiency: "Learning", evidence: "" },
+    {
+      id: "ts1",
+      name: "Patient communication",
+      category: "Clinical practice",
+      proficiency: "Learning",
+      evidence: "",
+    },
+    {
+      id: "ts2",
+      name: "Clinical reasoning",
+      category: "Clinical practice",
+      proficiency: "Learning",
+      evidence: "",
+    },
   ],
   projects: [],
   experienceSummary: "Seeking early-career chiropractic work in Canberra/ACT, with Sydney/NSW as a secondary location. Clinical experience details are not yet recorded.",
@@ -119,9 +164,7 @@ export const organisations: Organisation[] = [
   city: city as string,
   websiteUrl: "",
   careersUrl: verifiedOrganisationSources[name as string] ?? "",
-  description: verifiedOrganisationSources[name as string]
-    ? "Organisation linked to a verified official careers or government source."
-    : "Sample directory record. Organisation details have not yet passed the CareerOS verification gate.",
+  description: verifiedOrganisationSources[name as string] ? "Organisation linked to a verified official careers or government source." : "Sample directory record. Organisation details have not yet passed the CareerOS verification gate.",
   roleFamilies: roleFamilies as Organisation["roleFamilies"],
   sampleData: !verifiedOrganisationSources[name as string],
   verified: Boolean(verifiedOrganisationSources[name as string]),
@@ -135,6 +178,7 @@ export const organisations: Organisation[] = [
 }));
 
 const organisationIdByName: Record<string, string> = {
+  Amazon: "amazon",
   Atlassian: "atlassian",
   "Digital Transformation Agency": "digital-transformation-agency",
   "Australian Signals Directorate": "australian-signals-directorate",
@@ -148,10 +192,7 @@ export const jobs: Job[] = verifiedCareerOpportunities.map((record) => ({
   organisationId: organisationIdByName[record.company],
   companyName: record.company,
   title: record.title,
-  roleFamily: record.skills.some((skill) => skill.toLowerCase().includes("data")) ? "Data"
-    : record.skills.some((skill) => skill.toLowerCase().includes("cyber")) ? "AI"
-    : record.skills.some((skill) => skill.toLowerCase().includes("product")) ? "Product"
-    : "Software Engineering",
+  roleFamily: record.skills.some((skill) => skill.toLowerCase().includes("data")) ? "Data" : record.skills.some((skill) => skill.toLowerCase().includes("cyber")) ? "AI" : record.skills.some((skill) => skill.toLowerCase().includes("product")) ? "Product" : "Software Engineering",
   discipline: record.company.includes("Atlassian") ? "Computer Science" : "Government and Technology",
   employmentType: record.employmentType === "Casual" ? "Part-time" : record.employmentType,
   location: record.city,
@@ -162,8 +203,8 @@ export const jobs: Job[] = verifiedCareerOpportunities.map((record) => ({
   preferredSkills: record.skills,
   postedDate: record.lastUpdated,
   deadline: record.deadline ?? "",
-  sourceUrl: record.officialUrl,
-  suitableProfileIds: ["Atlassian", "Baidu", "ByteDance"].includes(record.company) ? [YUHAN_ID] : [],
+  sourceUrl: record.officialApplyUrl ?? record.officialUrl,
+  suitableProfileIds: record.profileScope ?? [YUHAN_ID],
   tags: [record.earlyCareerType, record.applicationStage],
   salaryText: record.salary ?? undefined,
   sampleData: false,
@@ -222,25 +263,10 @@ function roadmap(profileId: string, items: string[], category: RoadmapItem["cate
 }
 
 function workspace(profile: CareerProfile): ProfileWorkspace {
-  const items = profile.id === YUHAN_ID
-    ? ["Complete CareerOS MVP", "Continue WearAgain iteration", "Finalise English résumé", "Finalise Chinese résumé", "Build SQL fundamentals", "Research postgraduate pathways", "Apply for suitable internships"]
-    : [
-      "Stage 1 — Confirm qualification completion",
-      "Stage 1 — Review Ahpra graduate-registration guidance",
-      "Stage 1 — Prepare identity and qualification documents",
-      "Stage 1 — Confirm English-language evidence requirements",
-      "Stage 1 — Review professional indemnity insurance obligations",
-      "Stage 1 — Review CPD and recency-of-practice standards",
-      "Stage 1 — Submit or track registration application",
-      "Stage 1 — Confirm registration status on the practitioner register",
-      "Stage 2 — Prepare clinical résumé and cover letters",
-      "Stage 2 — Prepare referee list and clinical case examples",
-      "Stage 3 — Build a Canberra clinic target list",
-      "Stage 3 — Review current verified vacancies",
-      "Stage 3 — Submit targeted applications and schedule follow-ups",
-      "Stage 3 — Prepare chiropractic interview questions",
-      "Stage 4 — Plan induction, mentoring and professional development",
-    ];
+  const items =
+    profile.id === YUHAN_ID
+      ? ["Complete CareerOS MVP", "Continue WearAgain iteration", "Finalise English résumé", "Finalise Chinese résumé", "Build SQL fundamentals", "Research postgraduate pathways", "Apply for suitable internships"]
+      : ["Stage 1 — Confirm qualification completion", "Stage 1 — Review Ahpra graduate-registration guidance", "Stage 1 — Prepare identity and qualification documents", "Stage 1 — Confirm English-language evidence requirements", "Stage 1 — Review professional indemnity insurance obligations", "Stage 1 — Review CPD and recency-of-practice standards", "Stage 1 — Submit or track registration application", "Stage 1 — Confirm registration status on the practitioner register", "Stage 2 — Prepare clinical résumé and cover letters", "Stage 2 — Prepare referee list and clinical case examples", "Stage 3 — Build a Canberra clinic target list", "Stage 3 — Review current verified vacancies", "Stage 3 — Submit targeted applications and schedule follow-ups", "Stage 3 — Prepare chiropractic interview questions", "Stage 4 — Plan induction, mentoring and professional development"];
   const base: ProfileWorkspace = {
     profile,
     savedJobIds: [],
@@ -256,14 +282,31 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
   };
   if (profile.id === YUHAN_ID) {
     base.savedJobIds = ["atlassian-au-intern-program"];
-    base.applications = [{
-      id: "demo-application-yuhan", profileId: YUHAN_ID, jobId: "atlassian-au-intern-program",
-      organisationName: "Atlassian", jobTitle: "Australia Internship Program", status: "Preparing",
-      savedAt: "2026-07-28T09:00:00.000Z", appliedAt: "", nextAction: "Review sample role requirements",
-      nextActionDate: "2026-08-03", cvVersion: "English résumé v1", notes: "Sample planning record.",
-      lastUpdatedAt: "2026-07-28T09:00:00.000Z",
-      activity: [{ id: "demo-activity-yuhan", type: "created", label: "Application created", occurredAt: "2026-07-28T09:00:00.000Z" }],
-    }];
+    base.applications = [
+      {
+        id: "demo-application-yuhan",
+        profileId: YUHAN_ID,
+        jobId: "atlassian-au-intern-program",
+        organisationName: "Atlassian",
+        jobTitle: "Australia Internship Program",
+        status: "Preparing",
+        savedAt: "2026-07-28T09:00:00.000Z",
+        appliedAt: "",
+        nextAction: "Review sample role requirements",
+        nextActionDate: "2026-08-03",
+        cvVersion: "English résumé v1",
+        notes: "Sample planning record.",
+        lastUpdatedAt: "2026-07-28T09:00:00.000Z",
+        activity: [
+          {
+            id: "demo-activity-yuhan",
+            type: "created",
+            label: "Application created",
+            occurredAt: "2026-07-28T09:00:00.000Z",
+          },
+        ],
+      },
+    ];
   } else {
     const templates: Array<[string, CareerDocumentRecord["documentType"]]> = [
       ["Chiropractic résumé", "English résumé"],
