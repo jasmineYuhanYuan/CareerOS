@@ -30,6 +30,16 @@ const targets: Array<[string, string, string | null]> = [
   ["pinduoduo", "拼多多", "https://careers.pinduoduo.com/campus/"],
   ["netease", "网易", null],
   ["mihoyo", "米哈游", null],
+  ["shein", "SHEIN", "https://careers.shein.com/"],
+  ["dji", "DJI / 大疆", "https://we.dji.com/zh-CN/campus"],
+  ["li-auto", "Li Auto / 理想汽车", "https://www.lixiang.com/careers"],
+  ["nio", "NIO / 蔚来", "https://nio.jobs.feishu.cn/campus"],
+  ["xpeng", "XPeng / 小鹏汽车", "https://job.xiaopeng.com/campus"],
+  ["deepseek", "DeepSeek", null],
+  ["minimax", "MiniMax", null],
+  ["moonshot-ai", "Moonshot AI / 月之暗面", null],
+  ["zhipu-ai", "Zhipu AI / 智谱 AI", null],
+  ["bilibili", "Bilibili / 哔哩哔哩", null],
 ];
 
 export const chinaTrackingTargets: ChinaTrackingTarget[] = targets.map(([id, company, officialRecruitingUrl]) => ({

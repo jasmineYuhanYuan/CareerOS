@@ -11,6 +11,7 @@ import type {
 import { STORAGE_VERSION } from "@/types/domain";
 import { verifiedCareerOpportunities } from "@/data/verified/opportunities";
 import { verifiedProgrammes } from "@/data/verified/programmes";
+import { verifiedChinaCampusOpportunities } from "@/data/china-recruiting/verified-opportunities";
 
 export const YUHAN_ID = "yuhan-yuan";
 export const TOMMY_ID = "taicheng-guo-tommy";
@@ -251,7 +252,7 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
     savedOpportunityIds: profile.id === YUHAN_ID ? ["opportunity-atlassian-au-intern-program"] : [],
     contacts: [],
     documents: [],
-    chinaCampusOpportunities: [],
+    chinaCampusOpportunities: profile.id === YUHAN_ID ? structuredClone(verifiedChinaCampusOpportunities) : [],
   };
   if (profile.id === YUHAN_ID) {
     base.savedJobIds = ["atlassian-au-intern-program"];

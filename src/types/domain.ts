@@ -1,4 +1,4 @@
-export const STORAGE_VERSION = 4 as const;
+export const STORAGE_VERSION = 5 as const;
 export type AppLocale = "en" | "zh-CN";
 
 export type StudyLevel = "Undergraduate" | "Postgraduate";
@@ -62,9 +62,11 @@ export type OpportunityCategory = "Job" | "Internship" | "Graduate program" | "R
 export type VerificationStatus = "Sample" | "Unverified" | "Official source" | "Expired" | "Archived";
 export type SourceType = "Seed" | "Official" | "Government" | "University" | "Employer" | "Professional body" | "Job board" | "Aggregator" | "Community" | "Manual" | "User";
 export type ChinaOpportunityCategory = "Backend" | "Software Engineering" | "AI" | "AI Product" | "Product" | "Data" | "Other";
+export type ChinaRoleFamily = "Product" | "AI Product" | "Technical Product" | "Software Engineering" | "Frontend" | "Backend" | "Data" | "AI / ML" | "Operations" | "Growth" | "Other";
+export type ChinaRecruitingBatch = "日常实习" | "暑期实习" | "春招" | "秋招" | "提前批" | "正式批" | "补录";
 export type ChinaRecruitingStatus = "Wishlist" | "To Apply" | "Applied" | "OA" | "Interview" | "Offer" | "Rejected" | "Withdrawn" | "Archived";
 export type ChinaRecruitingPriority = "P1" | "P2" | "P3";
-export type ChinaResumeVersion = "Chinese" | "English" | "Both";
+export type ChinaResumeVersion = "Chinese" | "English" | "Both" | "中文产品简历" | "中文技术简历" | "英文产品简历" | "英文技术简历" | "通用校招简历";
 export type DeadlineUrgency = "Closing in 7 days" | "Closing in 14 days" | "Open" | "Expired" | "Not published";
 export type ChinaSourceType = "Official" | "Aggregator" | "Community" | "Manual";
 
@@ -77,11 +79,20 @@ export interface ChinaCampusOpportunity {
   location: string;
   country: "China";
   hiringSeason: string;
+  recruitingBatch: ChinaRecruitingBatch;
+  targetGraduationYear: string | null;
+  roleFamily: ChinaRoleFamily;
+  businessUnit: string | null;
   officialApplyLink: string;
+  officialCareersLink: string;
   sourceName: string;
   sourceUrl: string;
   sourceType: ChinaSourceType;
   lastVerifiedAt: string;
+  verificationStatus: OpportunityLifecycle;
+  verificationConfidence: "High" | "Medium" | "Low";
+  publishedDate: string | null;
+  sampleData: false;
   openDate: string | null;
   deadline: string | null;
   resumeVersion: ChinaResumeVersion;
@@ -92,6 +103,39 @@ export interface ChinaCampusOpportunity {
   notes: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export type ChinaAssessmentType = "Coding OA" | "General aptitude" | "Numerical reasoning" | "Verbal reasoning" | "Product case" | "SQL" | "Data analysis" | "Personality" | "Video interview" | "Written test";
+
+export interface ChinaAssessmentIntelligence {
+  id: string;
+  company: string;
+  roleFamily: ChinaRoleFamily | "All";
+  region: string;
+  assessmentProvider: string | null;
+  assessmentTypes: ChinaAssessmentType[];
+  reportedStage: string;
+  sourceType: "Official" | "Provider" | "Community";
+  confidence: "High" | "Medium" | "Low";
+  sourceUrl: string;
+  sourceDate: string;
+  lastVerifiedAt: string;
+  notes: string;
+}
+
+export interface ChinaInterviewIntelligence {
+  id: string;
+  company: string;
+  roleFamily: ChinaRoleFamily | "All";
+  likelyStages: string[];
+  focusAreas: string[];
+  typicalRounds: string | null;
+  sourceType: "Official" | "Community" | "Unknown";
+  sourceDate: string;
+  confidence: "High" | "Medium" | "Low";
+  sourceUrl: string;
+  lastVerifiedAt: string;
+  notes: string;
 }
 export type RelationshipType = "Recruiter" | "Hiring manager" | "University contact" | "Lecturer" | "Alumni" | "Mentor" | "Clinic owner" | "Professional contact" | "Other";
 export type CareerDocumentType = "English résumé" | "Chinese résumé" | "Cover letter" | "Portfolio" | "Academic transcript" | "Personal statement" | "Recommendation materials" | "Other";
