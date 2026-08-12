@@ -26,6 +26,11 @@ import {
 import { displayCompanyName, displayUiValue } from "@/i18n/presentation";
 import { deriveOpportunityLifecycle } from "@/lib/opportunity-lifecycle";
 import { applicationAnalytics } from "@/lib/application-pipeline";
+import {
+  getDailyCareerActions,
+  getDailyOpportunities,
+  getRecommendedJobs,
+} from "@/lib/opportunity-engine";
 
 function greetingKey():
   "dashboard.morning" | "dashboard.afternoon" | "dashboard.evening" {
@@ -92,6 +97,13 @@ export function Dashboard() {
   const progress = Math.round((completedChecks / checks.length) * 100);
   const activity = recentApplicationActivity(activeWorkspace);
   const applicationFunnel = applicationAnalytics(activeWorkspace.applications);
+  const dailyActions = getDailyCareerActions(activeWorkspace, today);
+  const dailyOpportunities = getDailyOpportunities(profile, today);
+  const dailyRecommended = getRecommendedJobs(profile, today).slice(0, 5);
+  const latestDailyVerification = dailyOpportunities
+    .map((item) => item.dateVerified)
+    .sort()
+    .at(-1);
   const chinaMetrics = chinaPipelineMetrics(
     activeWorkspace.chinaCampusOpportunities,
     today,
@@ -175,50 +187,101 @@ export function Dashboard() {
         <ProfileSelector />
       </header>
 
-      <section
-        className="mb-8"
-        aria-label={
-          language === "zh-CN" ? "申请进度统计" : "Application funnel"
-        }
-      >
+      <section className="mb-8">
+        <SectionHeader title={t("dashboard.todayCareerActions")} />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {dailyActions.map((action) => (
+            <Link
+              key={action.id}
+              href={action.href}
+              className="interactive-lift surface-card p-4"
+            >
+              <strong className="font-display text-3xl">{action.count}</strong>
+              <span className="mt-1 block text-sm text-[var(--text-secondary)]">
+                {t(
+                  action.type === "apply"
+                    ? "dashboard.jobsToApply"
+                    : action.type === "closing"
+                      ? "dashboard.jobsClosingSoon"
+                      : action.type === "resume"
+                        ? "dashboard.resumeUpdates"
+                        : "dashboard.followUps",
+                )}
+              </span>
+            </Link>
+          ))}
+        </div>
+        {latestDailyVerification && (
+          <p className="mt-3 text-xs text-[var(--text-tertiary)]">
+            {t("dashboard.lastVerified", {
+              date: formatDate(latestDailyVerification, language),
+            })}
+          </p>
+        )}
+      </section>
+
+      {!isTommy && dailyRecommended.length > 0 && (
+        <section className="mb-8">
+          <SectionHeader title={t("dashboard.recommendedJobs")} />
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            {dailyRecommended.map((item) => (
+              <article key={item.id} className="surface-card flex flex-col p-4">
+                <p className="text-xs text-[var(--text-secondary)]">
+                  {item.company}
+                </p>
+                <h3 className="mt-2 font-medium">{item.roleTitle}</h3>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                  {item.location}
+                </p>
+                <strong className="mt-3 text-[var(--accent)]">
+                  {t("dashboard.matchPercent", { score: item.matchScore })}
+                </strong>
+                <p className="mt-2 text-xs text-[var(--text-tertiary)]">
+                  {item.deadline
+                    ? formatDate(item.deadline, language)
+                    : displayUiValue("Not published", language)}
+                </p>
+                <a
+                  href={item.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-auto pt-4 text-sm font-medium text-[var(--accent)]"
+                >
+                  {t("dashboard.applyOfficial")} ↗
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="mb-8" aria-label={t("dashboard.applicationFunnel")}>
         <SectionHeader
-          title={language === "zh-CN" ? "申请进度" : "Application progress"}
+          title={t("dashboard.applicationFunnel")}
           action={
             <Link
               href="/applications"
               className="text-sm font-medium text-[var(--accent)]"
             >
-              {language === "zh-CN" ? "管理申请" : "Manage applications"}
+              {t("dashboard.manageApplications")}
             </Link>
           }
         />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {[
+            [t("dashboard.submitted"), applicationFunnel.submitted],
             [
-              language === "zh-CN" ? "已投递" : "Submitted",
-              applicationFunnel.submitted,
-            ],
-            [
-              "OA",
+              t("dashboard.oa"),
               activeWorkspace.applications.filter(
                 (item) =>
                   ["OA invited", "OA completed"].includes(item.status) &&
                   !item.id.startsWith("demo-"),
               ).length,
             ],
-            [
-              language === "zh-CN" ? "面试" : "Interviews",
-              applicationFunnel.interviews,
-            ],
+            [t("dashboard.interviews"), applicationFunnel.interviews],
             ["Offer", applicationFunnel.offers],
-            [
-              language === "zh-CN" ? "拒绝" : "Rejected",
-              applicationFunnel.rejections,
-            ],
-            [
-              language === "zh-CN" ? "等待" : "Waiting",
-              applicationFunnel.awaitingResponse,
-            ],
+            [t("dashboard.rejected"), applicationFunnel.rejections],
+            [t("dashboard.waiting"), applicationFunnel.awaitingResponse],
           ].map(([label, value]) => (
             <Link
               key={label}

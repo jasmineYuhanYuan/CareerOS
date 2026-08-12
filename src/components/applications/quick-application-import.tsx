@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select } from "@/components/ui/form-field";
 import { displayUiValue } from "@/i18n/presentation";
+import { getTranslation } from "@/i18n";
 import {
   createQuickApplication,
   isDuplicateApplication,
@@ -35,7 +36,8 @@ export function QuickApplicationImport({
   applications: JobApplication[];
   onImport: (application: JobApplication) => void;
 }) {
-  const zh = language === "zh-CN";
+  const t = (key: Parameters<typeof getTranslation>[1]) =>
+    getTranslation(language, key);
   const today = new Date().toISOString().slice(0, 10);
   const [open, setOpen] = useState(false);
   const [company, setCompany] = useState("");
@@ -56,19 +58,13 @@ export function QuickApplicationImport({
           status,
           sourceUrl: sourceUrl.trim() || undefined,
           sourceLabel: sourceUrl
-            ? zh
-              ? "官网"
-              : "Official website"
+            ? t("applications.officialWebsite")
             : undefined,
         },
         profileId,
       );
       if (isDuplicateApplication(applications, record)) {
-        setError(
-          zh
-            ? "相同公司、岗位和投递日期的记录已存在。"
-            : "An application with the same company, role and date already exists.",
-        );
+        setError(t("applications.duplicate"));
         return;
       }
       onImport(record);
@@ -83,9 +79,7 @@ export function QuickApplicationImport({
       setError(
         reason instanceof Error
           ? reason.message
-          : zh
-            ? "导入失败。"
-            : "Import failed.",
+          : t("applications.importFailed"),
       );
     }
   }
@@ -93,39 +87,33 @@ export function QuickApplicationImport({
   return (
     <>
       <Button variant="secondary" onClick={() => setOpen(true)}>
-        {zh ? "一键导入投递" : "Quick import"}
+        {t("applications.quickImport")}
       </Button>
       <Dialog
         open={open}
-        title={zh ? "一键导入投递记录" : "Quick-import application"}
-        description={
-          zh
-            ? "填写公司、岗位、投递日期和状态，即可生成申请记录。"
-            : "Create an application record from its essential details."
-        }
+        title={t("applications.quickImportTitle")}
+        description={t("applications.quickImportDescription")}
         onClose={() => setOpen(false)}
       >
         <form className="space-y-4" onSubmit={submit}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={zh ? "公司" : "Company"}>
+            <Field label={t("applications.company")}>
               <Input
                 required
                 value={company}
                 onChange={(event) => setCompany(event.target.value)}
-                placeholder={zh ? "例如：小红书" : "e.g. RED"}
+                placeholder={t("applications.companyPlaceholder")}
               />
             </Field>
-            <Field label={zh ? "岗位" : "Role"}>
+            <Field label={t("applications.role")}>
               <Input
                 required
                 value={role}
                 onChange={(event) => setRole(event.target.value)}
-                placeholder={
-                  zh ? "例如：软件开发工程师" : "e.g. Software Engineer"
-                }
+                placeholder={t("applications.rolePlaceholder")}
               />
             </Field>
-            <Field label={zh ? "投递日期" : "Applied date"}>
+            <Field label={t("applications.appliedDate")}>
               <Input
                 required
                 type="date"
@@ -133,7 +121,7 @@ export function QuickApplicationImport({
                 onChange={(event) => setDate(event.target.value)}
               />
             </Field>
-            <Field label={zh ? "当前状态" : "Current status"}>
+            <Field label={t("applications.currentStatus")}>
               <Select
                 value={status}
                 onChange={(event) =>
@@ -148,7 +136,7 @@ export function QuickApplicationImport({
               </Select>
             </Field>
           </div>
-          <Field label={zh ? "官网链接（可选）" : "Official URL (optional)"}>
+          <Field label={t("applications.officialUrl")}>
             <Input
               type="url"
               value={sourceUrl}
@@ -167,9 +155,9 @@ export function QuickApplicationImport({
               variant="secondary"
               onClick={() => setOpen(false)}
             >
-              {zh ? "取消" : "Cancel"}
+              {t("common.cancel")}
             </Button>
-            <Button type="submit">{zh ? "生成记录" : "Create record"}</Button>
+            <Button type="submit">{t("applications.createRecord")}</Button>
           </div>
         </form>
       </Dialog>

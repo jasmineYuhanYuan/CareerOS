@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createSeedState, YUHAN_ID } from "@/data/seed";
 import { formatDate } from "@/i18n/format";
-import { missingChineseKeys } from "@/i18n";
+import { en, missingChineseKeys, zhCN } from "@/i18n";
 import {
   displayCompanyName,
   displayUiValue,
@@ -13,6 +13,23 @@ import {
 describe("Chinese product localisation", () => {
   it("keeps English and zh-CN dictionaries in complete key parity", () => {
     expect(missingChineseKeys()).toEqual([]);
+    expect(Object.keys(zhCN).sort()).toEqual(Object.keys(en).sort());
+  });
+
+  it("keeps Chinese characters out of every English dictionary value", () => {
+    const entriesWithChinese = Object.entries(en).filter(([, value]) =>
+      /[\u3400-\u9fff]/u.test(value),
+    );
+    expect(entriesWithChinese).toEqual([]);
+  });
+
+  it("keeps the quick-import interface on the central dictionary", () => {
+    const source = readFileSync(
+      "src/components/applications/quick-application-import.tsx",
+      "utf8",
+    );
+    expect(source).not.toMatch(/language\s*===\s*["']zh-CN["']/);
+    expect(source).not.toMatch(/[\u3400-\u9fff]/u);
   });
 
   it("translates every audited English interface label", () => {
