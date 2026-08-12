@@ -3,7 +3,8 @@ export type AppLocale = "en" | "zh-CN";
 
 export type StudyLevel = "Undergraduate" | "Postgraduate";
 export type Proficiency = "Learning" | "Working" | "Confident" | "Advanced";
-export type EmploymentType = "Internship" | "Graduate" | "Full-time" | "Part-time" | "Contract";
+export type EmploymentType =
+  "Internship" | "Graduate" | "Full-time" | "Part-time" | "Contract";
 export type RemoteType = "On-site" | "Hybrid" | "Remote" | "Not published";
 export type RoleFamily =
   | "Product"
@@ -55,20 +56,87 @@ export type RoadmapCategory =
   | "Registration"
   | "Networking"
   | "Other";
-export type RoadmapStatus = "Not started" | "In progress" | "Completed" | "Not applicable" | "Blocked";
+export type RoadmapStatus =
+  "Not started" | "In progress" | "Completed" | "Not applicable" | "Blocked";
 export type Priority = "Low" | "Medium" | "High";
 export type ThemePreference = "System" | "Light" | "Dark";
-export type OpportunityCategory = "Job" | "Internship" | "Graduate program" | "Research opportunity" | "Scholarship" | "Hackathon" | "Competition" | "Networking event" | "Career event" | "Continuing education" | "Professional registration" | "Other";
-export type VerificationStatus = "Sample" | "Unverified" | "Official source" | "Expired" | "Archived";
-export type SourceType = "Seed" | "Official" | "Government" | "University" | "Employer" | "Professional body" | "Job board" | "Aggregator" | "Community" | "Manual" | "User";
-export type ChinaOpportunityCategory = "Backend" | "Software Engineering" | "AI" | "AI Product" | "Product" | "Data" | "Other";
-export type ChinaRoleFamily = "Product" | "AI Product" | "Technical Product" | "Software Engineering" | "Frontend" | "Backend" | "Data" | "AI / ML" | "Operations" | "Growth" | "Other";
-export type ChinaRecruitingBatch = "日常实习" | "暑期实习" | "春招" | "秋招" | "提前批" | "正式批" | "补录";
-export type ChinaRecruitingStatus = "Wishlist" | "To Apply" | "Applied" | "OA" | "Interview" | "Offer" | "Rejected" | "Withdrawn" | "Archived";
+export type OpportunityCategory =
+  | "Job"
+  | "Internship"
+  | "Graduate program"
+  | "Research opportunity"
+  | "Scholarship"
+  | "Hackathon"
+  | "Competition"
+  | "Networking event"
+  | "Career event"
+  | "Continuing education"
+  | "Professional registration"
+  | "Other";
+export type VerificationStatus =
+  "Sample" | "Unverified" | "Official source" | "Expired" | "Archived";
+export type SourceType =
+  | "Seed"
+  | "Official"
+  | "Government"
+  | "University"
+  | "Employer"
+  | "Professional body"
+  | "Job board"
+  | "Aggregator"
+  | "Community"
+  | "Manual"
+  | "User";
+export type ChinaOpportunityCategory =
+  | "Backend"
+  | "Software Engineering"
+  | "AI"
+  | "AI Product"
+  | "Product"
+  | "Data"
+  | "Other";
+export type ChinaRoleFamily =
+  | "Product"
+  | "AI Product"
+  | "Technical Product"
+  | "Software Engineering"
+  | "Frontend"
+  | "Backend"
+  | "Data"
+  | "AI / ML"
+  | "Operations"
+  | "Growth"
+  | "Other";
+export type ChinaRecruitingBatch =
+  "日常实习" | "暑期实习" | "春招" | "秋招" | "提前批" | "正式批" | "补录";
+export type ChinaRecruitingStatus =
+  | "Wishlist"
+  | "To Apply"
+  | "Applied"
+  | "OA"
+  | "Interview"
+  | "Offer"
+  | "Rejected"
+  | "Withdrawn"
+  | "Archived";
 export type ChinaRecruitingPriority = "P1" | "P2" | "P3";
-export type ChinaResumeVersion = "Chinese" | "English" | "Both" | "中文产品简历" | "中文技术简历" | "英文产品简历" | "英文技术简历" | "通用校招简历";
-export type DeadlineUrgency = "Closing in 7 days" | "Closing in 14 days" | "Open" | "Expired" | "Not published";
-export type ChinaSourceType = "Official" | "Aggregator" | "Community" | "Manual";
+export type ChinaResumeVersion =
+  | "Chinese"
+  | "English"
+  | "Both"
+  | "中文产品简历"
+  | "中文技术简历"
+  | "英文产品简历"
+  | "英文技术简历"
+  | "通用校招简历";
+export type DeadlineUrgency =
+  | "Closing in 7 days"
+  | "Closing in 14 days"
+  | "Open"
+  | "Expired"
+  | "Not published";
+export type ChinaSourceType =
+  "Official" | "Aggregator" | "Community" | "Manual";
 
 export interface ChinaCampusOpportunity {
   id: string;
@@ -93,6 +161,10 @@ export interface ChinaCampusOpportunity {
   sourceUrl: string;
   sourceType: ChinaSourceType;
   lastVerifiedAt: string;
+  checkedAt?: string;
+  verificationMethod?: string;
+  lifecycleStatus?: OpportunityLifecycle;
+  closedReason?: string | null;
   nextReviewDate?: string;
   sourceStatus?: string;
   verificationStatus: OpportunityLifecycle;
@@ -111,7 +183,17 @@ export interface ChinaCampusOpportunity {
   updatedAt: string;
 }
 
-export type ChinaAssessmentType = "Coding OA" | "General aptitude" | "Numerical reasoning" | "Verbal reasoning" | "Product case" | "SQL" | "Data analysis" | "Personality" | "Video interview" | "Written test";
+export type ChinaAssessmentType =
+  | "Coding OA"
+  | "General aptitude"
+  | "Numerical reasoning"
+  | "Verbal reasoning"
+  | "Product case"
+  | "SQL"
+  | "Data analysis"
+  | "Personality"
+  | "Video interview"
+  | "Written test";
 
 export interface ChinaAssessmentIntelligence {
   id: string;
@@ -143,13 +225,45 @@ export interface ChinaInterviewIntelligence {
   lastVerifiedAt: string;
   notes: string;
 }
-export type RelationshipType = "Recruiter" | "Hiring manager" | "University contact" | "Lecturer" | "Alumni" | "Mentor" | "Clinic owner" | "Professional contact" | "Other";
-export type CareerDocumentType = "English résumé" | "Chinese résumé" | "Cover letter" | "Portfolio" | "Academic transcript" | "Personal statement" | "Recommendation materials" | "Other";
-export type CareerDocumentStatus = "Missing" | "Draft" | "Review needed" | "Ready" | "Submitted" | "Outdated" | "Not applicable";
-export type OpportunityLifecycle = "Open" | "Upcoming" | "Closing soon" | "Closed" | "Expired" | "Archived" | "Verification required";
+export type RelationshipType =
+  | "Recruiter"
+  | "Hiring manager"
+  | "University contact"
+  | "Lecturer"
+  | "Alumni"
+  | "Mentor"
+  | "Clinic owner"
+  | "Professional contact"
+  | "Other";
+export type CareerDocumentType =
+  | "English résumé"
+  | "Chinese résumé"
+  | "Cover letter"
+  | "Portfolio"
+  | "Academic transcript"
+  | "Personal statement"
+  | "Recommendation materials"
+  | "Other";
+export type CareerDocumentStatus =
+  | "Missing"
+  | "Draft"
+  | "Review needed"
+  | "Ready"
+  | "Submitted"
+  | "Outdated"
+  | "Not applicable";
+export type OpportunityLifecycle =
+  | "Open"
+  | "Upcoming"
+  | "Closing soon"
+  | "Closed"
+  | "Expired"
+  | "Archived"
+  | "Verification required";
 export type ApplicationMaterialStatus = CareerDocumentStatus;
 export type InterviewSessionType = "Interview" | "Online assessment";
-export type InterviewSessionStatus = "Planned" | "Invited" | "Completed" | "Cancelled";
+export type InterviewSessionStatus =
+  "Planned" | "Invited" | "Completed" | "Cancelled";
 
 export interface ApplicationMaterial {
   id: string;
@@ -455,7 +569,14 @@ export interface CareerOSState {
 }
 
 export interface MatchDimension {
-  name: "Goal alignment" | "Discipline alignment" | "Skill overlap" | "Location alignment" | "Experience/project relevance" | "Eligibility confidence" | "Opportunity type preference";
+  name:
+    | "Goal alignment"
+    | "Discipline alignment"
+    | "Skill overlap"
+    | "Location alignment"
+    | "Experience/project relevance"
+    | "Eligibility confidence"
+    | "Opportunity type preference";
   score: number | null;
   weight: number;
   evidence: string[];
@@ -468,12 +589,19 @@ export interface MatchResult {
   gaps: string[];
   explanation: string;
   dimensions?: MatchDimension[];
-  confidence?: "High information" | "Medium information" | "Limited information";
+  confidence?:
+    "High information" | "Medium information" | "Limited information";
 }
 
 export interface DashboardDeadline {
   id: string;
   title: string;
-  source: "Job" | "Application" | "Postgraduate" | "Roadmap" | "Opportunity" | "Contact";
+  source:
+    | "Job"
+    | "Application"
+    | "Postgraduate"
+    | "Roadmap"
+    | "Opportunity"
+    | "Contact";
   date: string;
 }

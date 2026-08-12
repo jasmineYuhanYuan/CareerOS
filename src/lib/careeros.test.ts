@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { createSeedState, jobs, TOMMY_ID, YUHAN_ID } from "@/data/seed";
-import { aggregateDeadlines, profileReadiness, recentApplicationActivity } from "@/lib/dashboard";
+import {
+  aggregateDeadlines,
+  profileReadiness,
+  recentApplicationActivity,
+} from "@/lib/dashboard";
 import { displayOrganisationName, sampleStatus } from "@/lib/presentation";
 import { calculateJobMatch, isJobSuitableForProfile } from "@/lib/match";
-import { getProfileWorkspace, parseStoredState, validateState } from "@/lib/storage";
+import {
+  getProfileWorkspace,
+  parseStoredState,
+  validateState,
+} from "@/lib/storage";
 import { calculateOpportunityMatch } from "@/lib/opportunity-match";
 import { opportunities } from "@/data/opportunities";
 import { formatDate } from "@/i18n/format";
@@ -14,15 +22,21 @@ describe("profile-aware job filtering", () => {
   it("keeps chiropractic jobs out of Yuhan's relevant results", () => {
     const state = createSeedState();
     const profile = state.profiles[YUHAN_ID].profile;
-    const relevant = jobs.filter((job) => isJobSuitableForProfile(job, profile));
+    const relevant = jobs.filter((job) =>
+      isJobSuitableForProfile(job, profile),
+    );
     expect(relevant.length).toBeGreaterThan(0);
-    expect(relevant.every((job) => job.discipline !== "Chiropractic")).toBe(true);
+    expect(relevant.every((job) => job.discipline !== "Chiropractic")).toBe(
+      true,
+    );
   });
 
   it("keeps Tommy focused on chiropractic and excludes government technology roles", () => {
     const state = createSeedState();
     const profile = state.profiles[TOMMY_ID].profile;
-    const relevant = jobs.filter((job) => isJobSuitableForProfile(job, profile));
+    const relevant = jobs.filter((job) =>
+      isJobSuitableForProfile(job, profile),
+    );
     expect(profile.university).toBe("Macquarie University");
     expect(profile.discipline).toBe("Chiropractic");
     expect(profile.workEligibility).toBe("To be confirmed");
@@ -35,19 +49,24 @@ describe("profile-aware job filtering", () => {
 describe("deterministic match scoring", () => {
   it("returns the same result for identical inputs", () => {
     const profile = createSeedState().profiles[YUHAN_ID].profile;
-    expect(calculateJobMatch(jobs[0], profile)).toEqual(calculateJobMatch(jobs[0], profile));
+    expect(calculateJobMatch(jobs[0], profile)).toEqual(
+      calculateJobMatch(jobs[0], profile),
+    );
   });
 
   it("caps chiropractic matches when registration or work eligibility is unknown", () => {
     const profile = createSeedState().profiles[TOMMY_ID].profile;
-    const result = calculateJobMatch({
-      ...jobs[0],
-      title: "Graduate Chiropractor",
-      discipline: "Chiropractic",
-      roleFamily: "Chiropractic",
-      suitableProfileIds: [TOMMY_ID],
-      location: "Canberra",
-    }, profile);
+    const result = calculateJobMatch(
+      {
+        ...jobs[0],
+        title: "Graduate Chiropractor",
+        discipline: "Chiropractic",
+        roleFamily: "Chiropractic",
+        suitableProfileIds: [TOMMY_ID],
+        location: "Canberra",
+      },
+      profile,
+    );
     expect(result.score).toBeLessThanOrEqual(75);
     expect(result.gaps).toContain("Registration status must be confirmed");
     expect(result.gaps).toContain("Work eligibility must be confirmed");
@@ -55,6 +74,43 @@ describe("deterministic match scoring", () => {
 });
 
 describe("local storage parsing and fallback", () => {
+  it("removes only the placeholder profile and defaults safely to Yuhan", () => {
+    const raw = createSeedState();
+    raw.profiles.placeholder = {
+      ...structuredClone(raw.profiles[YUHAN_ID]),
+      profile: {
+        ...structuredClone(raw.profiles[YUHAN_ID].profile),
+        id: "placeholder",
+        displayName: "CareerOS Profile",
+      },
+    };
+    raw.activeProfileId = "placeholder";
+    raw.defaultProfileId = "placeholder";
+    const migrated = parseStoredState(JSON.stringify(raw));
+    expect(migrated.profiles.placeholder).toBeUndefined();
+    expect(migrated.activeProfileId).toBe(YUHAN_ID);
+    expect(migrated.defaultProfileId).toBe(YUHAN_ID);
+    expect(migrated.profiles[YUHAN_ID].profile.displayName).toBe("Yuhan Yuan");
+    expect(migrated.profiles[TOMMY_ID].profile.displayName).toBe(
+      "Taicheng Guo (Tommy)",
+    );
+  });
+
+  it("migrates stored China lifecycle truth without dropping user data", () => {
+    const raw = createSeedState();
+    const closed = raw.profiles[YUHAN_ID].chinaCampusOpportunities.find(
+      (item) => item.id === "xiaohongshu-product-intern-20983",
+    )!;
+    closed.status = "Applied";
+    closed.notes = "old local note";
+    const migrated = parseStoredState(JSON.stringify(raw));
+    const result = migrated.profiles[YUHAN_ID].chinaCampusOpportunities.find(
+      (item) => item.id === closed.id,
+    );
+    expect(result?.verificationStatus).toBe("Closed");
+    expect(result?.status).toBe("Archived");
+    expect(migrated.profiles[TOMMY_ID].profile.discipline).toBe("Chiropractic");
+  });
   it("falls back to seed data for malformed JSON", () => {
     const state = parseStoredState("{not-json");
     expect(state.version).toBe(STORAGE_VERSION);
@@ -63,13 +119,21 @@ describe("local storage parsing and fallback", () => {
 
   it("corrects the known false ANU and cybersecurity Tommy seed without preserving false eligibility", () => {
     const incorrect = createSeedState();
-    incorrect.profiles[TOMMY_ID].profile.university = "Australian National University";
-    incorrect.profiles[TOMMY_ID].profile.discipline = "Cyber Security and Data Analytics";
+    incorrect.profiles[TOMMY_ID].profile.university =
+      "Australian National University";
+    incorrect.profiles[TOMMY_ID].profile.discipline =
+      "Cyber Security and Data Analytics";
     incorrect.profiles[TOMMY_ID].profile.workEligibility = "Australian citizen";
     const corrected = parseStoredState(JSON.stringify(incorrect));
-    expect(corrected.profiles[TOMMY_ID].profile.university).toBe("Macquarie University");
-    expect(corrected.profiles[TOMMY_ID].profile.discipline).toBe("Chiropractic");
-    expect(corrected.profiles[TOMMY_ID].profile.workEligibility).toBe("To be confirmed");
+    expect(corrected.profiles[TOMMY_ID].profile.university).toBe(
+      "Macquarie University",
+    );
+    expect(corrected.profiles[TOMMY_ID].profile.discipline).toBe(
+      "Chiropractic",
+    );
+    expect(corrected.profiles[TOMMY_ID].profile.workEligibility).toBe(
+      "To be confirmed",
+    );
     expect(corrected.profiles[TOMMY_ID].savedOpportunityIds).toEqual([]);
   });
 
@@ -82,17 +146,30 @@ describe("local storage parsing and fallback", () => {
     const legacy = createSeedState();
     legacy.profiles[YUHAN_ID].applications[0].status = "Interviewing";
     const raw = JSON.parse(JSON.stringify(legacy)) as typeof legacy;
-    (raw.profiles[YUHAN_ID].applications[0] as unknown as { status: string }).status = "Assessment";
+    (
+      raw.profiles[YUHAN_ID].applications[0] as unknown as { status: string }
+    ).status = "Assessment";
     raw.profiles[YUHAN_ID].documents.push({
-      id: "legacy-doc", profileId: YUHAN_ID, documentType: "English résumé",
-      name: "Legacy CV", version: "v1", updatedAt: "2026-07-29", notes: "",
+      id: "legacy-doc",
+      profileId: YUHAN_ID,
+      documentType: "English résumé",
+      name: "Legacy CV",
+      version: "v1",
+      updatedAt: "2026-07-29",
+      notes: "",
       status: "Review needed",
     });
-    (raw.profiles[YUHAN_ID].documents[0] as unknown as { status: string }).status = "Needs update";
+    (
+      raw.profiles[YUHAN_ID].documents[0] as unknown as { status: string }
+    ).status = "Needs update";
     const migrated = parseStoredState(JSON.stringify(raw));
-    expect(migrated.profiles[YUHAN_ID].applications[0].status).toBe("OA invited");
+    expect(migrated.profiles[YUHAN_ID].applications[0].status).toBe(
+      "OA invited",
+    );
     expect(migrated.profiles[YUHAN_ID].applications[0].materials).toEqual([]);
-    expect(migrated.profiles[YUHAN_ID].documents[0].status).toBe("Review needed");
+    expect(migrated.profiles[YUHAN_ID].documents[0].status).toBe(
+      "Review needed",
+    );
   });
 });
 
@@ -105,8 +182,12 @@ describe("profile data separation", () => {
   });
 
   it("keeps Sprint 8 targets separated by profile", () => {
-    const yuhanTargets = opportunities.filter((item) => item.suitableProfileIds.includes(YUHAN_ID));
-    const tommyTargets = opportunities.filter((item) => item.suitableProfileIds.includes(TOMMY_ID));
+    const yuhanTargets = opportunities.filter((item) =>
+      item.suitableProfileIds.includes(YUHAN_ID),
+    );
+    const tommyTargets = opportunities.filter((item) =>
+      item.suitableProfileIds.includes(TOMMY_ID),
+    );
     expect(yuhanTargets.some((item) => item.country === "China")).toBe(true);
     expect(tommyTargets).toEqual([]);
   });
@@ -119,7 +200,10 @@ describe("dashboard deadline aggregation", () => {
     const deadlines = aggregateDeadlines(workspace);
     expect(deadlines.length).toBeGreaterThan(1);
     expect(deadlines.map((item) => item.date)).toEqual(
-      deadlines.map((item) => item.date).slice().sort(),
+      deadlines
+        .map((item) => item.date)
+        .slice()
+        .sort(),
     );
   });
 });
@@ -129,18 +213,24 @@ describe("Sprint 4 dashboard presentation", () => {
     const workspace = createSeedState().profiles[YUHAN_ID];
     const checks = profileReadiness(workspace);
     expect(checks).toHaveLength(8);
-    expect(checks.find((item) => item.key === "education")?.complete).toBe(true);
+    expect(checks.find((item) => item.key === "education")?.complete).toBe(
+      true,
+    );
     expect(checks.find((item) => item.key === "resume")?.complete).toBe(false);
   });
 
   it("orders recent application activity newest first", () => {
-    const activity = recentApplicationActivity(createSeedState().profiles[YUHAN_ID]);
+    const activity = recentApplicationActivity(
+      createSeedState().profiles[YUHAN_ID],
+    );
     expect(activity).toHaveLength(1);
     expect(activity[0].label).toBe("Application created");
   });
 
   it("removes duplicate sample suffixes and localises the consolidated warning", () => {
-    expect(displayOrganisationName("Harbour Chiropractic Clinic (Sample)")).toBe("Harbour Chiropractic Clinic");
+    expect(
+      displayOrganisationName("Harbour Chiropractic Clinic (Sample)"),
+    ).toBe("Harbour Chiropractic Clinic");
     expect(sampleStatus("zh-CN")).toBe("示例数据 · 非实时职位");
   });
 });
@@ -156,7 +246,10 @@ describe("import validation", () => {
 describe("Sprint 3 storage migration", () => {
   it("migrates valid version 2 workspaces without losing profile data", () => {
     const current = createSeedState();
-    const legacy = structuredClone(current) as unknown as Record<string, unknown>;
+    const legacy = structuredClone(current) as unknown as Record<
+      string,
+      unknown
+    >;
     legacy.version = 2;
     delete legacy.language;
     delete legacy.dashboardPreferences;
@@ -175,12 +268,17 @@ describe("Sprint 3 storage migration", () => {
 
 describe("Sprint 4 preference migration", () => {
   it("adds a persistent demo-mode preference without dropping profile data", () => {
-    const legacy = structuredClone(createSeedState()) as unknown as Record<string, unknown>;
+    const legacy = structuredClone(createSeedState()) as unknown as Record<
+      string,
+      unknown
+    >;
     const preferences = legacy.dashboardPreferences as Record<string, unknown>;
     delete preferences.demoMode;
     const migrated = parseStoredState(JSON.stringify(legacy));
     expect(migrated.dashboardPreferences.demoMode).toBe(false);
-    expect(migrated.profiles[TOMMY_ID].profile.displayName).toBe("Taicheng Guo (Tommy)");
+    expect(migrated.profiles[TOMMY_ID].profile.displayName).toBe(
+      "Taicheng Guo (Tommy)",
+    );
   });
 });
 
@@ -196,7 +294,10 @@ describe("typed localisation", () => {
 
 describe("transparent opportunity matching", () => {
   it("returns every required match dimension with evidence and uncertainty fields", () => {
-    const result = calculateOpportunityMatch(opportunities[0], createSeedState().profiles[YUHAN_ID].profile);
+    const result = calculateOpportunityMatch(
+      opportunities[0],
+      createSeedState().profiles[YUHAN_ID].profile,
+    );
     expect(result.dimensions?.map((dimension) => dimension.name)).toEqual([
       "Goal alignment",
       "Discipline alignment",
@@ -206,21 +307,43 @@ describe("transparent opportunity matching", () => {
       "Eligibility confidence",
       "Opportunity type preference",
     ]);
-    expect(result.dimensions?.every((dimension) => Array.isArray(dimension.evidence) && typeof dimension.uncertainty === "string")).toBe(true);
+    expect(
+      result.dimensions?.every(
+        (dimension) =>
+          Array.isArray(dimension.evidence) &&
+          typeof dimension.uncertainty === "string",
+      ),
+    ).toBe(true);
   });
   it("is deterministic, profile-aware and case-insensitive", () => {
     const state = createSeedState();
     const opportunity = { ...opportunities[0], skillTags: ["typescript"] };
-    const yuhan = calculateOpportunityMatch(opportunity, state.profiles[YUHAN_ID].profile);
-    const tommy = calculateOpportunityMatch(opportunity, state.profiles[TOMMY_ID].profile);
-    expect(yuhan).toEqual(calculateOpportunityMatch(opportunity, state.profiles[YUHAN_ID].profile));
+    const yuhan = calculateOpportunityMatch(
+      opportunity,
+      state.profiles[YUHAN_ID].profile,
+    );
+    const tommy = calculateOpportunityMatch(
+      opportunity,
+      state.profiles[TOMMY_ID].profile,
+    );
+    expect(yuhan).toEqual(
+      calculateOpportunityMatch(opportunity, state.profiles[YUHAN_ID].profile),
+    );
     expect(yuhan.score).not.toBe(tommy.score);
     expect(yuhan.strengths.join(" ").toLowerCase()).toContain("typescript");
   });
 
   it("uses limited confidence rather than zeroing missing data", () => {
-    const profile = { ...createSeedState().profiles[YUHAN_ID].profile, skills: [], projects: [], workEligibility: "" };
-    const result = calculateOpportunityMatch({ ...opportunities[0], skillTags: [], eligibilityText: undefined }, profile);
+    const profile = {
+      ...createSeedState().profiles[YUHAN_ID].profile,
+      skills: [],
+      projects: [],
+      workEligibility: "",
+    };
+    const result = calculateOpportunityMatch(
+      { ...opportunities[0], skillTags: [], eligibilityText: undefined },
+      profile,
+    );
     expect(result.score).toBeGreaterThan(0);
     expect(result.confidence).toBe("Limited information");
   });
@@ -230,8 +353,15 @@ describe("contact profile separation", () => {
   it("keeps contacts in their owning workspace", () => {
     const state = createSeedState();
     state.profiles[YUHAN_ID].contacts.push({
-      id: "c1", profileId: YUHAN_ID, name: "Test", organisation: "", role: "",
-      relationshipType: "Mentor", notes: "", createdAt: "2026-07-29", updatedAt: "2026-07-29",
+      id: "c1",
+      profileId: YUHAN_ID,
+      name: "Test",
+      organisation: "",
+      role: "",
+      relationshipType: "Mentor",
+      notes: "",
+      createdAt: "2026-07-29",
+      updatedAt: "2026-07-29",
     });
     expect(state.profiles[TOMMY_ID].contacts).toHaveLength(0);
   });

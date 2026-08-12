@@ -1,7 +1,7 @@
 import type { ChinaCampusOpportunity } from "@/types/domain";
 
 const YUHAN_ID = "yuhan-yuan";
-const verifiedAt = "2026-08-11";
+const verifiedAt = "2026-08-12";
 const timestamp = `${verifiedAt}T00:00:00.000Z`;
 
 const common = {
@@ -21,37 +21,187 @@ const common = {
   publishedDate: null,
   sampleData: false as const,
   lastVerifiedAt: verifiedAt,
+  checkedAt: timestamp,
+  verificationMethod: "Position page application action",
+  lifecycleStatus: "Open" as const,
+  closedReason: null,
   createdAt: timestamp,
   updatedAt: timestamp,
 };
 
 export const verifiedChinaCampusOpportunities: ChinaCampusOpportunity[] = [
   {
-    ...common, id: "baidu-backend-intern-j93985", jobId: "J93985", company: "Baidu / 百度", position: "后端实习工程师（J93985）", category: "Backend", roleFamily: "Backend", businessUnit: "MEG", headcount: 8, location: "Beijing",
-    publishedDate: "2026-07-21", officialApplyLink: "https://talent.baidu.com/jobs/detail/INTERN/ef58d698-b944-4c05-86fe-e76daffecc8b", officialCareersLink: "https://talent.baidu.com/jobs/campus", sourceName: "百度校园招聘 — 后端实习工程师（J93985）", sourceUrl: "https://talent.baidu.com/jobs/detail/INTERN/ef58d698-b944-4c05-86fe-e76daffecc8b",
-    responsibilities: ["负责智能体相关业务研发", "保障服务可靠性、性能与扩展能力", "与其他模块工程师协作完成解决方案"], requirements: ["掌握 Go 或 Java 及相关开发框架", "熟悉 RPC、缓存、MySQL 与分布式系统", "具备数据结构和系统架构基础"], priority: "P1", fitScore: 83,
-    notes: "官方独立岗位页显示日常实习项目和投递入口；未公开截止日期或毕业年份。", sourceStatus: "Official vacancy page with application action", nextReviewDate: "2026-08-14",
-  },
-  {
-    ...common, id: "baidu-python-backend-intern-j89661", jobId: "J89661", company: "Baidu / 百度", position: "后端研发（Python）方向实习生（J89661）", category: "Backend", roleFamily: "Backend", businessUnit: "ACG", headcount: 1, location: "Shanghai",
-    publishedDate: "2026-07-21", officialApplyLink: "https://talent.baidu.com/jobs/detail/INTERN/166d8095-9be0-4080-ac93-d902d4dc988f", officialCareersLink: "https://talent.baidu.com/jobs/campus", sourceName: "百度校园招聘 — Python 后端研发实习生（J89661）", sourceUrl: "https://talent.baidu.com/jobs/detail/INTERN/166d8095-9be0-4080-ac93-d902d4dc988f",
-    responsibilities: ["参与测试与质效平台开发", "根据用户需求设计和实现平台功能", "调研前沿测试技术并推动优化"], requirements: ["计算机相关专业本科及以上在校生", "掌握 Python、Go 或 Java 至少一门语言", "可尽快到岗并线下实习四个月以上"], resumeVersion: "中文技术简历", priority: "P1", fitScore: 85,
-    notes: "官方独立岗位页显示日常实习项目和投递入口；未公开截止日期。", sourceStatus: "Official vacancy page with application action", nextReviewDate: "2026-08-14",
-  },
-  {
-    ...common, id: "baidu-frontend-intern-j95084", jobId: "J95084", company: "Baidu / 百度", position: "前端开发实习生（J95084）", category: "Software Engineering", roleFamily: "Frontend", businessUnit: "应用模型研发部", headcount: 2, location: "Beijing / Shanghai",
-    publishedDate: "2026-07-21", officialApplyLink: "https://talent.baidu.com/jobs/detail/INTERN/35fbe3c6-54a1-4687-abc3-02cd760d9462", officialCareersLink: "https://talent.baidu.com/jobs/campus", sourceName: "百度校园招聘 — 前端开发实习生（J95084）", sourceUrl: "https://talent.baidu.com/jobs/detail/INTERN/35fbe3c6-54a1-4687-abc3-02cd760d9462",
-    responsibilities: ["开发和迭代 AI 数据平台前端模块", "实现数据标注、模型评估等关键界面", "参与前端工程化和性能优化"], requirements: ["掌握 HTML、CSS、JavaScript 与 TypeScript", "熟悉 React 或 Vue 等主流框架", "具备工程化、性能优化和协作能力"], resumeVersion: "中文技术简历", priority: "P1", fitScore: 89,
-    notes: "官方独立岗位页显示日常实习项目和投递入口；未公开截止日期。", sourceStatus: "Official vacancy page with application action", nextReviewDate: "2026-08-14",
-  },
-  {
-    ...common, id: "baidu-ai-product-ops-intern-j101336", jobId: "J101336", company: "Baidu / 百度", position: "AI产品运营实习生（J101336）", category: "AI Product", roleFamily: "Operations", businessUnit: "安全与企业效率平台", headcount: 1, location: "Beijing",
-    publishedDate: "2026-07-21", officialApplyLink: "https://talent.baidu.com/jobs/detail/INTERN/6cb6917a-cf17-4798-935d-6da81eb799b0", officialCareersLink: "https://talent.baidu.com/jobs/campus", sourceName: "百度校园招聘 — AI产品运营实习生（J101336）", sourceUrl: "https://talent.baidu.com/jobs/detail/INTERN/6cb6917a-cf17-4798-935d-6da81eb799b0",
-    responsibilities: ["负责文心快码相关 AI 产品运营", "支持产品推广、内容和线下活动", "协调跨团队资源并跟进执行"], requirements: ["本科及以上学历", "了解 AI 与 Agent 产品", "有产品运营、活动运营或 AIGC 经验者优先"], priority: "P2", fitScore: 79,
-    notes: "官方独立岗位页显示日常实习项目和投递入口；未公开截止日期。", sourceStatus: "Official vacancy page with application action", nextReviewDate: "2026-08-14",
+    ...common,
+    verificationStatus: "Verification required",
+    verificationConfidence: "Medium",
+    lifecycleStatus: "Verification required",
+    verificationMethod:
+      "Position page content visible; application action not confirmed",
+    id: "baidu-backend-intern-j93985",
+    jobId: "J93985",
+    company: "Baidu / 百度",
+    position: "后端实习工程师（J93985）",
+    category: "Backend",
+    roleFamily: "Backend",
+    businessUnit: "MEG",
+    headcount: 8,
+    location: "Beijing",
+    publishedDate: "2026-07-21",
+    officialApplyLink:
+      "https://talent.baidu.com/jobs/detail/INTERN/ef58d698-b944-4c05-86fe-e76daffecc8b",
+    officialCareersLink: "https://talent.baidu.com/jobs/campus",
+    sourceName: "百度校园招聘 — 后端实习工程师（J93985）",
+    sourceUrl:
+      "https://talent.baidu.com/jobs/detail/INTERN/ef58d698-b944-4c05-86fe-e76daffecc8b",
+    responsibilities: [
+      "负责智能体相关业务研发",
+      "保障服务可靠性、性能与扩展能力",
+      "与其他模块工程师协作完成解决方案",
+    ],
+    requirements: [
+      "掌握 Go 或 Java 及相关开发框架",
+      "熟悉 RPC、缓存、MySQL 与分布式系统",
+      "具备数据结构和系统架构基础",
+    ],
+    priority: "P1",
+    fitScore: 83,
+    notes:
+      "官方独立岗位页仍显示职位内容，但本次核验未确认可用投递动作；未公开截止日期或毕业年份。",
+    sourceStatus:
+      "Official position page; application action requires verification",
+    nextReviewDate: "2026-08-13",
   },
   {
     ...common,
+    verificationStatus: "Verification required",
+    verificationConfidence: "Medium",
+    lifecycleStatus: "Verification required",
+    verificationMethod:
+      "Position page content visible; application action not confirmed",
+    id: "baidu-python-backend-intern-j89661",
+    jobId: "J89661",
+    company: "Baidu / 百度",
+    position: "后端研发（Python）方向实习生（J89661）",
+    category: "Backend",
+    roleFamily: "Backend",
+    businessUnit: "ACG",
+    headcount: 1,
+    location: "Shanghai",
+    publishedDate: "2026-07-21",
+    officialApplyLink:
+      "https://talent.baidu.com/jobs/detail/INTERN/166d8095-9be0-4080-ac93-d902d4dc988f",
+    officialCareersLink: "https://talent.baidu.com/jobs/campus",
+    sourceName: "百度校园招聘 — Python 后端研发实习生（J89661）",
+    sourceUrl:
+      "https://talent.baidu.com/jobs/detail/INTERN/166d8095-9be0-4080-ac93-d902d4dc988f",
+    responsibilities: [
+      "参与测试与质效平台开发",
+      "根据用户需求设计和实现平台功能",
+      "调研前沿测试技术并推动优化",
+    ],
+    requirements: [
+      "计算机相关专业本科及以上在校生",
+      "掌握 Python、Go 或 Java 至少一门语言",
+      "可尽快到岗并线下实习四个月以上",
+    ],
+    resumeVersion: "中文技术简历",
+    priority: "P1",
+    fitScore: 85,
+    notes:
+      "官方独立岗位页仍显示职位内容，但本次核验未确认可用投递动作；未公开截止日期。",
+    sourceStatus:
+      "Official position page; application action requires verification",
+    nextReviewDate: "2026-08-13",
+  },
+  {
+    ...common,
+    verificationStatus: "Verification required",
+    verificationConfidence: "Medium",
+    lifecycleStatus: "Verification required",
+    verificationMethod:
+      "Position page content visible; application action not confirmed",
+    id: "baidu-frontend-intern-j95084",
+    jobId: "J95084",
+    company: "Baidu / 百度",
+    position: "前端开发实习生（J95084）",
+    category: "Software Engineering",
+    roleFamily: "Frontend",
+    businessUnit: "应用模型研发部",
+    headcount: 2,
+    location: "Beijing / Shanghai",
+    publishedDate: "2026-07-21",
+    officialApplyLink:
+      "https://talent.baidu.com/jobs/detail/INTERN/35fbe3c6-54a1-4687-abc3-02cd760d9462",
+    officialCareersLink: "https://talent.baidu.com/jobs/campus",
+    sourceName: "百度校园招聘 — 前端开发实习生（J95084）",
+    sourceUrl:
+      "https://talent.baidu.com/jobs/detail/INTERN/35fbe3c6-54a1-4687-abc3-02cd760d9462",
+    responsibilities: [
+      "开发和迭代 AI 数据平台前端模块",
+      "实现数据标注、模型评估等关键界面",
+      "参与前端工程化和性能优化",
+    ],
+    requirements: [
+      "掌握 HTML、CSS、JavaScript 与 TypeScript",
+      "熟悉 React 或 Vue 等主流框架",
+      "具备工程化、性能优化和协作能力",
+    ],
+    resumeVersion: "中文技术简历",
+    priority: "P1",
+    fitScore: 89,
+    notes:
+      "官方独立岗位页仍显示职位内容，但本次核验未确认可用投递动作；未公开截止日期。",
+    sourceStatus:
+      "Official position page; application action requires verification",
+    nextReviewDate: "2026-08-13",
+  },
+  {
+    ...common,
+    verificationStatus: "Verification required",
+    verificationConfidence: "Low",
+    lifecycleStatus: "Verification required",
+    verificationMethod:
+      "Position URL accessible; position content and application action not confirmed",
+    id: "baidu-ai-product-ops-intern-j101336",
+    jobId: "J101336",
+    company: "Baidu / 百度",
+    position: "AI产品运营实习生（J101336）",
+    category: "AI Product",
+    roleFamily: "Operations",
+    businessUnit: "安全与企业效率平台",
+    headcount: 1,
+    location: "Beijing",
+    publishedDate: "2026-07-21",
+    officialApplyLink:
+      "https://talent.baidu.com/jobs/detail/INTERN/6cb6917a-cf17-4798-935d-6da81eb799b0",
+    officialCareersLink: "https://talent.baidu.com/jobs/campus",
+    sourceName: "百度校园招聘 — AI产品运营实习生（J101336）",
+    sourceUrl:
+      "https://talent.baidu.com/jobs/detail/INTERN/6cb6917a-cf17-4798-935d-6da81eb799b0",
+    responsibilities: [
+      "负责文心快码相关 AI 产品运营",
+      "支持产品推广、内容和线下活动",
+      "协调跨团队资源并跟进执行",
+    ],
+    requirements: [
+      "本科及以上学历",
+      "了解 AI 与 Agent 产品",
+      "有产品运营、活动运营或 AIGC 经验者优先",
+    ],
+    priority: "P2",
+    fitScore: 79,
+    notes:
+      "官方链接可访问，但本次核验未返回职位内容或可用投递动作；不得视为开放。",
+    sourceStatus: "Official position URL; role state requires verification",
+    nextReviewDate: "2026-08-13",
+  },
+  {
+    ...common,
+    verificationStatus: "Verification required",
+    verificationConfidence: "Medium",
+    lifecycleStatus: "Verification required",
+    verificationMethod:
+      "Position page content visible; application action not confirmed",
     id: "baidu-ai-product-intern-j93525",
     jobId: "J93525",
     company: "Baidu / 百度",
@@ -60,21 +210,40 @@ export const verifiedChinaCampusOpportunities: ChinaCampusOpportunity[] = [
     roleFamily: "AI Product",
     businessUnit: "ACG",
     headcount: 1,
-    responsibilities: ["协助制定 AI 产品策略和产品架构", "跟进产品开发并协调相关团队", "分析市场、用户需求与反馈", "撰写产品文档和调研报告"],
-    requirements: ["对 AI 技术和人工智能产品有兴趣", "具备沟通表达、市场分析和商业思维能力", "计算机、统计或人工智能相关背景优先"],
+    responsibilities: [
+      "协助制定 AI 产品策略和产品架构",
+      "跟进产品开发并协调相关团队",
+      "分析市场、用户需求与反馈",
+      "撰写产品文档和调研报告",
+    ],
+    requirements: [
+      "对 AI 技术和人工智能产品有兴趣",
+      "具备沟通表达、市场分析和商业思维能力",
+      "计算机、统计或人工智能相关背景优先",
+    ],
     location: "Beijing",
-    officialApplyLink: "https://talent.baidu.com/jobs/detail/INTERN/3f59209f-f96e-43ab-b11e-545dbd7865d0",
+    officialApplyLink:
+      "https://talent.baidu.com/jobs/detail/INTERN/3f59209f-f96e-43ab-b11e-545dbd7865d0",
     officialCareersLink: "https://talent.baidu.com/jobs/campus",
     sourceName: "百度校园招聘 — AI产品实习生（J93525）",
-    sourceUrl: "https://talent.baidu.com/jobs/detail/INTERN/3f59209f-f96e-43ab-b11e-545dbd7865d0",
+    sourceUrl:
+      "https://talent.baidu.com/jobs/detail/INTERN/3f59209f-f96e-43ab-b11e-545dbd7865d0",
     priority: "P1",
     fitScore: 91,
-    notes: "官方岗位页仍显示日常实习项目；未公开截止日期或限定毕业年份。",
-    sourceStatus: "Official vacancy page with application action",
-    nextReviewDate: "2026-08-14",
+    notes:
+      "官方岗位页仍显示职位内容，但本次核验未确认可用投递动作；未公开截止日期或限定毕业年份。",
+    sourceStatus:
+      "Official position page; application action requires verification",
+    nextReviewDate: "2026-08-13",
   },
   {
     ...common,
+    verificationStatus: "Closed",
+    verificationConfidence: "High",
+    lifecycleStatus: "Closed",
+    verificationMethod: "Official position page closure message",
+    closedReason: "职位「产品实习生」已关闭，暂无投递",
+    status: "Archived",
     id: "xiaohongshu-product-intern-20983",
     jobId: "20983",
     company: "RED / 小红书",
@@ -83,8 +252,15 @@ export const verifiedChinaCampusOpportunities: ChinaCampusOpportunity[] = [
     roleFamily: "Product",
     businessUnit: null,
     headcount: null,
-    responsibilities: ["参与产品需求定义、方案设计、落地与迭代", "探索 AI 在产品设计、内容生产和用户体验中的应用"],
-    requirements: ["本科及以上在读", "每周至少到岗四天并实习不少于三个月", "具备清晰表达和将需求转化为产品方案的能力"],
+    responsibilities: [
+      "参与产品需求定义、方案设计、落地与迭代",
+      "探索 AI 在产品设计、内容生产和用户体验中的应用",
+    ],
+    requirements: [
+      "本科及以上在读",
+      "每周至少到岗四天并实习不少于三个月",
+      "具备清晰表达和将需求转化为产品方案的能力",
+    ],
     location: "Shanghai",
     officialApplyLink: "https://job.xiaohongshu.com/campus/position/20983",
     officialCareersLink: "https://job.xiaohongshu.com/campus",
@@ -92,9 +268,10 @@ export const verifiedChinaCampusOpportunities: ChinaCampusOpportunity[] = [
     sourceUrl: "https://job.xiaohongshu.com/campus/position/20983",
     priority: "P1",
     fitScore: 90,
-    notes: "官方岗位页显示投递入口；要求每周至少到岗四天并实习不少于三个月，未公开截止日期。",
-    sourceStatus: "Official vacancy page with application action",
-    nextReviewDate: "2026-08-14",
+    notes:
+      "官方职位状态已确认关闭；保留为历史记录，不进入推荐、行动中心或开放岗位统计。",
+    sourceStatus: "Official position page reports closed",
+    nextReviewDate: "2026-09-12",
   },
   {
     ...common,
@@ -106,8 +283,16 @@ export const verifiedChinaCampusOpportunities: ChinaCampusOpportunity[] = [
     roleFamily: "AI Product",
     businessUnit: null,
     headcount: null,
-    responsibilities: ["定义 AI 输出标准", "设计数据生产与评估调优流程", "使用 AI 工具快速搭建交互原型"],
-    requirements: ["具有人文专业训练与逻辑表达能力", "愿意使用 AI 工具亲手搭建产品原型", "投递时需提交 Vibe Coding 作品"],
+    responsibilities: [
+      "定义 AI 输出标准",
+      "设计数据生产与评估调优流程",
+      "使用 AI 工具快速搭建交互原型",
+    ],
+    requirements: [
+      "具有人文专业训练与逻辑表达能力",
+      "愿意使用 AI 工具亲手搭建产品原型",
+      "投递时需提交 Vibe Coding 作品",
+    ],
     location: "Shanghai",
     officialApplyLink: "https://job.xiaohongshu.com/campus/position/15586",
     officialCareersLink: "https://job.xiaohongshu.com/campus",
@@ -115,7 +300,8 @@ export const verifiedChinaCampusOpportunities: ChinaCampusOpportunity[] = [
     sourceUrl: "https://job.xiaohongshu.com/campus/position/15586",
     priority: "P1",
     fitScore: 87,
-    notes: "官方岗位页显示投递入口并要求随简历提交 Vibe Coding 作品；未公开截止日期。",
+    notes:
+      "官方岗位页显示投递入口并要求随简历提交 Vibe Coding 作品；未公开截止日期。",
     sourceStatus: "Official vacancy page with application action",
     nextReviewDate: "2026-08-14",
   },
@@ -129,8 +315,15 @@ export const verifiedChinaCampusOpportunities: ChinaCampusOpportunity[] = [
     roleFamily: "Growth",
     businessUnit: null,
     headcount: null,
-    responsibilities: ["负责校园用户社群、内容和活动运营", "分析校园用户需求并推动创新产品增长"],
-    requirements: ["2027 年及以后毕业", "至少实习三个月并尽快到岗", "具备校园社群或活动经验者优先"],
+    responsibilities: [
+      "负责校园用户社群、内容和活动运营",
+      "分析校园用户需求并推动创新产品增长",
+    ],
+    requirements: [
+      "2027 年及以后毕业",
+      "至少实习三个月并尽快到岗",
+      "具备校园社群或活动经验者优先",
+    ],
     location: "Shanghai",
     officialApplyLink: "https://job.xiaohongshu.com/campus/position/17437",
     officialCareersLink: "https://job.xiaohongshu.com/campus",
@@ -139,7 +332,8 @@ export const verifiedChinaCampusOpportunities: ChinaCampusOpportunity[] = [
     targetGraduationYear: "2027及以后",
     priority: "P2",
     fitScore: 78,
-    notes: "官方岗位页要求 2027 年及以后毕业、至少三个月实习并尽快到岗；未公开截止日期。",
+    notes:
+      "官方岗位页要求 2027 年及以后毕业、至少三个月实习并尽快到岗；未公开截止日期。",
     sourceStatus: "Official vacancy page with application action",
     nextReviewDate: "2026-08-14",
   },
@@ -153,8 +347,15 @@ export const verifiedChinaCampusOpportunities: ChinaCampusOpportunity[] = [
     roleFamily: "Growth",
     businessUnit: null,
     headcount: null,
-    responsibilities: ["负责创新产品内容策划与多平台分发", "监控增长数据并迭代内容策略"],
-    requirements: ["每周五天，实习四至六个月", "具备内容平台理解和数据分析意识", "能熟练使用 AI 工具者优先"],
+    responsibilities: [
+      "负责创新产品内容策划与多平台分发",
+      "监控增长数据并迭代内容策略",
+    ],
+    requirements: [
+      "每周五天，实习四至六个月",
+      "具备内容平台理解和数据分析意识",
+      "能熟练使用 AI 工具者优先",
+    ],
     location: "Shanghai",
     officialApplyLink: "https://job.xiaohongshu.com/campus/position/20615",
     officialCareersLink: "https://job.xiaohongshu.com/campus",
@@ -162,7 +363,8 @@ export const verifiedChinaCampusOpportunities: ChinaCampusOpportunity[] = [
     sourceUrl: "https://job.xiaohongshu.com/campus/position/20615",
     priority: "P2",
     fitScore: 76,
-    notes: "官方岗位页显示投递入口；要求每周五天、实习四至六个月并尽快到岗，未公开截止日期。",
+    notes:
+      "官方岗位页显示投递入口；要求每周五天、实习四至六个月并尽快到岗，未公开截止日期。",
     sourceStatus: "Official vacancy page with application action",
     nextReviewDate: "2026-08-14",
   },

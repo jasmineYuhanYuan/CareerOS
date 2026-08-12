@@ -74,6 +74,6 @@ describe("verified Australia market", () => {
     const coverage = realMarketCoverage(today);
     expect(coverage.australia.active).toBe(1);
     expect(coverage.australia.upcoming).toBe(2);
-    expect(coverage.china.active).toBe(9);
+    expect(coverage.china.active).toBe(3);
   });
 });

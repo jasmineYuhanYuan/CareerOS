@@ -37,6 +37,8 @@ export function realMarketCoverage(
       archived: verifiedCareerOpportunities.filter(
         (item) =>
           item.country === "China" && item.verificationStatus === "Archived",
+      ).length + verifiedChinaCampusOpportunities.filter(
+        (item) => ["Closed", "Archived"].includes(item.verificationStatus),
       ).length,
       companies: new Set(chinaActive.map((item) => item.company)).size,
       product: chinaActive.filter((item) => item.category === "Product").length,

@@ -46,6 +46,10 @@ function opportunity(
     sourceUrl: "https://careers.example.org/jobs/one",
     sourceType: "Official",
     lastVerifiedAt: today,
+    checkedAt: `${today}T00:00:00.000Z`,
+    verificationMethod: "Position page application action",
+    lifecycleStatus: "Open",
+    closedReason: null,
     verificationStatus: "Open",
     verificationConfidence: "High",
     publishedDate: null,
@@ -84,7 +88,7 @@ const importPayload = {
 };
 
 describe("China campus recruiting", () => {
-  it("ships only evidence-backed non-sample current China records", () => {
+  it("preserves every China record with explicit lifecycle evidence", () => {
     expect(verifiedChinaCampusOpportunities).toHaveLength(9);
     expect(
       verifiedChinaCampusOpportunities.every(
@@ -92,9 +96,49 @@ describe("China campus recruiting", () => {
           item.sourceType === "Official" &&
           item.sampleData === false &&
           item.officialApplyLink === item.sourceUrl &&
-          item.verificationStatus === "Open",
+          Boolean(item.verificationMethod) &&
+          Boolean(item.checkedAt),
       ),
     ).toBe(true);
+  });
+
+  it("keeps the confirmed closed RED product internship archived", () => {
+    const closed = verifiedChinaCampusOpportunities.find(
+      (item) => item.id === "xiaohongshu-product-intern-20983",
+    );
+    expect(closed).toMatchObject({
+      verificationStatus: "Closed",
+      lifecycleStatus: "Closed",
+      status: "Archived",
+    });
+    expect(closed?.closedReason).toContain("已关闭");
+    expect(selectTodayRecommendations([closed!], "2026-08-12")).toEqual([]);
+  });
+
+  it("excludes stale, verification-required and sample-like records", () => {
+    expect(
+      selectTodayRecommendations(
+        [opportunity({ lastVerifiedAt: "2026-08-01" })],
+        "2026-08-12",
+      ),
+    ).toEqual([]);
+    expect(
+      selectTodayRecommendations(
+        [
+          opportunity({
+            verificationStatus: "Verification required",
+            lifecycleStatus: "Verification required",
+          }),
+        ],
+        today,
+      ),
+    ).toEqual([]);
+    expect(
+      selectTodayRecommendations(
+        [opportunity({ verificationMethod: "HTTP 200 only" })],
+        today,
+      ),
+    ).toEqual([]);
   });
   it("does not affect Australia application metrics", () => {
     const workspace = createSeedState().profiles[YUHAN_ID];

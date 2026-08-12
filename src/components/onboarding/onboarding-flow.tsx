@@ -104,8 +104,10 @@ export function OnboardingFlow() {
   }
 
   function finish() {
-    const existing = state.profiles[draft.profileId]?.profile;
-    const id = existing?.id || `profile-${Date.now()}`;
+    const id =
+      draft.profileId ||
+      (draft.displayName.trim() ? `profile-${Date.now()}` : YUHAN_ID);
+    const existing = state.profiles[id]?.profile;
     const skills: Skill[] = split(draft.skills).map((name, index) => ({
       id: existing?.skills.find((item) => item.name === name)?.id ?? `onboarding-skill-${index}-${Date.now()}`,
       name,
@@ -124,7 +126,10 @@ export function OnboardingFlow() {
     }));
     upsertProfile({
       id,
-      displayName: draft.displayName.trim() || existing?.displayName || "CareerOS Profile",
+      displayName:
+        draft.displayName.trim() ||
+        existing?.displayName ||
+        state.profiles[YUHAN_ID].profile.displayName,
       preferredName: existing?.preferredName ?? "",
       university: draft.university.trim(),
       degree: draft.degree.trim(),

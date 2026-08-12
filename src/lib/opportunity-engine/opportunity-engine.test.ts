@@ -57,6 +57,12 @@ describe("daily opportunity engine", () => {
           ["active", "closingSoon"].includes(item.applicationStatus),
       ),
     ).toBe(true);
+    expect(recommended).toHaveLength(4);
+    expect(
+      recommended.some(
+        (item) => item.id === "xiaohongshu-product-intern-20983",
+      ),
+    ).toBe(false);
   });
 
   it("archives records only from a real published past deadline", () => {
@@ -83,5 +89,6 @@ describe("daily opportunity engine", () => {
       "resume",
       "followUp",
     ]);
+    expect(actions.find((item) => item.type === "apply")?.count).toBe(4);
   });
 });

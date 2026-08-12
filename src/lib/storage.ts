@@ -1,14 +1,20 @@
-import { createSeedState } from "@/data/seed";
+import { createSeedState, YUHAN_ID } from "@/data/seed";
+import { verifiedChinaCampusOpportunities } from "@/data/china-recruiting/verified-opportunities";
 import type { CareerOSState, ProfileWorkspace } from "@/types/domain";
 import { STORAGE_VERSION } from "@/types/domain";
 
 export const STORAGE_KEY = "careeros:mvp";
 
 function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+  );
 }
 
-function isWorkspace(value: unknown, profileId: string): value is ProfileWorkspace {
+function isWorkspace(
+  value: unknown,
+  profileId: string,
+): value is ProfileWorkspace {
   if (typeof value !== "object" || value === null) return false;
   const workspace = value as Record<string, unknown>;
   const profile = workspace.profile;
@@ -27,20 +33,32 @@ function isWorkspace(value: unknown, profileId: string): value is ProfileWorkspa
     applications.every((item) => {
       if (typeof item !== "object" || item === null) return false;
       const record = item as Record<string, unknown>;
-      return record.profileId === profileId && typeof record.id === "string" && typeof record.status === "string";
+      return (
+        record.profileId === profileId &&
+        typeof record.id === "string" &&
+        typeof record.status === "string"
+      );
     }) &&
     isStringArray(workspace.savedProgramIds) &&
     Array.isArray(postgraduateApplications) &&
     postgraduateApplications.every((item) => {
       if (typeof item !== "object" || item === null) return false;
       const record = item as Record<string, unknown>;
-      return record.profileId === profileId && typeof record.id === "string" && typeof record.programId === "string";
+      return (
+        record.profileId === profileId &&
+        typeof record.id === "string" &&
+        typeof record.programId === "string"
+      );
     }) &&
     Array.isArray(roadmapItems) &&
     roadmapItems.every((item) => {
       if (typeof item !== "object" || item === null) return false;
       const record = item as Record<string, unknown>;
-      return record.profileId === profileId && typeof record.id === "string" && typeof record.title === "string";
+      return (
+        record.profileId === profileId &&
+        typeof record.id === "string" &&
+        typeof record.title === "string"
+      );
     }) &&
     typeof workspace.organisationNotes === "object" &&
     workspace.organisationNotes !== null &&
@@ -49,19 +67,32 @@ function isWorkspace(value: unknown, profileId: string): value is ProfileWorkspa
     workspace.contacts.every((item) => {
       if (typeof item !== "object" || item === null) return false;
       const record = item as Record<string, unknown>;
-      return record.profileId === profileId && typeof record.id === "string" && typeof record.name === "string";
+      return (
+        record.profileId === profileId &&
+        typeof record.id === "string" &&
+        typeof record.name === "string"
+      );
     }) &&
     Array.isArray(workspace.documents) &&
     workspace.documents.every((item) => {
       if (typeof item !== "object" || item === null) return false;
       const record = item as Record<string, unknown>;
-      return record.profileId === profileId && typeof record.id === "string" && typeof record.name === "string";
+      return (
+        record.profileId === profileId &&
+        typeof record.id === "string" &&
+        typeof record.name === "string"
+      );
     }) &&
     Array.isArray(workspace.chinaCampusOpportunities) &&
     workspace.chinaCampusOpportunities.every((item) => {
       if (typeof item !== "object" || item === null) return false;
       const record = item as Record<string, unknown>;
-      return record.profileId === profileId && record.country === "China" && typeof record.id === "string" && typeof record.status === "string";
+      return (
+        record.profileId === profileId &&
+        record.country === "China" &&
+        typeof record.id === "string" &&
+        typeof record.status === "string"
+      );
     })
   );
 }
@@ -77,7 +108,8 @@ export function validateState(value: unknown): value is CareerOSState {
     !["en", "zh-CN"].includes(String(state.language)) ||
     typeof state.dashboardPreferences !== "object" ||
     state.dashboardPreferences === null ||
-    typeof (state.dashboardPreferences as Record<string, unknown>).demoMode !== "boolean" ||
+    typeof (state.dashboardPreferences as Record<string, unknown>).demoMode !==
+      "boolean" ||
     typeof state.profiles !== "object" ||
     state.profiles === null
   ) {
@@ -94,18 +126,28 @@ export function validateState(value: unknown): value is CareerOSState {
 }
 
 function normaliseSprint8State(state: CareerOSState): CareerOSState {
-  const applicationStatuses: Record<string, CareerOSState["profiles"][string]["applications"][number]["status"]> = {
+  const applicationStatuses: Record<
+    string,
+    CareerOSState["profiles"][string]["applications"][number]["status"]
+  > = {
     Saved: "Interested",
     Assessment: "OA invited",
     Interview: "Interviewing",
   };
-  const documentStatuses: Record<string, CareerOSState["profiles"][string]["documents"][number]["status"]> = {
+  const documentStatuses: Record<
+    string,
+    CareerOSState["profiles"][string]["documents"][number]["status"]
+  > = {
     "Needs update": "Review needed",
     Archived: "Outdated",
   };
-  return {
-    ...state,
-    profiles: Object.fromEntries(Object.entries(state.profiles).map(([profileId, workspace]) => [
+  const realProfiles = Object.fromEntries(
+    Object.entries(state.profiles).filter(
+      ([, workspace]) => workspace.profile.displayName !== "CareerOS Profile",
+    ),
+  );
+  const profiles = Object.fromEntries(
+    Object.entries(realProfiles).map(([profileId, workspace]) => [
       profileId,
       {
         ...workspace,
@@ -119,15 +161,58 @@ function normaliseSprint8State(state: CareerOSState): CareerOSState {
           ...document,
           status: documentStatuses[document.status] ?? document.status,
         })),
+        chinaCampusOpportunities: workspace.chinaCampusOpportunities.map(
+          (record) => {
+            const canonical = verifiedChinaCampusOpportunities.find(
+              (item) => item.id === record.id && item.profileId === profileId,
+            );
+            if (canonical) {
+              return {
+                ...record,
+                ...canonical,
+                status:
+                  canonical.verificationStatus === "Closed" ||
+                  canonical.verificationStatus === "Archived"
+                    ? "Archived"
+                    : record.status,
+              };
+            }
+            return {
+              ...record,
+              verificationStatus: "Verification required" as const,
+              verificationConfidence: "Low" as const,
+              lifecycleStatus: "Verification required" as const,
+              verificationMethod:
+                record.verificationMethod ??
+                "Stored record requires position-page revalidation",
+            };
+          },
+        ),
       },
-    ])),
+    ]),
+  );
+  const fallbackProfileId = profiles[YUHAN_ID]
+    ? YUHAN_ID
+    : Object.keys(profiles)[0];
+  return {
+    ...state,
+    activeProfileId: profiles[state.activeProfileId]
+      ? state.activeProfileId
+      : fallbackProfileId,
+    defaultProfileId: profiles[state.defaultProfileId]
+      ? state.defaultProfileId
+      : fallbackProfileId,
+    profiles,
   };
 }
 
 export function migrateState(value: unknown): CareerOSState | null {
   if (validateState(value)) {
     const profile = value.profiles["taicheng-guo-tommy"]?.profile;
-    if (profile?.university === "Australian National University" && profile.discipline === "Cyber Security and Data Analytics") {
+    if (
+      profile?.university === "Australian National University" &&
+      profile.discipline === "Cyber Security and Data Analytics"
+    ) {
       const corrected = createSeedState().profiles["taicheng-guo-tommy"];
       return normaliseSprint8State({
         ...value,
@@ -148,49 +233,101 @@ export function migrateState(value: unknown): CareerOSState | null {
   }
   if (typeof value !== "object" || value === null) return null;
   const legacy = value as Record<string, unknown>;
-  if (legacy.version === 4 && typeof legacy.profiles === "object" && legacy.profiles !== null) {
+  if (
+    legacy.version === 4 &&
+    typeof legacy.profiles === "object" &&
+    legacy.profiles !== null
+  ) {
     const seed = createSeedState();
-    const migratedProfiles = Object.fromEntries(Object.entries(legacy.profiles as Record<string, unknown>).map(([id, workspaceValue]) => {
-      const workspace = workspaceValue as Record<string, unknown>;
-      const oldRecords = Array.isArray(workspace.chinaCampusOpportunities) ? workspace.chinaCampusOpportunities as Record<string, unknown>[] : [];
-      const upgraded: Record<string, unknown>[] = oldRecords.map((record) => ({
-        ...record,
-        recruitingBatch: record.recruitingBatch ?? "日常实习",
-        targetGraduationYear: record.targetGraduationYear ?? null,
-        roleFamily: record.roleFamily ?? record.category ?? "Other",
-        businessUnit: record.businessUnit ?? null,
-        officialCareersLink: record.officialCareersLink ?? record.sourceUrl,
-        verificationStatus: record.verificationStatus ?? "Verification required",
-        verificationConfidence: record.verificationConfidence ?? "Low",
-        publishedDate: record.publishedDate ?? null,
-        sampleData: false,
-      }));
-      const seedRecords = seed.profiles[id]?.chinaCampusOpportunities ?? [];
-      const existingIds = new Set(upgraded.map((record) => String(record.id ?? "")));
-      return [id, { ...workspace, chinaCampusOpportunities: [...upgraded, ...seedRecords.filter((record) => !existingIds.has(record.id))] }];
-    }));
-    const migrated = { ...legacy, version: STORAGE_VERSION, profiles: migratedProfiles };
-    return validateState(migrated) ? normaliseSprint8State(migrated as CareerOSState) : null;
+    const migratedProfiles = Object.fromEntries(
+      Object.entries(legacy.profiles as Record<string, unknown>).map(
+        ([id, workspaceValue]) => {
+          const workspace = workspaceValue as Record<string, unknown>;
+          const oldRecords = Array.isArray(workspace.chinaCampusOpportunities)
+            ? (workspace.chinaCampusOpportunities as Record<string, unknown>[])
+            : [];
+          const upgraded: Record<string, unknown>[] = oldRecords.map(
+            (record) => ({
+              ...record,
+              recruitingBatch: record.recruitingBatch ?? "日常实习",
+              targetGraduationYear: record.targetGraduationYear ?? null,
+              roleFamily: record.roleFamily ?? record.category ?? "Other",
+              businessUnit: record.businessUnit ?? null,
+              officialCareersLink:
+                record.officialCareersLink ?? record.sourceUrl,
+              verificationStatus:
+                record.verificationStatus ?? "Verification required",
+              verificationConfidence: record.verificationConfidence ?? "Low",
+              publishedDate: record.publishedDate ?? null,
+              sampleData: false,
+            }),
+          );
+          const seedRecords = seed.profiles[id]?.chinaCampusOpportunities ?? [];
+          const existingIds = new Set(
+            upgraded.map((record) => String(record.id ?? "")),
+          );
+          return [
+            id,
+            {
+              ...workspace,
+              chinaCampusOpportunities: [
+                ...upgraded,
+                ...seedRecords.filter((record) => !existingIds.has(record.id)),
+              ],
+            },
+          ];
+        },
+      ),
+    );
+    const migrated = {
+      ...legacy,
+      version: STORAGE_VERSION,
+      profiles: migratedProfiles,
+    };
+    return validateState(migrated)
+      ? normaliseSprint8State(migrated as CareerOSState)
+      : null;
   }
-  if (legacy.version === 3 && typeof legacy.profiles === "object" && legacy.profiles !== null) {
-    const preferences = typeof legacy.dashboardPreferences === "object" && legacy.dashboardPreferences !== null
-      ? legacy.dashboardPreferences as Record<string, unknown>
-      : {};
+  if (
+    legacy.version === 3 &&
+    typeof legacy.profiles === "object" &&
+    legacy.profiles !== null
+  ) {
+    const preferences =
+      typeof legacy.dashboardPreferences === "object" &&
+      legacy.dashboardPreferences !== null
+        ? (legacy.dashboardPreferences as Record<string, unknown>)
+        : {};
     const migrated = {
       ...legacy,
       version: STORAGE_VERSION,
       dashboardPreferences: { ...preferences, demoMode: false },
-      profiles: Object.fromEntries(Object.entries(legacy.profiles as Record<string, unknown>).map(([id, workspace]) => [
-        id,
-        { ...(workspace as Record<string, unknown>), chinaCampusOpportunities: [] },
-      ])),
+      profiles: Object.fromEntries(
+        Object.entries(legacy.profiles as Record<string, unknown>).map(
+          ([id, workspace]) => [
+            id,
+            {
+              ...(workspace as Record<string, unknown>),
+              chinaCampusOpportunities: [],
+            },
+          ],
+        ),
+      ),
     };
     return validateState(migrated) ? migrated : null;
   }
-  if (legacy.version !== 2 || typeof legacy.profiles !== "object" || legacy.profiles === null) return null;
+  if (
+    legacy.version !== 2 ||
+    typeof legacy.profiles !== "object" ||
+    legacy.profiles === null
+  )
+    return null;
   const migratedProfiles: Record<string, unknown> = {};
-  for (const [profileId, workspaceValue] of Object.entries(legacy.profiles as Record<string, unknown>)) {
-    if (typeof workspaceValue !== "object" || workspaceValue === null) return null;
+  for (const [profileId, workspaceValue] of Object.entries(
+    legacy.profiles as Record<string, unknown>,
+  )) {
+    if (typeof workspaceValue !== "object" || workspaceValue === null)
+      return null;
     migratedProfiles[profileId] = {
       ...(workspaceValue as Record<string, unknown>),
       savedOpportunityIds: [],
@@ -228,7 +365,10 @@ export function serialiseState(state: CareerOSState): string {
   return JSON.stringify(state, null, 2);
 }
 
-export function saveState(storage: Pick<Storage, "setItem">, state: CareerOSState): boolean {
+export function saveState(
+  storage: Pick<Storage, "setItem">,
+  state: CareerOSState,
+): boolean {
   try {
     storage.setItem(STORAGE_KEY, serialiseState(state));
     return true;

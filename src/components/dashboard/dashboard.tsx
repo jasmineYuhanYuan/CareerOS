@@ -236,10 +236,20 @@ export function Dashboard() {
                 <strong className="mt-3 text-[var(--accent)]">
                   {t("dashboard.matchPercent", { score: item.matchScore })}
                 </strong>
+                <div className="mt-2">
+                  <StatusBadge status="positive">
+                    {displayUiValue("Open", language)}
+                  </StatusBadge>
+                </div>
                 <p className="mt-2 text-xs text-[var(--text-tertiary)]">
                   {item.deadline
                     ? formatDate(item.deadline, language)
                     : displayUiValue("Not published", language)}
+                </p>
+                <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+                  {t("dashboard.lastVerified", {
+                    date: formatDate(item.dateVerified, language),
+                  })}
                 </p>
                 <a
                   href={item.sourceUrl}
