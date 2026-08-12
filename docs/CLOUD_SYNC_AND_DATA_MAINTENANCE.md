@@ -10,7 +10,7 @@ An HTTP error is not treated as evidence that a job closed. A role returns to Op
 
 ## Cloud state
 
-`/api/sync/state` accepts an authenticated Supabase access token. `GET` returns the signed-in owner's snapshot. `PUT` validates the complete CareerOS state and uses a revision number; stale writes return HTTP 409 rather than overwriting newer device data.
+`/api/sync/state` accepts an authenticated Supabase access token. `GET` returns the signed-in owner's snapshot. `PUT` validates the complete CareerOS state and calls `save_careeros_state`, which performs the revision comparison and write atomically inside PostgreSQL. Stale writes return HTTP 409 rather than overwriting newer device data.
 
 Apply `supabase/migrations/202608120001_cloud_sync_and_opportunity_audit.sql` in the target project. The snapshot table uses RLS and `auth.uid()`. Audit tables are service-role-only.
 

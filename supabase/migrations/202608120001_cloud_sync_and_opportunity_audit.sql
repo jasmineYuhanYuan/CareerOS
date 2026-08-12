@@ -21,6 +21,10 @@ alter table public.careeros_state_snapshots enable row level security;
 revoke all on public.careeros_state_snapshots from anon;
 grant select, insert, update, delete on public.careeros_state_snapshots to authenticated;
 
+drop policy if exists "Owners read their CareerOS state" on public.careeros_state_snapshots;
+drop policy if exists "Owners insert their CareerOS state" on public.careeros_state_snapshots;
+drop policy if exists "Owners update their CareerOS state" on public.careeros_state_snapshots;
+drop policy if exists "Owners delete their CareerOS state" on public.careeros_state_snapshots;
 create policy "Owners read their CareerOS state" on public.careeros_state_snapshots
 for select to authenticated using ((select auth.uid()) = owner_id);
 create policy "Owners insert their CareerOS state" on public.careeros_state_snapshots
@@ -30,6 +34,46 @@ for update to authenticated using ((select auth.uid()) = owner_id)
 with check ((select auth.uid()) = owner_id);
 create policy "Owners delete their CareerOS state" on public.careeros_state_snapshots
 for delete to authenticated using ((select auth.uid()) = owner_id);
+
+create or replace function public.save_careeros_state(
+  expected_revision bigint,
+  next_state jsonb
+)
+returns table (revision bigint, updated_at timestamptz)
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  current_user_id uuid := (select auth.uid());
+begin
+  if current_user_id is null then
+    raise exception 'Authentication required' using errcode = '42501';
+  end if;
+
+  if expected_revision = 0 then
+    insert into public.careeros_state_snapshots (owner_id, state, revision)
+    values (current_user_id, next_state, 1)
+    on conflict (owner_id) do nothing
+    returning careeros_state_snapshots.revision, careeros_state_snapshots.updated_at
+    into revision, updated_at;
+  else
+    update public.careeros_state_snapshots
+    set state = next_state, revision = expected_revision + 1
+    where owner_id = current_user_id and careeros_state_snapshots.revision = expected_revision
+    returning careeros_state_snapshots.revision, careeros_state_snapshots.updated_at
+    into revision, updated_at;
+  end if;
+
+  if revision is null then
+    raise exception 'SYNC_CONFLICT' using errcode = '40001';
+  end if;
+  return next;
+end;
+$$;
+
+revoke all on function public.save_careeros_state(bigint, jsonb) from public, anon;
+grant execute on function public.save_careeros_state(bigint, jsonb) to authenticated;
 
 create table if not exists public.opportunity_verification_events (
   id bigint generated always as identity primary key,

@@ -44,23 +44,21 @@ export async function PUT(request: Request) {
     return Response.json({ ok: false, error: "Invalid CareerOS state." }, { status: 400 });
   }
   const revision = typeof record.revision === "number" ? record.revision : 0;
-  const { data: current } = await authenticated.client
-    .from("careeros_state_snapshots")
-    .select("revision")
-    .eq("owner_id", authenticated.userId)
-    .maybeSingle();
-  if (current && current.revision !== revision) {
+  const { data, error } = await authenticated.client.rpc("save_careeros_state", {
+    expected_revision: revision,
+    next_state: record.state,
+  });
+  if (error?.message.includes("SYNC_CONFLICT") || error?.code === "40001") {
+    const { data: current } = await authenticated.client
+      .from("careeros_state_snapshots")
+      .select("revision")
+      .eq("owner_id", authenticated.userId)
+      .maybeSingle();
     return Response.json(
-      { ok: false, error: "Sync conflict", currentRevision: current.revision },
+      { ok: false, error: "Sync conflict", currentRevision: current?.revision ?? null },
       { status: 409 },
     );
   }
-  const nextRevision = revision + 1;
-  const { data, error } = await authenticated.client
-    .from("careeros_state_snapshots")
-    .upsert({ owner_id: authenticated.userId, state: record.state, revision: nextRevision })
-    .select("revision,updated_at")
-    .single();
   if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
-  return Response.json({ ok: true, snapshot: data });
+  return Response.json({ ok: true, snapshot: data?.[0] });
 }
