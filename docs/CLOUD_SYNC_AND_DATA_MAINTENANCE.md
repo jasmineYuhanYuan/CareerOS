@@ -14,6 +14,8 @@ An HTTP error is not treated as evidence that a job closed. A role returns to Op
 
 Apply `supabase/migrations/202608120001_cloud_sync_and_opportunity_audit.sql` in the target project. The snapshot table uses RLS and `auth.uid()`. Audit tables are service-role-only.
 
+The audit tables intentionally have no RLS policies for `anon` or `authenticated`. Supabase's `service_role` bypasses RLS and receives explicit table grants, so a permissive `service_role` policy is redundant. Supabase Security Advisor may report `rls_enabled_no_policy` for these two server-only tables as an informational notice; do not silence it with a `USING (true)` policy.
+
 Required production variables:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
