@@ -53,6 +53,17 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) on the development Mac.
 
+## Optional cloud sync and daily vacancy checks
+
+CareerOS continues to work locally without external services. To enable secure cross-device sync and the daily official-position audit:
+
+1. Create a Supabase project and apply `supabase/migrations/202608120001_cloud_sync_and_opportunity_audit.sql`.
+2. Enable Supabase email magic-link authentication and allow the production `/settings` redirect URL.
+3. Copy `.env.example` to `.env.local` and fill the Supabase project values plus a random `CRON_SECRET` of at least 16 characters.
+4. Add the same variables to Vercel and redeploy.
+
+The daily audit never treats an inaccessible page as evidence that a role closed. It restores Open status only when the official position page exposes a recognizable application action. See [docs/CLOUD_SYNC_AND_DATA_MAINTENANCE.md](docs/CLOUD_SYNC_AND_DATA_MAINTENANCE.md) for the security and evidence model.
+
 ## Same-Wi-Fi mobile testing
 
 Start the server on all local interfaces:
@@ -111,14 +122,12 @@ Both reset actions require confirmation.
 
 ## Current limitations
 
-- Data is local to one browser and is not encrypted or cloud-synchronised
-- Sample opportunity and program data is not live or scraped
+- Data remains local until a Supabase project and user sign-in are configured
+- Official-page checks are conservative and client-rendered pages may require manual verification
 - Match estimates use transparent deterministic rules, not employer criteria
-- No authentication, automatic application submission, payments or AI APIs
+- No automatic application submission, payments or AI APIs
 - The MVP does not yet support file uploads or shared accounts
 
 ## Planned phases
 
-Supabase persistence and authentication remain planned after the local CRUD
-workflows are validated. AI-assisted matching, CV support and interview
-preparation remain later phases and are intentionally excluded from this MVP.
+After the Supabase project is configured and the migration is applied, the next step is production validation of cross-device conflict handling and scheduled audit logs. AI-assisted matching remains outside this phase.

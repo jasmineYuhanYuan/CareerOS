@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/form-field";
@@ -10,6 +10,13 @@ import { useLanguage } from "@/providers/language-provider";
 import { formatDate } from "@/i18n/format";
 import type { AppLocale, ThemePreference } from "@/types/domain";
 import { useToast } from "@/providers/toast-provider";
+import {
+  cloudSessionEmail,
+  pullCloudState,
+  pushCloudState,
+  requestMagicLink,
+  signOutCloudSync,
+} from "@/lib/cloud-sync";
 
 export function SettingsPanel() {
   const { state, activeWorkspace, setTheme, setLanguage, updateDashboardPreferences, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData } = useCareerOS();
@@ -17,6 +24,28 @@ export function SettingsPanel() {
   const { notify } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState("");
+  const [syncEmail, setSyncEmail] = useState("");
+  const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
+  const [syncBusy, setSyncBusy] = useState(false);
+
+  useEffect(() => {
+    void cloudSessionEmail().then(setSignedInEmail);
+  }, []);
+
+  async function runSync(action: () => Promise<string>) {
+    setSyncBusy(true);
+    try {
+      const result = await action();
+      setMessage(result);
+      notify(result, "success");
+    } catch (error) {
+      const result = error instanceof Error ? error.message : t("settings.syncFailed");
+      setMessage(result);
+      notify(result, "error");
+    } finally {
+      setSyncBusy(false);
+    }
+  }
 
   function download() {
     const blob = new Blob([exportData()], { type: "application/json" });
@@ -65,8 +94,42 @@ export function SettingsPanel() {
           <p className="text-sm leading-7 text-[var(--text-secondary)]">Exports include storage version {state.version}, both profile workspaces and all locally saved records.</p>
           <div className="mt-5 flex flex-wrap gap-2"><Button onClick={download}>{t("settings.export")}</Button><Button variant="secondary" onClick={() => inputRef.current?.click()}>{t("settings.import")}</Button><input ref={inputRef} className="sr-only" type="file" accept="application/json,.json" aria-label={t("settings.import")} onChange={(e) => void upload(e.target.files?.[0])} /></div>
         </Card>
+        <Card eyebrow={t("settings.cloudSync")} title={t("settings.cloudSync")}>
+          <p className="text-sm leading-7 text-[var(--text-secondary)]">{t("settings.cloudSyncDescription")}</p>
+          {signedInEmail ? (
+            <>
+              <p className="mt-3 text-sm font-medium">{t("settings.signedInAs", { email: signedInEmail })}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button disabled={syncBusy} onClick={() => void runSync(async () => {
+                  await pushCloudState(state);
+                  return t("settings.uploadComplete");
+                })}>{t("settings.uploadCloud")}</Button>
+                <Button variant="secondary" disabled={syncBusy} onClick={() => void runSync(async () => {
+                  const snapshot = await pullCloudState();
+                  if (!snapshot) return t("settings.noCloudCopy");
+                  const result = importData(JSON.stringify(snapshot.state));
+                  if (!result.ok) throw new Error(result.message);
+                  return t("settings.downloadComplete");
+                })}>{t("settings.downloadCloud")}</Button>
+                <Button variant="secondary" disabled={syncBusy} onClick={() => void runSync(async () => {
+                  await signOutCloudSync();
+                  setSignedInEmail(null);
+                  return t("settings.signedOut");
+                })}>{t("settings.signOut")}</Button>
+              </div>
+            </>
+          ) : (
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <input className="min-h-11 flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm" type="email" value={syncEmail} onChange={(event) => setSyncEmail(event.target.value)} placeholder={t("settings.emailPlaceholder")} aria-label={t("settings.emailPlaceholder")} />
+              <Button disabled={syncBusy || !syncEmail} onClick={() => void runSync(async () => {
+                await requestMagicLink(syncEmail);
+                return t("settings.magicLinkSent");
+              })}>{t("settings.sendMagicLink")}</Button>
+            </div>
+          )}
+        </Card>
         <Card eyebrow={t("settings.privacy")} title={t("settings.privacy")}>
-          <p className="text-sm leading-7 text-[var(--text-secondary)]">CareerOS currently uses localStorage. Data is not synced to a server, shared between browsers or protected by an account. Export a backup before clearing browser data.</p>
+          <p className="text-sm leading-7 text-[var(--text-secondary)]">{t("settings.privacyDescription")}</p>
         </Card>
         <Card className="lg:col-span-2" eyebrow={t("settings.reset")} title={t("settings.reset")}>
           <div className="flex flex-wrap gap-3"><Button variant="secondary" onClick={() => window.confirm(t("settings.resetProfileConfirm", { name: activeWorkspace.profile.displayName })) && resetCurrentProfile()}>{t("settings.resetProfile")}</Button><Button variant="danger" onClick={() => window.confirm(t("settings.resetAllConfirm")) && resetAll()}>{t("settings.resetAll")}</Button></div>

@@ -12,6 +12,10 @@ import {
 import { createSeedState, jobs, programs } from "@/data/seed";
 import { parseStoredState, readState, saveState, serialiseState, validateState } from "@/lib/storage";
 import { createChinaApplicationRecord, importChinaOpportunityJson } from "@/lib/china-recruiting";
+import {
+  applyOpportunityStatusOverrides,
+  type OpportunityStatusOverride,
+} from "@/lib/opportunity-inspector";
 import type {
   CareerOSState,
   CareerProfile,
@@ -80,6 +84,37 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
       setHydrated(true);
     });
   }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const controller = new AbortController();
+    void fetch("/api/opportunities/status", { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : null)
+      .then((payload: unknown) => {
+        if (typeof payload !== "object" || payload === null) return;
+        const overrides = (payload as Record<string, unknown>).overrides;
+        if (!Array.isArray(overrides)) return;
+        setState((current) => ({
+          ...current,
+          profiles: Object.fromEntries(Object.entries(current.profiles).map(([id, workspace]) => [
+            id,
+            {
+              ...workspace,
+              chinaCampusOpportunities: applyOpportunityStatusOverrides(
+                workspace.chinaCampusOpportunities,
+                overrides as OpportunityStatusOverride[],
+              ),
+            },
+          ])),
+        }));
+      })
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          console.warn("CareerOS opportunity status refresh failed.");
+        }
+      });
+    return () => controller.abort();
+  }, [hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
