@@ -25,6 +25,7 @@ import {
 } from "@/lib/china-recruiting";
 import { displayCompanyName, displayUiValue } from "@/i18n/presentation";
 import { deriveOpportunityLifecycle } from "@/lib/opportunity-lifecycle";
+import { applicationAnalytics } from "@/lib/application-pipeline";
 
 function greetingKey():
   "dashboard.morning" | "dashboard.afternoon" | "dashboard.evening" {
@@ -90,6 +91,7 @@ export function Dashboard() {
   const completedChecks = checks.filter((item) => item.complete).length;
   const progress = Math.round((completedChecks / checks.length) * 100);
   const activity = recentApplicationActivity(activeWorkspace);
+  const applicationFunnel = applicationAnalytics(activeWorkspace.applications);
   const chinaMetrics = chinaPipelineMetrics(
     activeWorkspace.chinaCampusOpportunities,
     today,
@@ -172,6 +174,65 @@ export function Dashboard() {
         </div>
         <ProfileSelector />
       </header>
+
+      <section
+        className="mb-8"
+        aria-label={
+          language === "zh-CN" ? "申请进度统计" : "Application funnel"
+        }
+      >
+        <SectionHeader
+          title={language === "zh-CN" ? "申请进度" : "Application progress"}
+          action={
+            <Link
+              href="/applications"
+              className="text-sm font-medium text-[var(--accent)]"
+            >
+              {language === "zh-CN" ? "管理申请" : "Manage applications"}
+            </Link>
+          }
+        />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+          {[
+            [
+              language === "zh-CN" ? "已投递" : "Submitted",
+              applicationFunnel.submitted,
+            ],
+            [
+              "OA",
+              activeWorkspace.applications.filter(
+                (item) =>
+                  ["OA invited", "OA completed"].includes(item.status) &&
+                  !item.id.startsWith("demo-"),
+              ).length,
+            ],
+            [
+              language === "zh-CN" ? "面试" : "Interviews",
+              applicationFunnel.interviews,
+            ],
+            ["Offer", applicationFunnel.offers],
+            [
+              language === "zh-CN" ? "拒绝" : "Rejected",
+              applicationFunnel.rejections,
+            ],
+            [
+              language === "zh-CN" ? "等待" : "Waiting",
+              applicationFunnel.awaitingResponse,
+            ],
+          ].map(([label, value]) => (
+            <Link
+              key={label}
+              href="/applications"
+              className="interactive-lift surface-card p-4"
+            >
+              <strong className="font-display text-3xl">{value}</strong>
+              <span className="mt-1 block text-xs text-[var(--text-secondary)]">
+                {label}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <section
         className="surface-card overflow-hidden"

@@ -20,6 +20,7 @@ import type {
 import { applicationAnalytics } from "@/lib/application-pipeline";
 import { displayUiValue } from "@/i18n/presentation";
 import { ApplicationFilters, ApplicationMetrics } from "./application-overview";
+import { QuickApplicationImport } from "./quick-application-import";
 
 const statuses: ApplicationStatus[] = [
   "Interested",
@@ -574,11 +575,24 @@ export function ApplicationTracker() {
           title={t("applications.title")}
           description={t("applications.description")}
         />
-        <Button
-          onClick={() => setDraft(emptyApplication(activeWorkspace.profile.id))}
-        >
-          {t("applications.create")}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <QuickApplicationImport
+            language={language}
+            profileId={activeWorkspace.profile.id}
+            applications={activeWorkspace.applications}
+            onImport={(application) => {
+              createApplication(application);
+              notify(zh ? "投递记录已导入。" : "Application imported.");
+            }}
+          />
+          <Button
+            onClick={() =>
+              setDraft(emptyApplication(activeWorkspace.profile.id))
+            }
+          >
+            {t("applications.create")}
+          </Button>
+        </div>
       </div>
       <ApplicationFilters
         language={language}
