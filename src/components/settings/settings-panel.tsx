@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/form-field";
@@ -10,27 +11,17 @@ import { useLanguage } from "@/providers/language-provider";
 import { formatDate } from "@/i18n/format";
 import type { AppLocale, ThemePreference } from "@/types/domain";
 import { useToast } from "@/providers/toast-provider";
-import {
-  cloudSessionEmail,
-  pullCloudState,
-  pushCloudState,
-  requestMagicLink,
-  signOutCloudSync,
-} from "@/lib/cloud-sync";
+import { pullCloudState, pushCloudState } from "@/lib/cloud-sync";
+import { useAuth } from "@/providers/auth-provider";
 
 export function SettingsPanel() {
   const { state, activeWorkspace, setTheme, setLanguage, updateDashboardPreferences, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData } = useCareerOS();
   const { language, t } = useLanguage();
   const { notify } = useToast();
+  const { user, isAuthenticated, isLoading, signOut } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState("");
-  const [syncEmail, setSyncEmail] = useState("");
-  const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
   const [syncBusy, setSyncBusy] = useState(false);
-
-  useEffect(() => {
-    void cloudSessionEmail().then(setSignedInEmail);
-  }, []);
 
   async function runSync(action: () => Promise<string>) {
     setSyncBusy(true);
@@ -96,9 +87,9 @@ export function SettingsPanel() {
         </Card>
         <Card eyebrow={t("settings.cloudSync")} title={t("settings.cloudSync")}>
           <p className="text-sm leading-7 text-[var(--text-secondary)]">{t("settings.cloudSyncDescription")}</p>
-          {signedInEmail ? (
+          {isLoading ? <p className="mt-3 text-sm text-[var(--text-secondary)]">{language === "zh-CN" ? "正在检查登录状态…" : "Checking sign-in status…"}</p> : isAuthenticated ? (
             <>
-              <p className="mt-3 text-sm font-medium">{t("settings.signedInAs", { email: signedInEmail })}</p>
+              <p className="mt-3 text-sm font-medium">{t("settings.signedInAs", { email: user?.email ?? "" })}</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button disabled={syncBusy} onClick={() => void runSync(async () => {
                   await pushCloudState(state);
@@ -112,20 +103,13 @@ export function SettingsPanel() {
                   return t("settings.downloadComplete");
                 })}>{t("settings.downloadCloud")}</Button>
                 <Button variant="secondary" disabled={syncBusy} onClick={() => void runSync(async () => {
-                  await signOutCloudSync();
-                  setSignedInEmail(null);
+                  await signOut();
                   return t("settings.signedOut");
                 })}>{t("settings.signOut")}</Button>
               </div>
             </>
           ) : (
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <input className="min-h-11 flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm" type="email" value={syncEmail} onChange={(event) => setSyncEmail(event.target.value)} placeholder={t("settings.emailPlaceholder")} aria-label={t("settings.emailPlaceholder")} />
-              <Button disabled={syncBusy || !syncEmail} onClick={() => void runSync(async () => {
-                await requestMagicLink(syncEmail);
-                return t("settings.magicLinkSent");
-              })}>{t("settings.sendMagicLink")}</Button>
-            </div>
+            <Link href="/auth" className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-[var(--accent)] px-4 text-sm font-semibold text-white">{language === "zh-CN" ? "登录或注册" : "Sign in or create account"}</Link>
           )}
         </Card>
         <Card eyebrow={t("settings.privacy")} title={t("settings.privacy")}>

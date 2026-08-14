@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { CareerOSProvider } from "@/providers/careeros-provider";
 import { LanguageProvider } from "@/providers/language-provider";
 import { ToastProvider } from "@/providers/toast-provider";
+import { AuthProvider } from "@/providers/auth-provider";
 import "./globals.css";
 
 const bodyFont = DM_Sans({ variable: "--font-body", subsets: ["latin"] });
@@ -38,11 +39,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${bodyFont.variable} ${displayFont.variable}`}>
       <body>
-        <CareerOSProvider>
-          <LanguageProvider>
-            <ToastProvider><AppShell>{children}</AppShell></ToastProvider>
-          </LanguageProvider>
-        </CareerOSProvider>
+        <AuthProvider>
+          <CareerOSProvider>
+            <LanguageProvider>
+              <ToastProvider><AppShell>{children}</AppShell></ToastProvider>
+            </LanguageProvider>
+          </CareerOSProvider>
+        </AuthProvider>
       </body>
     </html>
   );
