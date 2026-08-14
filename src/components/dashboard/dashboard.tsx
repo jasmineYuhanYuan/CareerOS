@@ -31,6 +31,7 @@ import {
   getDailyOpportunities,
   getRecommendedJobs,
 } from "@/lib/opportunity-engine";
+import { getEligibleOpportunities } from "@/lib/profile-eligibility";
 
 function greetingKey():
   "dashboard.morning" | "dashboard.afternoon" | "dashboard.evening" {
@@ -54,10 +55,8 @@ export function Dashboard() {
   );
   const deadlines = aggregateDeadlines(activeWorkspace).slice(0, 7);
   const today = new Date().toISOString().slice(0, 10);
-  const relevant = opportunities
-    .filter(
-      (item) => item.suitableProfileIds.includes(profile.id) && !item.archived,
-    )
+  const relevant = getEligibleOpportunities(profile, opportunities)
+    .filter((item) => !item.archived)
     .filter((item) =>
       isTommy ? false : ["Australia", "China"].includes(item.country),
     )

@@ -1,4 +1,5 @@
 import type { CareerProfile, Job, MatchResult, PostgraduateProgram } from "@/types/domain";
+import { isJobRelevantToProfile } from "@/lib/profile-eligibility";
 
 function normalise(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -13,11 +14,7 @@ function includesRelated(values: string[], target: string): boolean {
 }
 
 export function isJobSuitableForProfile(job: Job, profile: CareerProfile): boolean {
-  if (job.suitableProfileIds.includes(profile.id)) return true;
-  return (
-    includesRelated(profile.careerGoals, job.roleFamily) ||
-    normalise(profile.discipline) === normalise(job.discipline)
-  );
+  return isJobRelevantToProfile(profile, job);
 }
 
 export function calculateJobMatch(job: Job, profile: CareerProfile): MatchResult {

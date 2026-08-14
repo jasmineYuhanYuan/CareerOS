@@ -11,6 +11,7 @@ import { useLanguage } from "@/providers/language-provider";
 import type { OpportunityLifecycle } from "@/types/domain";
 import { displayUiValue } from "@/i18n/presentation";
 import { formatDate } from "@/i18n/format";
+import { getEligibleOpportunities } from "@/lib/profile-eligibility";
 
 export function RecruitmentCalendar() {
   const { activeWorkspace } = useCareerOS();
@@ -20,9 +21,13 @@ export function RecruitmentCalendar() {
   const [lifecycle, setLifecycle] = useState<OpportunityLifecycle | "All">(
     "All",
   );
+  const eligibleOpportunities = useMemo(
+    () => getEligibleOpportunities(activeWorkspace.profile, opportunities),
+    [activeWorkspace.profile],
+  );
   const records = useMemo(
     () =>
-      opportunities
+      eligibleOpportunities
         .map((opportunity) => ({
           opportunity,
           lifecycle: deriveOpportunityLifecycle(opportunity, "2026-07-30"),
@@ -36,7 +41,7 @@ export function RecruitmentCalendar() {
             b.opportunity.deadline ?? "9999",
           ),
         ),
-    [country, lifecycle],
+    [country, eligibleOpportunities, lifecycle],
   );
   const dated = records.filter((item) => item.opportunity.deadline);
   const undated = records.filter((item) => !item.opportunity.deadline);
@@ -67,7 +72,7 @@ export function RecruitmentCalendar() {
             onChange={(event) => setCountry(event.target.value)}
           >
             <option value="All">{displayUiValue("All", language)}</option>
-            {Array.from(new Set(opportunities.map((item) => item.country)))
+            {Array.from(new Set(eligibleOpportunities.map((item) => item.country)))
               .sort()
               .map((value) => (
                 <option key={value}>{value}</option>

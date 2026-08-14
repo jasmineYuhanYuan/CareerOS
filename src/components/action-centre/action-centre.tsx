@@ -14,6 +14,7 @@ import {
 } from "@/lib/opportunity-lifecycle";
 import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
+import { getEligibleOpportunities } from "@/lib/profile-eligibility";
 
 function Section({
   title,
@@ -39,13 +40,11 @@ export function ActionCentre() {
     item.profileIds.includes(activeWorkspace.profile.id),
   );
   const gap = analyseCareerGap(activeWorkspace, target?.id ?? gapTargets[0].id);
-  const lifecycleRecords = opportunities.map((opportunity) => ({
+  const lifecycleRecords = getEligibleOpportunities(activeWorkspace.profile, opportunities).map((opportunity) => ({
     opportunity,
     lifecycle: deriveOpportunityLifecycle(opportunity, today),
   }));
-  const profileLifecycleRecords = lifecycleRecords.filter((item) =>
-    item.opportunity.suitableProfileIds.includes(activeWorkspace.profile.id),
-  );
+  const profileLifecycleRecords = lifecycleRecords;
   const closingSoon = profileLifecycleRecords.filter(
     (item) => item.lifecycle === "Closing soon",
   );
@@ -78,7 +77,7 @@ export function ActionCentre() {
       .filter((material) => !materialIsReady(material.status))
       .map((material) => ({ application, material })),
   );
-  const saved = opportunities.filter((item) =>
+  const saved = getEligibleOpportunities(activeWorkspace.profile, opportunities).filter((item) =>
     activeWorkspace.savedOpportunityIds.includes(item.id),
   );
   const followUps = activeWorkspace.contacts.filter(

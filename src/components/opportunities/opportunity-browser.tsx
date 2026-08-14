@@ -17,6 +17,9 @@ import { formatDate, formatPercentage } from "@/i18n/format";
 import { deriveOpportunityLifecycle } from "@/lib/opportunity-lifecycle";
 import { jobs } from "@/data/seed";
 import { displayUiValue } from "@/i18n/presentation";
+import Link from "next/link";
+import { TOMMY_ID } from "@/data/seed";
+import { getEligibleOpportunities } from "@/lib/profile-eligibility";
 
 export function OpportunityBrowser() {
   const {
@@ -35,20 +38,24 @@ export function OpportunityBrowser() {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sort, setSort] = useState<"relevance" | "deadline">("relevance");
   const [selected, setSelected] = useState<Opportunity | null>(null);
+  const eligibleOpportunities = useMemo(
+    () => getEligibleOpportunities(activeWorkspace.profile, opportunities),
+    [activeWorkspace.profile],
+  );
 
   const matches = useMemo(
     () =>
       new Map(
-        opportunities.map((item) => [
+        eligibleOpportunities.map((item) => [
           item.id,
           calculateOpportunityMatch(item, activeWorkspace.profile),
         ]),
       ),
-    [activeWorkspace.profile],
+    [activeWorkspace.profile, eligibleOpportunities],
   );
   const visible = useMemo(
     () =>
-      opportunities
+      eligibleOpportunities
         .filter(
           (item) =>
             state.dashboardPreferences.showArchivedOpportunities ||
@@ -98,6 +105,7 @@ export function OpportunityBrowser() {
       sort,
       state.dashboardPreferences,
       verifiedOnly,
+      eligibleOpportunities,
     ],
   );
 
@@ -161,7 +169,7 @@ export function OpportunityBrowser() {
           >
             <option value="All">{t("common.all")}</option>
             {Array.from(
-              new Set(opportunities.map((item) => item.category)),
+              new Set(eligibleOpportunities.map((item) => item.category)),
             ).map((value) => (
               <option key={value} value={value}>{displayUiValue(value, language)}</option>
             ))}
@@ -176,7 +184,7 @@ export function OpportunityBrowser() {
             <option value="All">{t("common.all")}</option>
             {Array.from(
               new Set(
-                opportunities.flatMap((item) => [item.country, item.city]),
+                eligibleOpportunities.flatMap((item) => [item.country, item.city]),
               ),
             )
               .sort()
@@ -193,7 +201,7 @@ export function OpportunityBrowser() {
           >
             <option value="All">{t("common.all")}</option>
             {Array.from(
-              new Set(opportunities.flatMap((item) => item.disciplineTags)),
+              new Set(eligibleOpportunities.flatMap((item) => item.disciplineTags)),
             )
               .sort()
               .map((value) => (
@@ -232,11 +240,28 @@ export function OpportunityBrowser() {
       </div>
       {visible.length === 0 ? (
         <div className="mt-8">
-          <EmptyState
-            icon="◇"
-            title={t("opportunities.empty")}
-            description={t("opportunities.description")}
-          />
+          {activeWorkspace.profile.id === TOMMY_ID && eligibleOpportunities.length === 0 ? (
+            <div className="surface-card border-dashed p-8 text-center">
+              <h2 className="font-display text-xl font-medium">
+                {language === "zh-CN"
+                  ? "目前没有找到适合 Tommy 且已核验为正在招聘的岗位。"
+                  : "There are currently no verified open roles suitable for Tommy."}
+              </h2>
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+                {language === "zh-CN"
+                  ? "你仍可以查看 Canberra / ACT 诊所目录、准备 Ahpra 注册材料，或记录目标诊所进行主动联系。"
+                  : "You can still review the Canberra / ACT clinic directory, prepare Ahpra registration materials, or record target clinics for proactive outreach."}
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Link className="button-secondary" href="/chiropractic">{language === "zh-CN" ? "查看诊所目录" : "View clinic directory"}</Link>
+                <Link className="button-secondary" href="/roadmap">{language === "zh-CN" ? "打开职业规划" : "Open career roadmap"}</Link>
+                <Link className="button-secondary" href="/gap-analysis">{language === "zh-CN" ? "查看注册准备" : "Review registration preparation"}</Link>
+                <Link className="button-secondary" href="/contacts">{language === "zh-CN" ? "添加目标诊所" : "Add target clinic"}</Link>
+              </div>
+            </div>
+          ) : (
+            <EmptyState icon="◇" title={t("opportunities.empty")} description={t("opportunities.description")} />
+          )}
         </div>
       ) : (
         <div className="mt-8 grid gap-4 xl:grid-cols-2">

@@ -29,6 +29,8 @@ import type {
   ThemePreference,
   AppLocale,
 } from "@/types/domain";
+import { opportunities } from "@/data/opportunities";
+import { isJobRelevantToProfile, isOpportunityRelevantToProfile } from "@/lib/profile-eligibility";
 
 interface CareerOSContextValue {
   state: CareerOSState;
@@ -186,7 +188,7 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
     updateActive((workspace) => {
       if (workspace.applications.some((item) => item.jobId === jobId)) return workspace;
       const job = jobs.find((item) => item.id === jobId);
-      if (!job) return workspace;
+      if (!job || !isJobRelevantToProfile(workspace.profile, job)) return workspace;
       const timestamp = now();
       const application: JobApplication = {
         id: `application-${Date.now()}`,
@@ -290,12 +292,16 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
   const setLanguage = useCallback((language: AppLocale) => setState((current) => ({ ...current, language })), []);
   const updateDashboardPreferences = useCallback((dashboardPreferences: DashboardPreferences) => setState((current) => ({ ...current, dashboardPreferences })), []);
   const toggleSavedOpportunity = useCallback((opportunityId: string) => {
-    updateActive((workspace) => ({
-      ...workspace,
-      savedOpportunityIds: workspace.savedOpportunityIds.includes(opportunityId)
-        ? workspace.savedOpportunityIds.filter((id) => id !== opportunityId)
-        : [...workspace.savedOpportunityIds, opportunityId],
-    }));
+    updateActive((workspace) => {
+      const record = opportunities.find((item) => item.id === opportunityId);
+      if (!record || !isOpportunityRelevantToProfile(workspace.profile, record)) return workspace;
+      return {
+        ...workspace,
+        savedOpportunityIds: workspace.savedOpportunityIds.includes(opportunityId)
+          ? workspace.savedOpportunityIds.filter((id) => id !== opportunityId)
+          : [...workspace.savedOpportunityIds, opportunityId],
+      };
+    });
   }, [updateActive]);
   const upsertContact = useCallback((contact: CareerContact) => {
     updateActive((workspace) => ({

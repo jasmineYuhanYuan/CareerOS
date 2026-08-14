@@ -1,6 +1,7 @@
 import { jobs, programs } from "@/data/seed";
 import { opportunities } from "@/data/opportunities";
 import type { DashboardDeadline, ProfileWorkspace } from "@/types/domain";
+import { isJobRelevantToProfile, isOpportunityRelevantToProfile } from "@/lib/profile-eligibility";
 
 export interface ReadinessItem {
   key: "education" | "goals" | "locations" | "skills" | "projects" | "eligibility" | "links" | "resume";
@@ -44,7 +45,7 @@ export function aggregateDeadlines(workspace: ProfileWorkspace): DashboardDeadli
   const deadlines: DashboardDeadline[] = [];
   for (const jobId of workspace.savedJobIds) {
     const job = jobs.find((item) => item.id === jobId);
-    if (job?.deadline) deadlines.push({ id: `job-${job.id}`, title: `${job.title} sample deadline`, source: "Job", date: job.deadline });
+    if (job?.deadline && isJobRelevantToProfile(workspace.profile, job)) deadlines.push({ id: `job-${job.id}`, title: `${job.title} sample deadline`, source: "Job", date: job.deadline });
   }
   for (const application of workspace.applications) {
     if (application.nextActionDate) deadlines.push({ id: `application-${application.id}`, title: application.nextAction || `${application.jobTitle} next action`, source: "Application", date: application.nextActionDate });
@@ -58,7 +59,7 @@ export function aggregateDeadlines(workspace: ProfileWorkspace): DashboardDeadli
   }
   for (const opportunityId of workspace.savedOpportunityIds) {
     const opportunity = opportunities.find((item) => item.id === opportunityId);
-    if (opportunity?.deadline) deadlines.push({ id: `opportunity-${opportunity.id}`, title: opportunity.title, source: "Opportunity", date: opportunity.deadline });
+    if (opportunity?.deadline && isOpportunityRelevantToProfile(workspace.profile, opportunity)) deadlines.push({ id: `opportunity-${opportunity.id}`, title: opportunity.title, source: "Opportunity", date: opportunity.deadline });
   }
   for (const contact of workspace.contacts) {
     if (contact.nextFollowUpDate) deadlines.push({ id: `contact-${contact.id}`, title: `Follow up with ${contact.name}`, source: "Contact", date: contact.nextFollowUpDate });
