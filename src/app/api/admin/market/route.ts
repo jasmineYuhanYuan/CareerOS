@@ -4,7 +4,9 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const authorization = request.headers.get("authorization");
+  if (!((secret && authorization === `Bearer ${secret}`) || (serviceRoleKey && authorization === `Bearer ${serviceRoleKey}`))) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   const db = createSupabaseAdminClient();
   if (!db) return Response.json({ ok: false, error: "Supabase unavailable." }, { status: 503 });
   const body = await request.json() as { action?: string; id?: string; status?: string; reason?: string };

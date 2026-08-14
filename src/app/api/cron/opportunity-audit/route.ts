@@ -6,7 +6,9 @@ export const maxDuration = 300;
 
 async function audit(request: Request, trigger: "cron" | "manual") {
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const authorization = request.headers.get("authorization");
+  if (!((secret && authorization === `Bearer ${secret}`) || (serviceRoleKey && authorization === `Bearer ${serviceRoleKey}`))) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
