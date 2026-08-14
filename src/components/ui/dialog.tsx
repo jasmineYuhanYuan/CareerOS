@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useLanguage } from "@/providers/language-provider";
 
@@ -18,19 +18,24 @@ export function Dialog({
   onClose: () => void;
 }) {
   const { t } = useLanguage();
+  const dialogRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!open) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const focusable = () => [...(dialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])') ?? [])];
+    requestAnimationFrame(() => focusable()[0]?.focus());
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
+      if (event.key === "Tab") { const items = focusable(); if (!items.length) return; const first = items[0]; const last = items.at(-1)!; if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); } else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); } }
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => { window.removeEventListener("keydown", onKeyDown); previous?.focus(); };
   }, [open, onClose]);
 
   if (!open) return null;
   return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-end bg-[#171915]/45 p-0 backdrop-blur-[2px] sm:place-items-center sm:p-5" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby={description ? "dialog-description" : undefined} className="max-h-[94dvh] w-full overflow-y-auto rounded-t-[1.75rem] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_24px_80px_rgba(20,22,18,0.18)] sm:max-w-2xl sm:rounded-[1.75rem] sm:p-8">
+      <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby={description ? "dialog-description" : undefined} className="max-h-[94dvh] w-full overflow-y-auto rounded-t-[1.75rem] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_24px_80px_rgba(20,22,18,0.18)] sm:max-w-2xl sm:rounded-[1.75rem] sm:p-8">
         <header className="mb-5 flex items-start justify-between gap-4">
           <div>
             <h2 id="dialog-title" className="font-display text-2xl font-medium tracking-[-0.03em]">{title}</h2>

@@ -333,9 +333,9 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
   const upsertDocument = useCallback((document: CareerDocumentRecord) => {
     updateActive((workspace) => document.profileId !== workspace.profile.id ? workspace : ({
       ...workspace,
-      documents: workspace.documents.some((item) => item.id === document.id)
+      documents: (workspace.documents.some((item) => item.id === document.id)
         ? workspace.documents.map((item) => item.id === document.id ? document : item)
-        : [...workspace.documents, document],
+        : [...workspace.documents, document]).map((item) => document.isPrimary && item.id !== document.id && (item.documentFamily ?? item.documentType) === (document.documentFamily ?? document.documentType) ? { ...item, isPrimary: false } : item),
     }));
   }, [updateActive]);
   const deleteDocument = useCallback((id: string) => {

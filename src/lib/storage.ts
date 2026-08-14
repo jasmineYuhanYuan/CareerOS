@@ -174,6 +174,14 @@ function normaliseSprint8State(state: CareerOSState): CareerOSState {
           parseStatus: document.storagePath
             ? document.parseStatus ?? "failed"
             : "not_uploaded",
+          markets: document.markets ?? (document.targetMarket ? document.targetMarket.split(",").map((item) => item.trim()).filter(Boolean) : []),
+          directions: document.directions ?? [],
+          documentFamily: document.documentFamily ?? document.documentType,
+          versionNumber: document.versionNumber ?? Number(document.version.match(/\d+/)?.[0] ?? 1),
+          parsedStatus: document.parsedStatus ?? (document.parseStatus === "parsed" ? "ready" : document.parseStatus === "failed" ? "error" : "pending"),
+          targetRoles: document.targetRoles ?? [],
+          atsScore: document.atsScore ?? null,
+          lastParsedAt: document.lastParsedAt ?? null,
         })),
         chinaCampusOpportunities: workspace.chinaCampusOpportunities.map(
           (record) => {
