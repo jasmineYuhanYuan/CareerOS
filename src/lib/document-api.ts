@@ -28,6 +28,11 @@ async function token(): Promise<string> {
 }
 
 export type DocumentUploadStage = "uploading" | "parsing" | "extracting" | "done" | "error";
+export async function listCareerDocuments(profileId: string): Promise<CareerDocumentRecord[]> {
+  const response = await fetch(`/api/documents?profileId=${encodeURIComponent(profileId)}`, { headers: { Authorization: `Bearer ${await token()}` }, cache: "no-store" });
+  if (!response.ok) throw new Error("Document library could not be loaded.");
+  return (await response.json() as { documents: CareerDocumentRecord[] }).documents;
+}
 export async function uploadCareerDocument(file: File, fields: Record<string, string>, onStage?: (stage: DocumentUploadStage) => void): Promise<CareerDocumentRecord> {
   const form = new FormData(); form.set("file", file); Object.entries(fields).forEach(([key, value]) => form.set(key, value));
   onStage?.("uploading");

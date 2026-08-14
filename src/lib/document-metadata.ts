@@ -16,10 +16,16 @@ export function documentTypeLabel(value: CareerDocumentType, locale: AppLocale) 
 export function documentLanguageLabel(value: CareerDocumentLanguage | undefined, locale: AppLocale) { const current = value ?? "Other"; return locale === "zh-CN" ? zhLanguage[current] ?? current : current; }
 
 export function validateDocumentFile(file: Pick<File, "name" | "size" | "type">): string | null {
-  const extensionValid = /\.(pdf|docx)$/i.test(file.name);
-  if (!extensionValid || !DOCUMENT_MIME_TYPES.includes(file.type as typeof DOCUMENT_MIME_TYPES[number])) return "type";
+  const extension = file.name.match(/\.(pdf|docx)$/i)?.[1]?.toLowerCase();
+  const matchingType = extension === "pdf" ? file.type === DOCUMENT_MIME_TYPES[0] : extension === "docx" ? file.type === DOCUMENT_MIME_TYPES[1] : false;
+  if (!matchingType) return "type";
   if (file.size <= 0 || file.size > MAX_DOCUMENT_BYTES) return "size";
   return null;
+}
+
+type FileDropEvent = { preventDefault(): void; stopPropagation(): void; dataTransfer: { files?: ArrayLike<File> | null } };
+export function handleDocumentDrop(event: FileDropEvent, handleSelectedFile: (file: File | null) => void): void {
+  event.preventDefault(); event.stopPropagation(); handleSelectedFile(event.dataTransfer.files?.[0] ?? null);
 }
 
 export function titleFromFileName(fileName: string): string {
