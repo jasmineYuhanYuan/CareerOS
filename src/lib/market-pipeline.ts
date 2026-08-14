@@ -94,14 +94,14 @@ export async function runMarketAudit(db: SupabaseClient, fetcher: typeof fetch =
   await bootstrapMarketData(db);
   const { data: sources, error } = await db.from("market_sources").select("*").eq("enabled", true);
   if (error) throw error;
-  for (const source of (sources ?? []) as MarketSourceRow[]) {
+  await Promise.all(((sources ?? []) as MarketSourceRow[]).map(async (source) => {
     summary.checked++;
     try {
       const response = await fetcher(source.official_url, { headers: { "user-agent": "CareerOS-Market-Audit/2.0 (+https://career-os-azure.vercel.app)" }, redirect: "follow", signal: AbortSignal.timeout(12_000) });
       const body = await response.text();
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       await db.from("market_sources").update({ health_status: "healthy", consecutive_failures: 0, last_checked_at: startedAt, last_success_at: startedAt, last_error: null, updated_at: startedAt }).eq("id", source.id);
-      if (source.crawl_strategy !== "listing") continue;
+      if (source.crawl_strategy !== "listing") return;
       const links = discoverOfficialLinks(body, source.official_url);
       for (const link of links) {
         const { data: existing } = await db.from("market_opportunities").select("id").eq("source_url", link.url).maybeSingle();
@@ -115,9 +115,9 @@ export async function runMarketAudit(db: SupabaseClient, fetcher: typeof fetch =
       await db.from("market_sources").update({ health_status: source.consecutive_failures + 1 >= 3 ? "failed" : "degraded", consecutive_failures: source.consecutive_failures + 1, last_checked_at: startedAt, last_error: message, updated_at: startedAt }).eq("id", source.id);
       await db.from("market_verification_events").insert({ run_id: run.id, source_id: source.id, event_type: "source-failed", evidence_type: "request-failed", evidence_text: message, checked_at: startedAt });
     }
-  }
+  }));
   const { data: active } = await db.from("market_opportunities").select("*").in("lifecycle_status", ["Open", "Closing soon", "Verification required"]);
-  for (const item of active ?? []) {
+  await Promise.all((active ?? []).map(async (item) => {
     try {
       const response = await fetcher(item.source_url, { headers: { "user-agent": "CareerOS-Market-Audit/2.0" }, redirect: "follow", signal: AbortSignal.timeout(12_000) });
       const observation = classifyMarketPage({ ok: response.ok, status: response.status, body: await response.text(), url: item.source_url, deadline: item.deadline, checkedAt: startedAt });
@@ -136,7 +136,7 @@ export async function runMarketAudit(db: SupabaseClient, fetcher: typeof fetch =
         await db.from("market_verification_events").insert({ run_id: run.id, source_id: item.source_id, opportunity_id: item.id, event_type: "downgraded", previous_status: item.lifecycle_status, observed_status: next, evidence_type: "stale-verification", evidence_text: "Open status expired after repeated inability to obtain fresh position-level application evidence.", checked_at: startedAt });
       }
     }
-  }
+  }));
   const verificationRequired = (active ?? []).filter((item) => item.lifecycle_status === "Verification required").length + summary.downgraded;
   const status = summary.failed === 0 ? "completed" : summary.failed < summary.checked ? "partial" : "failed";
   await db.from("market_audit_runs").update({ status, completed_at: new Date().toISOString(), sources_checked: summary.checked, sources_failed: summary.failed, discovered_count: summary.discovered, opened_count: summary.opened, closed_count: summary.closed, downgraded_count: summary.downgraded, verification_required_count: verificationRequired, error_summary: summary.errors }).eq("id", run.id);
