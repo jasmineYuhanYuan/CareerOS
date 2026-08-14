@@ -1,397 +1,76 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useRef, useState, type DragEvent, type KeyboardEvent } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select, Textarea } from "@/components/ui/form-field";
 import { PageHeading } from "@/components/ui/page-heading";
 import { StatusBadge } from "@/components/ui/status-badge";
-import {
-  deleteCareerDocumentFile,
-  downloadCareerDocument,
-  updateCareerDocumentStatus,
-  uploadCareerDocument,
-} from "@/lib/document-api";
+import { deleteCareerDocumentFile, downloadCareerDocument, updateCareerDocument, uploadCareerDocument, viewCareerDocument, type DocumentUploadStage } from "@/lib/document-api";
 import { documentHasRealFile } from "@/lib/document-evidence";
+import { documentDirections, documentFamily, documentLanguageLabel, documentLanguages, documentMarkets, documentTypeLabel, isLatestDocument, nextDocumentVersion, resumeTypes, titleFromFileName, validateDocumentFile } from "@/lib/document-metadata";
 import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
 import { useToast } from "@/providers/toast-provider";
-import type {
-  CareerDocumentLanguage,
-  CareerDocumentRecord,
-  CareerDocumentType,
-} from "@/types/domain";
+import type { CareerDocumentLanguage, CareerDocumentRecord, CareerDocumentType } from "@/types/domain";
 
-const types: CareerDocumentType[] = [
-  "English résumé",
-  "Chinese résumé",
-  "Cover letter",
-  "Portfolio",
-  "Academic transcript",
-  "Personal statement",
-  "Recommendation materials",
-  "Other",
-];
-const languages: CareerDocumentLanguage[] = [
-  "English",
-  "Chinese",
-  "Bilingual",
-  "Other",
-];
-type Draft = {
-  title: string;
-  documentType: CareerDocumentType;
-  language: CareerDocumentLanguage;
-  version: string;
-  targetMarket: string;
-  notes: string;
-  isPrimary: boolean;
-};
-const blank = (): Draft => ({
-  title: "",
-  documentType: "English résumé",
-  language: "English",
-  version: "v1",
-  targetMarket: "",
-  notes: "",
-  isPrimary: false,
-});
+type Draft = { title: string; documentType: CareerDocumentType; language: CareerDocumentLanguage; markets: string[]; directions: string[]; notes: string; isPrimary: boolean; versionNumber?: number };
+const blank = (): Draft => ({ title: "", documentType: "English technical résumé", language: "English", markets: [], directions: [], notes: "", isPrimary: false });
+const fileType = (document: CareerDocumentRecord) => document.mimeType === "application/pdf" ? "PDF" : document.mimeType?.includes("wordprocessingml") ? "DOCX" : "—";
+const formatSize = (size: number) => size >= 1024 * 1024 ? `${(size / 1024 / 1024).toFixed(1)} MB` : `${Math.ceil(size / 1024)} KB`;
 
 export function DocumentManager() {
-  const { activeWorkspace, upsertDocument, deleteDocument } = useCareerOS();
-  const { language } = useLanguage();
-  const zh = language === "zh-CN";
-  const { notify } = useToast();
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState(blank);
-  const [file, setFile] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
-  const upload = async () => {
-    if (!file) return;
-    setBusy(true);
-    try {
-      const fields = Object.fromEntries(
-        Object.entries(draft).map(([key, value]) => [key, String(value)]),
-      );
-      const document = await uploadCareerDocument(file, {
-        ...fields,
-        profileId: activeWorkspace.profile.id,
-      });
-      upsertDocument(document);
-      setOpen(false);
-      setFile(null);
-      setDraft(blank());
-      notify(
-        document.parseStatus === "parsed"
-          ? zh
-            ? "文档已上传并解析。"
-            : "Document uploaded and parsed."
-          : zh
-            ? "文件已上传，但内容解析失败"
-            : "File uploaded, but parsing failed.",
-      );
-    } catch (error) {
-      notify(error instanceof Error ? error.message : "Upload failed.");
-    } finally {
-      setBusy(false);
-    }
-  };
-  const remove = async (document: CareerDocumentRecord) => {
-    if (
-      !window.confirm(
-        zh ? `删除 ${document.name}？` : `Delete ${document.name}?`,
-      )
-    )
-      return;
-    try {
-      if (documentHasRealFile(document))
-        await deleteCareerDocumentFile(document.id);
-      deleteDocument(document.id);
-    } catch (error) {
-      notify(error instanceof Error ? error.message : "Delete failed.");
-    }
-  };
-  const markReady = async (document: CareerDocumentRecord) => {
-    try {
-      upsertDocument(await updateCareerDocumentStatus(document.id, "Ready"));
-    } catch (error) {
-      notify(error instanceof Error ? error.message : "Update failed.");
-    }
-  };
-  const groups = [
-    [
-      zh ? "我的简历" : "My résumés",
-      (d: CareerDocumentRecord) => /résumé/i.test(d.documentType),
-    ],
-    [
-      zh ? "作品集" : "Portfolios",
-      (d: CareerDocumentRecord) => d.documentType === "Portfolio",
-    ],
-    [
-      zh ? "求职信" : "Cover letters",
-      (d: CareerDocumentRecord) => d.documentType === "Cover letter",
-    ],
-    [
-      zh ? "其他材料" : "Other materials",
-      (d: CareerDocumentRecord) =>
-        !/résumé/i.test(d.documentType) &&
-        !["Portfolio", "Cover letter"].includes(d.documentType),
-    ],
-  ] as const;
-  return (
-    <div className="page-enter">
-      <PageHeading
-        eyebrow={zh ? "真实求职材料" : "Real career materials"}
-        title={zh ? "文档中心" : "Document Hub"}
-        description={
-          zh
-            ? "安全上传 PDF 或 DOCX。解析内容可作为匹配证据，但不会自动覆盖档案。"
-            : "Securely upload PDF or DOCX files. Parsed content becomes evidence without overwriting your profile."
-        }
-        action={
-          <Button onClick={() => setOpen(true)}>
-            {zh ? "上传文档" : "Upload document"}
-          </Button>
-        }
-      />
-      {activeWorkspace.documents.length === 0 ? (
-        <div className="mt-8">
-          <EmptyState
-            icon="□"
-            title={zh ? "尚未上传文档" : "No documents uploaded"}
-            description={
-              zh
-                ? "只有真实上传的文件才能计入材料就绪度。"
-                : "Only real uploaded files count toward readiness."
-            }
-          />
-        </div>
-      ) : (
-        groups.map(([title, matches]) => {
-          const records = activeWorkspace.documents.filter(matches);
-          return records.length ? (
-            <section key={title} className="mt-10">
-              <h2 className="font-display text-xl font-medium">{title}</h2>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                {records.map((document) => {
-                  const real = documentHasRealFile(document);
-                  return (
-                    <article key={document.id} className="surface-card p-5">
-                      <div className="flex justify-between gap-3">
-                        <div className="flex gap-2">
-                          <StatusBadge
-                            status={
-                              document.status === "Ready"
-                                ? "positive"
-                                : "neutral"
-                            }
-                          >
-                            {document.status}
-                          </StatusBadge>
-                          <StatusBadge>
-                            {document.parseStatus === "parsed"
-                              ? zh
-                                ? "已解析"
-                                : "Parsed"
-                              : real
-                                ? zh
-                                  ? "解析失败"
-                                  : "Parse failed"
-                                : zh
-                                  ? "仅记录"
-                                  : "Record only"}
-                          </StatusBadge>
-                        </div>
-                        <span className="text-xs text-[var(--text-tertiary)]">
-                          {document.uploadedAt
-                            ? new Date(document.uploadedAt).toLocaleDateString(
-                                zh ? "zh-CN" : "en-AU",
-                              )
-                            : "—"}
-                        </span>
-                      </div>
-                      <h3 className="mt-4 font-display text-lg font-medium">
-                        {document.name}
-                      </h3>
-                      <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                        {document.documentType} · {document.language ?? "Other"}{" "}
-                        · {document.version}
-                      </p>
-                      <p className="mt-2 text-xs text-[var(--text-tertiary)]">
-                        {real
-                          ? `${document.fileName} · ${Math.ceil((document.fileSize ?? 0) / 1024)} KB`
-                          : zh
-                            ? "仅记录，尚未上传文件"
-                            : "Record only — file not uploaded"}
-                      </p>
-                      {document.parseError && (
-                        <p className="mt-2 text-sm text-[var(--danger)]">
-                          {document.parseError}
-                        </p>
-                      )}
-                      <div className="mt-4 flex gap-1">
-                        {real && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                              void downloadCareerDocument(
-                                document.id,
-                                document.fileName ?? document.name,
-                              )
-                            }
-                          >
-                            {zh ? "下载" : "Download"}
-                          </Button>
-                        )}
-                        {real &&
-                          document.parseStatus === "parsed" &&
-                          document.status !== "Ready" && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => void markReady(document)}
-                            >
-                              {zh ? "标记为就绪" : "Mark ready"}
-                            </Button>
-                          )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => void remove(document)}
-                        >
-                          {zh ? "删除" : "Delete"}
-                        </Button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
-          ) : null;
-        })
-      )}
-      <Dialog
-        open={open}
-        title={zh ? "上传文档" : "Upload document"}
-        description={
-          zh
-            ? "文件保持私有，并在服务器端解析。"
-            : "Files remain private and are parsed server-side."
-        }
-        onClose={() => !busy && setOpen(false)}
-      >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <input
-              type="file"
-              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              onChange={(event) => {
-                const next = event.target.files?.[0] ?? null;
-                setFile(next);
-                if (next && !draft.title)
-                  setDraft({
-                    ...draft,
-                    title: next.name.replace(/\.(pdf|docx)$/i, ""),
-                  });
-              }}
-            />
-            <p className="mt-1 text-xs text-[var(--text-tertiary)]">
-              PDF / DOCX · 10 MB max
-            </p>
-          </div>
-          <Field label={zh ? "标题" : "Title"}>
-            <Input
-              value={draft.title}
-              onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-            />
-          </Field>
-          <Field label={zh ? "版本" : "Version"}>
-            <Input
-              value={draft.version}
-              onChange={(e) => setDraft({ ...draft, version: e.target.value })}
-            />
-          </Field>
-          <Field label={zh ? "类型" : "Type"}>
-            <Select
-              value={draft.documentType}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  documentType: e.target.value as CareerDocumentType,
-                })
-              }
-            >
-              {types.map((value) => (
-                <option key={value}>{value}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label={zh ? "语言" : "Language"}>
-            <Select
-              value={draft.language}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  language: e.target.value as CareerDocumentLanguage,
-                })
-              }
-            >
-              {languages.map((value) => (
-                <option key={value}>{value}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label={zh ? "目标市场／方向" : "Target market / role"}>
-            <Input
-              value={draft.targetMarket}
-              onChange={(e) =>
-                setDraft({ ...draft, targetMarket: e.target.value })
-              }
-            />
-          </Field>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={draft.isPrimary}
-              onChange={(e) =>
-                setDraft({ ...draft, isPrimary: e.target.checked })
-              }
-            />
-            {zh ? "设为主要版本" : "Primary version"}
-          </label>
-          <div className="sm:col-span-2">
-            <Field label={zh ? "备注" : "Notes"}>
-              <Textarea
-                value={draft.notes}
-                onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
-              />
-            </Field>
-          </div>
-          <div className="flex justify-end gap-2 sm:col-span-2">
-            <Button
-              variant="ghost"
-              disabled={busy}
-              onClick={() => setOpen(false)}
-            >
-              {zh ? "取消" : "Cancel"}
-            </Button>
-            <Button
-              disabled={busy || !file || !draft.title.trim()}
-              onClick={() => void upload()}
-            >
-              {busy
-                ? zh
-                  ? "上传中…"
-                  : "Uploading…"
-                : zh
-                  ? "上传并解析"
-                  : "Upload and parse"}
-            </Button>
-          </div>
-        </div>
-      </Dialog>
-    </div>
-  );
+  const { activeWorkspace, upsertDocument, deleteDocument } = useCareerOS(); const { language } = useLanguage(); const zh = language === "zh-CN"; const { notify } = useToast();
+  const [open, setOpen] = useState(false); const [editing, setEditing] = useState<CareerDocumentRecord | null>(null); const [draft, setDraft] = useState(blank); const [file, setFile] = useState<File | null>(null); const [dragging, setDragging] = useState(false); const [stage, setStage] = useState<DocumentUploadStage | "idle">("idle"); const [error, setError] = useState(""); const [success, setSuccess] = useState<CareerDocumentRecord | null>(null); const inputRef = useRef<HTMLInputElement>(null); const autoTitle = useRef("");
+  const family = documentFamily(draft.documentType); const automaticVersion = useMemo(() => nextDocumentVersion(activeWorkspace.documents, family), [activeWorkspace.documents, family]); const busy = ["uploading", "parsing", "extracting"].includes(stage);
+  const stageLabel: Record<string, string> = { uploading: zh ? "正在上传" : "Uploading", parsing: zh ? "正在解析简历" : "Parsing résumé", extracting: zh ? "正在提取技能与经历" : "Extracting skills and experience", done: zh ? "完成" : "Done", error: zh ? "处理失败" : "Error" };
+
+  function resetUpload() { setDraft(blank()); setFile(null); setStage("idle"); setError(""); setSuccess(null); setEditing(null); autoTitle.current = ""; if (inputRef.current) inputRef.current.value = ""; }
+  function startUpload(preset?: CareerDocumentRecord) { resetUpload(); if (preset) setDraft({ title: preset.name, documentType: preset.documentType, language: preset.language ?? "Other", markets: preset.markets ?? (preset.targetMarket ? [preset.targetMarket] : []), directions: preset.directions ?? [], notes: preset.notes, isPrimary: preset.isPrimary ?? false }); setOpen(true); }
+  function chooseFile(next: File | null) { setError(""); setSuccess(null); if (!next) { setFile(null); return; } const validation = validateDocumentFile(next); if (validation) { setFile(null); setError(validation === "size" ? (zh ? "文件必须小于或等于 10MB。" : "The file must be 10 MB or smaller.") : (zh ? "仅支持 PDF 或 DOCX 文件。" : "Only PDF and DOCX files are supported.")); return; } setFile(next); const suggested = titleFromFileName(next.name); if (!draft.title.trim() || draft.title === autoTitle.current) { autoTitle.current = suggested; setDraft((current) => ({ ...current, title: suggested })); } }
+  function toggle(list: "markets" | "directions", value: string) { setDraft((current) => ({ ...current, [list]: current[list].includes(value) ? current[list].filter((item) => item !== value) : [...current[list], value] })); }
+  async function upload() { if (!file || !draft.title.trim()) return; setError(""); setSuccess(null); try { const fields = { profileId: activeWorkspace.profile.id, title: draft.title.trim(), documentType: draft.documentType, documentFamily: family, language: draft.language, markets: JSON.stringify(draft.markets), directions: JSON.stringify(draft.directions), notes: draft.notes, isPrimary: String(draft.isPrimary), ...(draft.versionNumber ? { versionNumber: String(draft.versionNumber) } : {}) }; const document = await uploadCareerDocument(file, fields, setStage); upsertDocument(document); setSuccess(document); if (document.parsedStatus === "error") setError(document.parseError ?? (zh ? "文件已上传，但解析失败。" : "The file uploaded, but parsing failed.")); else notify(zh ? "简历上传并解析完成" : "Résumé uploaded and parsed"); } catch (reason) { setStage("error"); setError(reason instanceof Error ? reason.message : (zh ? "上传失败。" : "Upload failed.")); } }
+  async function saveMetadata() { if (!editing) return; try { const document = await updateCareerDocument(editing.id, { title: draft.title, language: draft.language, markets: draft.markets, directions: draft.directions, notes: draft.notes, isPrimary: draft.isPrimary }); upsertDocument(document); setEditing(null); setOpen(false); notify(zh ? "文档信息已更新。" : "Document metadata updated."); } catch (reason) { setError(reason instanceof Error ? reason.message : "Update failed."); } }
+  async function setPrimary(document: CareerDocumentRecord) { try { upsertDocument(await updateCareerDocument(document.id, { isPrimary: true })); notify(zh ? "已设为主要版本。" : "Primary version updated."); } catch (reason) { notify(reason instanceof Error ? reason.message : "Update failed."); } }
+  async function archive(document: CareerDocumentRecord) { if (!window.confirm(zh ? `归档 ${document.name}？` : `Archive ${document.name}?`)) return; try { upsertDocument(await updateCareerDocument(document.id, { status: "Archived" })); } catch (reason) { notify(reason instanceof Error ? reason.message : "Archive failed."); } }
+  async function remove(document: CareerDocumentRecord) { if (!window.confirm(zh ? `永久删除 ${document.name}？此操作无法撤销。` : `Permanently delete ${document.name}? This cannot be undone.`)) return; try { if (documentHasRealFile(document)) await deleteCareerDocumentFile(document.id); deleteDocument(document.id); } catch (reason) { notify(reason instanceof Error ? reason.message : "Delete failed."); } }
+  function edit(document: CareerDocumentRecord) { setEditing(document); setDraft({ title: document.name, documentType: document.documentType, language: document.language ?? "Other", markets: document.markets ?? (document.targetMarket ? [document.targetMarket] : []), directions: document.directions ?? [], notes: document.notes, isPrimary: document.isPrimary ?? false, versionNumber: document.versionNumber }); setError(""); setSuccess(null); setOpen(true); }
+  function drop(event: DragEvent<HTMLDivElement>) { event.preventDefault(); setDragging(false); chooseFile(event.dataTransfer.files?.[0] ?? null); }
+  function dropKey(event: KeyboardEvent<HTMLDivElement>) { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); inputRef.current?.click(); } }
+
+  const documents = activeWorkspace.documents.filter((document) => document.status !== "Archived");
+  return <div className="page-enter">
+    <PageHeading eyebrow={zh ? "真实求职材料" : "Real career materials"} title={zh ? "简历与文档库" : "Resume & Document Library"} description={zh ? "安全管理简历版本、目标方向和解析结果；现有本地与云端文档继续兼容。" : "Manage résumé versions, target directions and parsing results while keeping local and cloud records compatible."} action={<Button onClick={() => startUpload()}>{zh ? "上传文档" : "Upload document"}</Button>} />
+    {documents.length === 0 ? <div className="mt-8"><EmptyState icon="□" title={zh ? "尚未上传文档" : "No documents uploaded"} description={zh ? "上传真实 PDF 或 DOCX 后，CareerOS 才会解析可用证据。" : "Upload a real PDF or DOCX before CareerOS can extract evidence."} /></div> : <div className="mt-8 grid gap-4 md:grid-cols-2">{documents.map((document) => { const real = documentHasRealFile(document); const latest = isLatestDocument(document, activeWorkspace.documents); return <article key={document.id} className="surface-card flex flex-col p-5 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex flex-wrap gap-2">{document.isPrimary ? <StatusBadge status="positive">Primary</StatusBadge> : null}{latest ? <Badge>Latest</Badge> : null}<StatusBadge status={document.parsedStatus === "ready" || document.parseStatus === "parsed" ? "positive" : document.parsedStatus === "error" || document.parseStatus === "failed" ? "danger" : "neutral"}>{document.parsedStatus === "ready" || document.parseStatus === "parsed" ? (zh ? "已解析" : "Parsed") : document.parsedStatus === "error" || document.parseStatus === "failed" ? (zh ? "解析失败" : "Parse error") : (zh ? "待解析" : "Pending")}</StatusBadge></div><span className="text-xs text-[var(--text-tertiary)]">{document.uploadedAt ? new Date(document.uploadedAt).toLocaleDateString(zh ? "zh-CN" : "en-AU") : "—"}</span></div>
+      <h2 className="mt-4 font-display text-lg font-medium">{document.name}</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">{document.version} · {documentTypeLabel(document.documentType, language)} · {documentLanguageLabel(document.language, language)}</p>
+      <div className="mt-4 flex flex-wrap gap-2">{(document.markets ?? (document.targetMarket ? [document.targetMarket] : [])).map((item) => <Badge key={item}>{item}</Badge>)}{(document.directions ?? []).map((item) => <Badge key={item}>{item}</Badge>)}</div>
+      <dl className="mt-4 grid grid-cols-2 gap-3 text-xs"><div><dt className="text-[var(--text-tertiary)]">{zh ? "文件" : "File"}</dt><dd className="mt-1">{real ? `${fileType(document)} · ${formatSize(document.fileSize ?? 0)}` : (zh ? "仅旧记录" : "Legacy record")}</dd></div><div><dt className="text-[var(--text-tertiary)]">{zh ? "最近更新" : "Last updated"}</dt><dd className="mt-1">{document.updatedAt || "—"}</dd></div></dl>
+      {document.parseError ? <p role="alert" className="mt-3 text-sm text-[var(--danger)]">{document.parseError}</p> : null}
+      <div className="mt-auto flex flex-wrap gap-1 pt-5">{real ? <><Button size="sm" variant="ghost" onClick={() => void viewCareerDocument(document.id)}>{zh ? "查看" : "View"}</Button><Button size="sm" variant="ghost" onClick={() => void downloadCareerDocument(document.id, document.fileName ?? document.name)}>{zh ? "下载" : "Download"}</Button><Button size="sm" variant="ghost" onClick={() => startUpload(document)}>{zh ? "替换" : "Replace"}</Button></> : null}{!document.isPrimary ? <Button size="sm" variant="ghost" onClick={() => void setPrimary(document)}>{zh ? "设为主要版本" : "Set Primary"}</Button> : null}<Button size="sm" variant="ghost" onClick={() => edit(document)}>{zh ? "编辑信息" : "Edit Metadata"}</Button><Button size="sm" variant="ghost" onClick={() => void archive(document)}>{zh ? "归档" : "Archive"}</Button><Button size="sm" variant="ghost" onClick={() => void remove(document)}>{zh ? "删除" : "Delete"}</Button></div>
+    </article>; })}</div>}
+
+    <Dialog open={open} title={editing ? (zh ? "编辑文档信息" : "Edit document metadata") : (zh ? "上传文档" : "Upload document")} description={zh ? "文件保持私有，并在服务器端解析。" : "Files remain private and are parsed server-side."} onClose={() => { if (!busy) { setOpen(false); resetUpload(); } }}>
+      <div className="grid gap-5 sm:grid-cols-2">
+        {!editing ? <div className="sm:col-span-2"><input ref={inputRef} className="sr-only" type="file" aria-label={zh ? "选择 PDF 或 DOCX 文件" : "Choose a PDF or DOCX file"} accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(event) => chooseFile(event.target.files?.[0] ?? null)} />
+          <div role="button" tabIndex={0} onKeyDown={dropKey} onClick={() => inputRef.current?.click()} onDragEnter={(event) => { event.preventDefault(); setDragging(true); }} onDragOver={(event) => event.preventDefault()} onDragLeave={() => setDragging(false)} onDrop={drop} className={`rounded-2xl border-2 border-dashed p-6 text-center transition-colors ${dragging ? "border-[var(--accent)] bg-[var(--accent-soft)]" : "border-[var(--border-strong)] bg-[var(--surface-subtle)]"}`}>
+            {file ? <><p className="font-medium">{file.name}</p><p className="mt-1 text-sm text-[var(--text-secondary)]">{file.type === "application/pdf" ? "PDF" : "DOCX"} · {formatSize(file.size)}</p><div className="mt-3 flex justify-center gap-2"><Button type="button" size="sm" variant="secondary" onClick={(event) => { event.stopPropagation(); inputRef.current?.click(); }}>{zh ? "更换文件" : "Replace file"}</Button><Button type="button" size="sm" variant="ghost" onClick={(event) => { event.stopPropagation(); chooseFile(null); if (inputRef.current) inputRef.current.value = ""; }}>{zh ? "移除" : "Remove"}</Button></div></> : <><p className="font-medium">{zh ? "拖拽文件到这里" : "Drag and drop your file here"}</p><p className="mt-2 text-sm text-[var(--text-secondary)]">{zh ? "或选择文件" : "or choose a file"}</p><p className="mt-2 text-xs text-[var(--text-tertiary)]">PDF / DOCX · {zh ? "最大 10MB" : "10 MB max"}</p></>}
+          </div></div> : null}
+        <Field label={zh ? "标题" : "Title"}><Input value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} /></Field>
+        <Field label={zh ? "版本" : "Version"} hint={zh ? "按同一简历系列自动生成" : "Automatically generated within this resume family"}><Input value={`v${editing ? (editing.versionNumber ?? 1) : (draft.versionNumber ?? automaticVersion)}`} readOnly /></Field>
+        <Field label={zh ? "类型" : "Type"}><Select disabled={Boolean(editing)} value={draft.documentType} onChange={(event) => setDraft({ ...draft, documentType: event.target.value as CareerDocumentType })}>{resumeTypes.map((value) => <option key={value} value={value}>{documentTypeLabel(value, language)}</option>)}</Select></Field>
+        <Field label={zh ? "语言" : "Language"}><Select value={draft.language} onChange={(event) => setDraft({ ...draft, language: event.target.value as CareerDocumentLanguage })}>{documentLanguages.map((value) => <option key={value} value={value}>{documentLanguageLabel(value, language)}</option>)}</Select></Field>
+        <fieldset className="sm:col-span-2"><legend className="text-sm font-medium">{zh ? "目标市场" : "Market"}</legend><div className="mt-2 flex flex-wrap gap-2">{documentMarkets.map((value) => <button type="button" aria-pressed={draft.markets.includes(value)} key={value} onClick={() => toggle("markets", value)} className={`min-h-10 rounded-full border px-3 text-sm ${draft.markets.includes(value) ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]" : "border-[var(--border)]"}`}>{value}</button>)}</div></fieldset>
+        <fieldset className="sm:col-span-2"><legend className="text-sm font-medium">{zh ? "职位方向" : "Role / Direction"}</legend><div className="mt-2 flex flex-wrap gap-2">{documentDirections.map((value) => <button type="button" aria-pressed={draft.directions.includes(value)} key={value} onClick={() => toggle("directions", value)} className={`min-h-10 rounded-full border px-3 text-sm ${draft.directions.includes(value) ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]" : "border-[var(--border)]"}`}>{value}</button>)}</div></fieldset>
+        <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={draft.isPrimary} onChange={(event) => setDraft({ ...draft, isPrimary: event.target.checked })} />{zh ? "设为主要版本" : "Set as primary version"}</label>
+        {!editing ? <details className="sm:col-span-2"><summary className="cursor-pointer text-sm font-medium">{zh ? "高级设置" : "Advanced settings"}</summary><Field label={zh ? "自定义版本号" : "Custom version number"} hint={zh ? "留空则自动生成" : "Leave empty to use automatic versioning"}><Input min={1} type="number" value={draft.versionNumber ?? ""} onChange={(event) => setDraft({ ...draft, versionNumber: event.target.value ? Number(event.target.value) : undefined })} /></Field></details> : null}
+        <div className="sm:col-span-2"><Field label={zh ? "备注" : "Notes"}><Textarea value={draft.notes} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} /></Field></div>
+        <div aria-live="polite" className="sm:col-span-2">{stage !== "idle" ? <p className={stage === "error" ? "text-sm font-medium text-[var(--danger)]" : "text-sm font-medium text-[var(--accent)]"}>{stageLabel[stage]}</p> : null}{error ? <div role="alert" className="mt-2 rounded-xl bg-[var(--danger-soft)] p-3 text-sm text-[var(--danger)]"><p>{error}</p>{!editing && file ? <Button className="mt-2" type="button" size="sm" variant="secondary" onClick={() => void upload()}>{zh ? "重试" : "Retry"}</Button> : null}</div> : null}</div>
+        {success ? <div className={`sm:col-span-2 rounded-2xl p-4 ${success.parsedStatus === "error" ? "bg-[var(--danger-soft)]" : "bg-[var(--success-soft)]"}`}><p className={`font-medium ${success.parsedStatus === "error" ? "text-[var(--danger)]" : "text-[var(--success)]"}`}>{success.parsedStatus === "error" ? (zh ? "文件已上传，但解析失败" : "File uploaded, but parsing failed") : (zh ? "简历上传并解析完成" : "Résumé uploaded and parsed")}</p><p className="mt-2 text-sm">{success.name} · {success.version} · {fileType(success)} · {documentLanguageLabel(success.language, language)}</p><div className="mt-2 flex flex-wrap gap-2">{[...(success.markets ?? []), ...(success.directions ?? [])].map((item) => <Badge key={item}>{item}</Badge>)}</div></div> : null}
+        <div className="flex flex-col-reverse gap-2 sm:col-span-2 sm:flex-row sm:justify-end"><Button className="w-full sm:w-auto" variant="ghost" disabled={busy} onClick={() => { setOpen(false); resetUpload(); }}>{success ? (zh ? "关闭" : "Close") : (zh ? "取消" : "Cancel")}</Button>{!success ? <Button className="w-full sm:w-auto" disabled={busy || (!editing && (!file || !draft.title.trim())) || Boolean(editing && !draft.title.trim())} onClick={() => void (editing ? saveMetadata() : upload())}>{busy ? stageLabel[stage] : editing ? (zh ? "保存" : "Save") : (zh ? "上传并解析" : "Upload and parse")}</Button> : null}</div>
+      </div>
+    </Dialog>
+  </div>;
 }

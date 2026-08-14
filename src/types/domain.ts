@@ -256,6 +256,10 @@ export type RelationshipType =
 export type CareerDocumentType =
   | "English résumé"
   | "Chinese résumé"
+  | "English technical résumé"
+  | "English product résumé"
+  | "Chinese technical résumé"
+  | "Chinese product résumé"
   | "Cover letter"
   | "Portfolio"
   | "Academic transcript"
@@ -580,6 +584,10 @@ export interface CareerDocumentRecord {
   status: CareerDocumentStatus;
   language?: CareerDocumentLanguage;
   targetMarket?: string;
+  markets?: string[];
+  directions?: string[];
+  documentFamily?: string;
+  versionNumber?: number;
   fileName?: string;
   storagePath?: string;
   mimeType?: string;
@@ -588,8 +596,12 @@ export interface CareerDocumentRecord {
   extractedText?: string;
   parsedData?: ParsedResumeData;
   parseStatus?: "not_uploaded" | "parsed" | "failed";
+  parsedStatus?: "pending" | "parsing" | "ready" | "error";
   parseError?: string;
   isPrimary?: boolean;
+  targetRoles?: string[];
+  atsScore?: number | null;
+  lastParsedAt?: string | null;
 }
 
 export interface DashboardPreferences {
