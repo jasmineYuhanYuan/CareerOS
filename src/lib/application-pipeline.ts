@@ -1,4 +1,4 @@
-import type { ApplicationStatus, JobApplication } from "@/types/domain";
+import type { ApplicationSource, ApplicationStatus, JobApplication } from "@/types/domain";
 import { initialStatusHistory, suggestedNextAction } from "@/lib/application-status";
 
 const terminalStatuses = new Set<ApplicationStatus>([
@@ -39,6 +39,16 @@ export interface ApplicationAnalytics {
   assessmentWaiting: number;
   resumeScreening: number;
   offerPending: number;
+  sourcePerformance: ApplicationSourcePerformance[];
+}
+
+export interface ApplicationSourcePerformance {
+  source: ApplicationSource;
+  applications: number;
+  interviews: number;
+  offers: number;
+  interviewRate: number;
+  offerRate: number;
 }
 
 export interface QuickApplicationInput {
@@ -48,6 +58,7 @@ export interface QuickApplicationInput {
   status: ApplicationStatus;
   sourceUrl?: string;
   sourceLabel?: string;
+  source?: ApplicationSource;
 }
 
 export function createQuickApplication(
@@ -72,6 +83,7 @@ export function createQuickApplication(
     organisationName: company,
     jobTitle: role,
     status: input.status,
+    source: input.source ?? "Other",
     savedAt: now,
     appliedAt: input.appliedDate,
     nextAction: suggestedNextAction(input.status),
@@ -143,6 +155,21 @@ export function applicationAnalytics(
     );
     return days >= 0 ? [days] : [];
   });
+  const sourceGroups = new Map<ApplicationSource, JobApplication[]>();
+  for (const application of userRecords) {
+    const records = sourceGroups.get(application.source) ?? [];
+    records.push(application);
+    sourceGroups.set(application.source, records);
+  }
+  const reachedStatus = (application: JobApplication, statuses: Set<ApplicationStatus>) =>
+    statuses.has(application.status) || application.statusHistory.some((event) => statuses.has(event.status));
+  const interviewStatuses = new Set<ApplicationStatus>(["Interview Pending", "Interview Invitation", "Interview 1", "Interview 2", "Final Interview", "Background Check", "Reference Check", "Offer Received", "Offer Accepted", "Offer Declined"]);
+  const offerStatuses = new Set<ApplicationStatus>(["Offer Received", "Offer Accepted", "Offer Declined"]);
+  const sourcePerformance = [...sourceGroups.entries()].map(([source, records]) => {
+    const interviews = records.filter((application) => reachedStatus(application, interviewStatuses)).length;
+    const offers = records.filter((application) => reachedStatus(application, offerStatuses)).length;
+    return { source, applications: records.length, interviews, offers, interviewRate: Math.round(interviews / records.length * 100), offerRate: Math.round(offers / records.length * 100) };
+  }).sort((a, b) => b.applications - a.applications || a.source.localeCompare(b.source));
   return {
     submitted: userRecords.filter((application) =>
       submittedStatuses.has(application.status),
@@ -163,6 +190,7 @@ export function applicationAnalytics(
     assessmentWaiting: userRecords.filter((application) => ["Assessment In Progress", "Assessment Invitation Received", "Assessment Scheduled"].includes(application.status)).length,
     resumeScreening: userRecords.filter((application) => application.status === "Resume Screening").length,
     offerPending: userRecords.filter((application) => application.status === "Offer Received").length,
+    sourcePerformance,
     averageResponseDays:
       responseDurations.length >= 3
         ? Math.round(

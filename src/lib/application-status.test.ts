@@ -1,12 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { applicationStatuses, applicationStatusTone, initialStatusHistory, normaliseApplicationStatus, recordStatusTransition, suggestedNextAction } from "./application-status";
+import { applicationStatuses, applicationStatusTone, inferApplicationSource, initialStatusHistory, normaliseApplicationStatus, recordStatusTransition, suggestedNextAction } from "./application-status";
 import type { JobApplication } from "@/types/domain";
 
 function application(status: JobApplication["status"]): JobApplication {
-  return { id: "a", profileId: "p", jobId: "j", organisationName: "小红书", jobTitle: "产品实习生", status, savedAt: "2026-08-14T00:00:00Z", appliedAt: "2026-08-14", nextAction: "", nextActionDate: "", cvVersion: "", notes: "No email or assessment link received.", lastUpdatedAt: "2026-08-14T00:00:00Z", activity: [], statusHistory: initialStatusHistory(status, "2026-08-14T00:00:00Z"), materials: [], sessions: [] };
+  return { id: "a", profileId: "p", jobId: "j", organisationName: "小红书", jobTitle: "产品实习生", status, source: "Company Website", savedAt: "2026-08-14T00:00:00Z", appliedAt: "2026-08-14", nextAction: "", nextActionDate: "", cvVersion: "", notes: "No email or assessment link received.", lastUpdatedAt: "2026-08-14T00:00:00Z", activity: [], statusHistory: initialStatusHistory(status, "2026-08-14T00:00:00Z"), materials: [], sessions: [] };
 }
 
 describe("professional application statuses", () => {
+  it("keeps the assessment workflow in the required order", () => {
+    expect(applicationStatuses.slice(4, 11)).toEqual(["Applied", "Resume Screening", "Resume Passed", "Assessment In Progress", "Assessment Invitation Received", "Assessment Scheduled", "Assessment Completed"]);
+  });
+
+  it("infers legacy application sources conservatively", () => {
+    expect(inferApplicationSource({ notes: "Source: 内推", sourceSnapshot: undefined })).toBe("Referral");
+    expect(inferApplicationSource({ notes: "", sourceSnapshot: { location: "", officialUrl: "https://www.seek.com.au/job/1", deadline: null, recruitingBatch: "", title: "Role", company: "Company", capturedAt: "2026-08-14" } })).toBe("SEEK");
+    expect(inferApplicationSource({ notes: "", sourceSnapshot: undefined })).toBe("Other");
+  });
   it("distinguishes entering an assessment flow from receiving an invitation", () => {
     expect(applicationStatuses).toContain("Assessment In Progress");
     expect(applicationStatuses).toContain("Assessment Invitation Received");

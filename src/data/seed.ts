@@ -290,6 +290,7 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
         organisationName: "Atlassian",
         jobTitle: "Australia Internship Program",
         status: "Preparing",
+        source: "Other",
         savedAt: "2026-07-28T09:00:00.000Z",
         appliedAt: "",
         nextAction: "Review sample role requirements",

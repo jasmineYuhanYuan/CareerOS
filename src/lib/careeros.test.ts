@@ -188,6 +188,18 @@ describe("local storage parsing and fallback", () => {
     expect(application.notes).toBe("No invitation link received");
     expect(application.statusHistory).toHaveLength(1);
   });
+
+  it("upgrades version 7 snapshots with an inferred application source", () => {
+    const raw = JSON.parse(JSON.stringify(createSeedState())) as Record<string, unknown>;
+    raw.version = 7;
+    const profiles = raw.profiles as Record<string, { applications: Array<Record<string, unknown>> }>;
+    const record = profiles[YUHAN_ID].applications[0];
+    delete record.source;
+    record.notes = "Imported from LinkedIn";
+    const application = parseStoredState(JSON.stringify(raw)).profiles[YUHAN_ID].applications[0];
+    expect(application.source).toBe("LinkedIn");
+    expect(application.notes).toBe("Imported from LinkedIn");
+  });
 });
 
 describe("profile data separation", () => {

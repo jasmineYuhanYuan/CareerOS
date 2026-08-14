@@ -343,6 +343,7 @@ export const zhCN = {
   "applications.company": "公司",
   "applications.appliedDate": "投递日期",
   "applications.currentStatus": "当前状态",
+  "applications.source": "来源",
   "applications.officialUrl": "官网链接（可选）",
   "applications.createRecord": "生成记录",
   "applications.imported": "投递记录已导入。",

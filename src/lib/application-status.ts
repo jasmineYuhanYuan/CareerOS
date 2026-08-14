@@ -1,4 +1,4 @@
-import type { ApplicationStatus, ApplicationStatusEvent } from "@/types/domain";
+import type { ApplicationSource, ApplicationStatus, ApplicationStatusEvent } from "@/types/domain";
 import type { JobApplication } from "@/types/domain";
 
 export const applicationStatuses: ApplicationStatus[] = [
@@ -10,6 +10,21 @@ export const applicationStatuses: ApplicationStatus[] = [
   "Offer Received", "Offer Accepted", "Offer Declined",
   "Rejected", "Withdrawn", "Archived",
 ];
+
+export const applicationSources: ApplicationSource[] = [
+  "Company Website", "SEEK", "LinkedIn", "Referral", "BOSS", "Nowcoder", "Other",
+];
+
+export function inferApplicationSource(application: Pick<JobApplication, "notes" | "sourceSnapshot">): ApplicationSource {
+  const evidence = `${application.notes} ${application.sourceSnapshot?.officialUrl ?? ""}`.toLowerCase();
+  if (/seek\.com|\bseek\b/.test(evidence)) return "SEEK";
+  if (/linkedin\.com|\blinkedin\b/.test(evidence)) return "LinkedIn";
+  if (/zhipin\.com|\bboss\b|直聘/.test(evidence)) return "BOSS";
+  if (/nowcoder\.com|\bnowcoder\b|牛客/.test(evidence)) return "Nowcoder";
+  if (/referr|内推/.test(evidence)) return "Referral";
+  if (application.sourceSnapshot?.officialUrl) return "Company Website";
+  return "Other";
+}
 
 const legacyStatusMap: Record<string, ApplicationStatus> = {
   Saved: "Interested",

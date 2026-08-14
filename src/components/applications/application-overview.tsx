@@ -87,6 +87,7 @@ export function ApplicationMetrics({
     ["Rejections", analytics.rejections],
   ];
   return (
+    <>
     <section
       aria-label={zh ? "申请统计" : "Application analytics"}
       className="mb-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
@@ -105,5 +106,10 @@ export function ApplicationMetrics({
           : "Counts use user-created records only. Average response time remains hidden until at least three valid response intervals exist."}
       </p>
     </section>
+    <section className="mb-7 overflow-x-auto rounded-[1.35rem] border border-[var(--border)] bg-[var(--surface)]" aria-label={zh ? "申请来源转化" : "Application source conversion"}>
+      <div className="border-b border-[var(--border)] p-4"><h2 className="font-display text-lg font-medium">{zh ? "渠道表现" : "Source performance"}</h2><p className="mt-1 text-xs text-[var(--text-secondary)]">{zh ? "面试率和 Offer 率按该渠道全部申请计算，并包含历史已到达阶段。" : "Interview and offer rates use all applications from each source and include stages reached in history."}</p></div>
+      {analytics.sourcePerformance.length ? <table className="w-full min-w-[560px] text-left text-sm"><thead className="bg-[var(--surface-subtle)] text-xs text-[var(--text-secondary)]"><tr><th className="p-3">{zh ? "来源" : "Source"}</th><th className="p-3">{zh ? "申请" : "Applications"}</th><th className="p-3">{zh ? "进入面试" : "Interviews"}</th><th className="p-3">{zh ? "面试率" : "Interview rate"}</th><th className="p-3">{zh ? "Offer 率" : "Offer rate"}</th></tr></thead><tbody>{analytics.sourcePerformance.map((row) => <tr key={row.source} className="border-t border-[var(--border)]"><td className="p-3 font-medium">{displayUiValue(row.source, language)}</td><td className="p-3">{row.applications}</td><td className="p-3">{row.interviews}</td><td className="p-3">{row.interviewRate}%</td><td className="p-3">{row.offerRate}%</td></tr>)}</tbody></table> : <p className="p-4 text-sm text-[var(--text-secondary)]">{zh ? "添加申请来源后显示渠道统计。" : "Source analytics appear after applications are added."}</p>}
+    </section>
+    </>
   );
 }

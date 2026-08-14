@@ -211,6 +211,7 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
         organisationName: job.companyName,
         jobTitle: job.title,
         status: "Preparing",
+        source: "Company Website",
         savedAt: timestamp,
         appliedAt: "",
         nextAction: "Review sample role and confirm vacancy details",

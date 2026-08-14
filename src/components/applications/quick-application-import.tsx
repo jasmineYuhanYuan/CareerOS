@@ -10,10 +10,11 @@ import {
 } from "@/lib/application-pipeline";
 import type {
   AppLocale,
+  ApplicationSource,
   ApplicationStatus,
   JobApplication,
 } from "@/types/domain";
-import { applicationStatuses } from "@/lib/application-status";
+import { applicationSources, applicationStatuses } from "@/lib/application-status";
 
 const importStatuses: ApplicationStatus[] = applicationStatuses.filter((status) => !["Interested", "Researching", "Preparing", "Ready to Apply", "Archived"].includes(status));
 
@@ -37,6 +38,7 @@ export function QuickApplicationImport({
   const [date, setDate] = useState(today);
   const [status, setStatus] = useState<ApplicationStatus>("Applied");
   const [sourceUrl, setSourceUrl] = useState("");
+  const [source, setSource] = useState<ApplicationSource>("Company Website");
   const [error, setError] = useState("");
 
   function submit(event: FormEvent) {
@@ -49,6 +51,7 @@ export function QuickApplicationImport({
           appliedDate: date,
           status,
           sourceUrl: sourceUrl.trim() || undefined,
+          source,
           sourceLabel: sourceUrl
             ? t("applications.officialWebsite")
             : undefined,
@@ -65,6 +68,7 @@ export function QuickApplicationImport({
       setDate(today);
       setStatus("Applied");
       setSourceUrl("");
+      setSource("Company Website");
       setError("");
       setOpen(false);
     } catch (reason) {
@@ -125,6 +129,11 @@ export function QuickApplicationImport({
                     {displayUiValue(value, language)}
                   </option>
                 ))}
+              </Select>
+            </Field>
+            <Field label={t("applications.source")}>
+              <Select value={source} onChange={(event) => setSource(event.target.value as ApplicationSource)}>
+                {applicationSources.map((value) => <option key={value} value={value}>{displayUiValue(value, language)}</option>)}
               </Select>
             </Field>
           </div>

@@ -18,6 +18,7 @@ function application(
     organisationName: "Organisation",
     jobTitle: "Role",
     status,
+    source: "Company Website",
     savedAt: "2026-07-01",
     appliedAt: status === "Interested" ? "" : "2026-07-02",
     nextAction: "",
@@ -57,6 +58,15 @@ describe("application pipeline quality", () => {
       application("offer", "Offer Received"),
     ]);
     expect(result).toMatchObject({ resumeScreening: 1, assessmentWaiting: 1, interviews: 1, offerPending: 1, offers: 1 });
+  });
+
+  it("calculates source conversion from status history", () => {
+    const reachedInterview = application("source-interview", "Interview 1");
+    reachedInterview.source = "LinkedIn";
+    const laterRejected = { ...reachedInterview, status: "Rejected" as const, statusHistory: [{ id: "interview", status: "Interview 1" as const, timestamp: "2026-08-14T00:00:00Z", notes: "" }, { id: "rejected", status: "Rejected" as const, timestamp: "2026-08-15T00:00:00Z", notes: "" }] };
+    const applied = application("source-applied", "Applied");
+    applied.source = "LinkedIn";
+    expect(applicationAnalytics([laterRejected, applied]).sourcePerformance).toEqual([{ source: "LinkedIn", applications: 2, interviews: 1, offers: 0, interviewRate: 50, offerRate: 0 }]);
   });
 
   it("creates a quick-import record with its official source snapshot", () => {

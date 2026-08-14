@@ -24,6 +24,7 @@ export function createChinaApplicationRecord(
     organisationName: opportunity.company,
     jobTitle: opportunity.position,
     status: "Preparing",
+    source: "Company Website",
     savedAt: timestamp,
     appliedAt: "",
     nextAction: "Review the official role and prepare application materials",

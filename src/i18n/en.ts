@@ -355,6 +355,7 @@ export const en = {
   "applications.company": "Company",
   "applications.appliedDate": "Applied date",
   "applications.currentStatus": "Current status",
+  "applications.source": "Source",
   "applications.officialUrl": "Official URL (optional)",
   "applications.createRecord": "Create record",
   "applications.imported": "Application imported.",

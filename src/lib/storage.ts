@@ -2,7 +2,7 @@ import { createSeedState, YUHAN_ID } from "@/data/seed";
 import { verifiedChinaCampusOpportunities } from "@/data/china-recruiting/verified-opportunities";
 import type { CareerOSState, ProfileWorkspace } from "@/types/domain";
 import { STORAGE_VERSION } from "@/types/domain";
-import { initialStatusHistory, normaliseApplicationStatus } from "@/lib/application-status";
+import { inferApplicationSource, initialStatusHistory, normaliseApplicationStatus } from "@/lib/application-status";
 
 export const STORAGE_KEY = "careeros:mvp";
 
@@ -158,6 +158,7 @@ function normaliseSprint8State(state: CareerOSState): CareerOSState {
           return {
             ...application,
             status,
+            source: application.source ?? inferApplicationSource(application),
             statusHistory,
             materials: application.materials ?? [],
             sessions: application.sessions ?? [],
@@ -219,7 +220,7 @@ function normaliseSprint8State(state: CareerOSState): CareerOSState {
 }
 
 export function migrateState(value: unknown): CareerOSState | null {
-  if (typeof value === "object" && value !== null && [5, 6].includes(Number((value as Record<string, unknown>).version))) {
+  if (typeof value === "object" && value !== null && [5, 6, 7].includes(Number((value as Record<string, unknown>).version))) {
     const upgraded: Record<string, unknown> = { ...(value as Record<string, unknown>), version: STORAGE_VERSION };
     const profiles = upgraded.profiles as Record<string, Record<string, unknown>> | undefined;
     if (profiles) {

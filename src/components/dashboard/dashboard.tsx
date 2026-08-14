@@ -219,6 +219,11 @@ export function Dashboard() {
       </section>
 
       <section className="mb-8">
+        <SectionHeader title={language === "zh-CN" ? "申请渠道" : "Application sources"} />
+        {applicationFunnel.sourcePerformance.length ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{applicationFunnel.sourcePerformance.map((source) => <Link key={source.source} href="/applications" className="interactive-lift surface-card p-4"><div className="flex items-baseline justify-between gap-3"><span className="font-medium">{displayUiValue(source.source, language)}</span><strong className="font-display text-2xl">{source.applications}</strong></div><p className="mt-2 text-xs text-[var(--text-secondary)]">{language === "zh-CN" ? `面试率 ${source.interviewRate}% · Offer 率 ${source.offerRate}%` : `${source.interviewRate}% interview · ${source.offerRate}% offer`}</p></Link>)}</div> : <p className="surface-card p-4 text-sm text-[var(--text-secondary)]">{language === "zh-CN" ? "添加申请来源后显示渠道统计。" : "Source analytics appear after applications are added."}</p>}
+      </section>
+
+      <section className="mb-8">
         <SectionHeader title={t("dashboard.todayCareerActions")} />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {dailyActions.map((action) => (

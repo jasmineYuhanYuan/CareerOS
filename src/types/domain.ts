@@ -1,4 +1,4 @@
-export const STORAGE_VERSION = 7 as const;
+export const STORAGE_VERSION = 8 as const;
 export type AppLocale = "en" | "zh-CN";
 
 export type StudyLevel = "Undergraduate" | "Postgraduate";
@@ -47,6 +47,14 @@ export type ApplicationStatus =
   | "Rejected"
   | "Withdrawn"
   | "Archived";
+export type ApplicationSource =
+  | "Company Website"
+  | "SEEK"
+  | "LinkedIn"
+  | "Referral"
+  | "BOSS"
+  | "Nowcoder"
+  | "Other";
 export type PostgraduateStatus =
   | "Considering"
   | "Researching"
@@ -429,6 +437,7 @@ export interface JobApplication {
   organisationName: string;
   jobTitle: string;
   status: ApplicationStatus;
+  source: ApplicationSource;
   savedAt: string;
   appliedAt: string;
   nextAction: string;

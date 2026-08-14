@@ -13,6 +13,7 @@ import { useLanguage } from "@/providers/language-provider";
 import type {
   ApplicationMaterialStatus,
   ApplicationStatus,
+  ApplicationSource,
   InterviewSessionStatus,
   InterviewSessionType,
   JobApplication,
@@ -22,7 +23,7 @@ import { displayUiValue } from "@/i18n/presentation";
 import { ApplicationFilters, ApplicationMetrics } from "./application-overview";
 import { QuickApplicationImport } from "./quick-application-import";
 import { documentHasRealFile } from "@/lib/document-evidence";
-import { applicationStatuses as statuses, applicationStatusTone, initialStatusHistory, suggestedNextAction } from "@/lib/application-status";
+import { applicationSources, applicationStatuses as statuses, applicationStatusTone, initialStatusHistory, suggestedNextAction } from "@/lib/application-status";
 const materialStatuses: ApplicationMaterialStatus[] = [
   "Missing",
   "Draft",
@@ -46,6 +47,7 @@ function emptyApplication(profileId: string): JobApplication {
     organisationName: "",
     jobTitle: "",
     status: "Interested",
+    source: "Other",
     savedAt: createdAt,
     appliedAt: "",
     nextAction: "",
@@ -206,7 +208,12 @@ export function ApplicationTracker() {
                 ))}
               </Select>
             </Field>
-            <Field label="Date applied">
+            <Field label={zh ? "来源" : "Source"}>
+              <Select value={draft.source} onChange={(event) => setDraft({ ...draft, source: event.target.value as ApplicationSource })}>
+                {applicationSources.map((source) => <option key={source} value={source}>{displayUiValue(source, language)}</option>)}
+              </Select>
+            </Field>
+            <Field label={t("applications.dateApplied")}>
               <Input
                 type="date"
                 value={draft.appliedAt}
@@ -215,7 +222,7 @@ export function ApplicationTracker() {
                 }
               />
             </Field>
-            <Field label="Next action">
+            <Field label={t("applications.nextAction")}>
               <Input
                 value={draft.nextAction}
                 onChange={(e) =>
@@ -223,7 +230,7 @@ export function ApplicationTracker() {
                 }
               />
             </Field>
-            <Field label="Next-action date">
+            <Field label={t("applications.nextDate")}>
               <Input
                 type="date"
                 value={draft.nextActionDate}
@@ -282,7 +289,7 @@ export function ApplicationTracker() {
                   className="grid gap-3 rounded-xl border border-[var(--border)] p-3 sm:grid-cols-[1fr_12rem_auto]"
                 >
                   <Input
-                    aria-label="Material name"
+                    aria-label={zh ? "材料名称" : "Material name"}
                     value={material.label}
                     onChange={(event) =>
                       setDraft({
@@ -297,7 +304,7 @@ export function ApplicationTracker() {
                     }
                   />
                   <Select
-                    aria-label={`${material.label} readiness`}
+                    aria-label={zh ? `${material.label}准备状态` : `${material.label} readiness`}
                     value={material.status}
                     onChange={(event) =>
                       setDraft({
@@ -332,7 +339,7 @@ export function ApplicationTracker() {
                       })
                     }
                   >
-                    Remove
+                    {zh ? "移除" : "Remove"}
                   </Button>
                 </div>
               ))}
@@ -345,7 +352,7 @@ export function ApplicationTracker() {
           </section>
           <section>
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm font-medium">Interview and OA sessions</h3>
+              <h3 className="text-sm font-medium">{zh ? "面试与笔试安排" : "Interview and assessment sessions"}</h3>
               <Button
                 type="button"
                 size="sm"
@@ -370,7 +377,7 @@ export function ApplicationTracker() {
                   })
                 }
               >
-                Add session
+                {zh ? "添加安排" : "Add session"}
               </Button>
             </div>
             <div className="mt-3 space-y-3">
@@ -380,7 +387,7 @@ export function ApplicationTracker() {
                   className="grid gap-3 rounded-xl border border-[var(--border)] p-3 sm:grid-cols-2"
                 >
                   <Select
-                    aria-label="Session type"
+                    aria-label={zh ? "安排类型" : "Session type"}
                     value={session.type}
                     onChange={(event) =>
                       setDraft({
@@ -398,11 +405,11 @@ export function ApplicationTracker() {
                       })
                     }
                   >
-                    <option>Interview</option>
-                    <option>Online assessment</option>
+                    <option value="Interview">{zh ? "面试" : "Interview"}</option>
+                    <option value="Online assessment">{zh ? "在线笔试" : "Online assessment"}</option>
                   </Select>
                   <Select
-                    aria-label="Session status"
+                    aria-label={zh ? "安排状态" : "Session status"}
                     value={session.status}
                     onChange={(event) =>
                       setDraft({
@@ -428,12 +435,12 @@ export function ApplicationTracker() {
                         "Cancelled",
                       ] as InterviewSessionStatus[]
                     ).map((status) => (
-                      <option key={status}>{status}</option>
+                      <option key={status} value={status}>{displayUiValue(status, language)}</option>
                     ))}
                   </Select>
                   <Input
-                    aria-label="Provider or interviewer"
-                    placeholder="Provider or interviewer"
+                    aria-label={zh ? "笔试平台或面试官" : "Provider or interviewer"}
+                    placeholder={zh ? "笔试平台或面试官" : "Provider or interviewer"}
                     value={session.provider}
                     onChange={(event) =>
                       setDraft({
@@ -448,8 +455,8 @@ export function ApplicationTracker() {
                     }
                   />
                   <Input
-                    aria-label="Stage"
-                    placeholder="Stage"
+                    aria-label={zh ? "轮次" : "Stage"}
+                    placeholder={zh ? "轮次" : "Stage"}
                     value={session.stage}
                     onChange={(event) =>
                       setDraft({
@@ -464,7 +471,7 @@ export function ApplicationTracker() {
                     }
                   />
                   <Input
-                    aria-label="Scheduled time"
+                    aria-label={zh ? "安排时间" : "Scheduled time"}
                     type="datetime-local"
                     value={session.scheduledAt}
                     onChange={(event) =>
@@ -492,7 +499,7 @@ export function ApplicationTracker() {
                       })
                     }
                   >
-                    Remove session
+                    {zh ? "移除安排" : "Remove session"}
                   </Button>
                 </div>
               ))}
@@ -520,7 +527,7 @@ export function ApplicationTracker() {
                       {event.notes && <p className="mt-1 text-[var(--text-secondary)]">{event.notes}</p>}
                     </li>
                   ))}
-                {!statuses.slice(statuses.indexOf(draft.status) + 1).every((status) => ["Rejected", "Withdrawn", "Archived"].includes(status)) && !["Offer Accepted", "Offer Declined", "Rejected", "Withdrawn", "Archived"].includes(draft.status) && <li className="relative text-xs text-[var(--text-tertiary)]"><span className="absolute -left-[1.42rem] top-1 size-2.5 rounded-full border-2 border-[var(--border-strong)] bg-[var(--surface)]" />Pending…</li>}
+                {!statuses.slice(statuses.indexOf(draft.status) + 1).every((status) => ["Rejected", "Withdrawn", "Archived"].includes(status)) && !["Offer Accepted", "Offer Declined", "Rejected", "Withdrawn", "Archived"].includes(draft.status) && <li className="relative text-xs text-[var(--text-tertiary)]"><span className="absolute -left-[1.42rem] top-1 size-2.5 rounded-full border-2 border-[var(--border-strong)] bg-[var(--surface)]" />{zh ? "等待下一步…" : "Pending…"}</li>}
               </ol>
             </section>
           )}
