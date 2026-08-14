@@ -1,4 +1,4 @@
-import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabasePublicClient } from "@/lib/supabase/server";
 import { TOMMY_ID, YUHAN_ID } from "@/data/seed";
 
 export const dynamic = "force-dynamic";
@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const profileId = new URL(request.url).searchParams.get("profileId");
   if (![YUHAN_ID, TOMMY_ID].includes(profileId ?? "")) return Response.json({ ok: false, error: "Unknown profile." }, { status: 400 });
-  const db = createSupabaseAdminClient();
+  const db = createSupabasePublicClient();
   if (!db) return Response.json({ ok: true, configured: false, opportunities: [], sources: [], recentEvents: [], latestRun: null });
   const [opportunities, sources, events, run] = await Promise.all([
     db.from("market_opportunities").select("*").contains("profile_scope", [profileId]).order("last_verified_at", { ascending: false, nullsFirst: false }),
