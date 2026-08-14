@@ -2,6 +2,7 @@ import { jobs, programs } from "@/data/seed";
 import { opportunities } from "@/data/opportunities";
 import type { DashboardDeadline, ProfileWorkspace } from "@/types/domain";
 import { isJobRelevantToProfile, isOpportunityRelevantToProfile } from "@/lib/profile-eligibility";
+import { documentIsReady } from "@/lib/document-evidence";
 
 export interface ReadinessItem {
   key: "education" | "goals" | "locations" | "skills" | "projects" | "eligibility" | "links" | "resume";
@@ -25,7 +26,7 @@ export function profileReadiness(workspace: ProfileWorkspace): ReadinessItem[] {
     { key: "projects", complete: profile.projects.length > 0 },
     { key: "eligibility", complete: Boolean(profile.workEligibility && !profile.workEligibility.toLowerCase().includes("confirm")) },
     { key: "links", complete: Boolean(profile.linkedInUrl || profile.githubUrl || profile.portfolioUrl) },
-    { key: "resume", complete: workspace.documents.some((item) => item.documentType.includes("résumé")) },
+    { key: "resume", complete: workspace.documents.some((item) => item.documentType.includes("résumé") && documentIsReady(item)) },
   ];
 }
 

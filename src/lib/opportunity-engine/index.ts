@@ -14,6 +14,7 @@ import type {
   DataFreshness,
   RecommendedAction,
 } from "@/types/opportunity";
+import { documentIsReady } from "@/lib/document-evidence";
 
 function freshness(verifiedAt: string, today: string): DataFreshness {
   const days = Math.floor(
@@ -270,7 +271,7 @@ export function getDailyCareerActions(
       id: "resume",
       type: "resume",
       label: "Resume updates needed",
-      count: workspace.documents.some((item) => item.status === "Ready")
+      count: workspace.documents.some(documentIsReady)
         ? 0
         : 1,
       href: "/documents",

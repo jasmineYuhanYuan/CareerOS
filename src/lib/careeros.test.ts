@@ -157,7 +157,7 @@ describe("local storage parsing and fallback", () => {
       version: "v1",
       updatedAt: "2026-07-29",
       notes: "",
-      status: "Review needed",
+      status: "Missing",
     });
     (
       raw.profiles[YUHAN_ID].documents[0] as unknown as { status: string }
@@ -168,7 +168,7 @@ describe("local storage parsing and fallback", () => {
     );
     expect(migrated.profiles[YUHAN_ID].applications[0].materials).toEqual([]);
     expect(migrated.profiles[YUHAN_ID].documents[0].status).toBe(
-      "Review needed",
+      "Missing",
     );
   });
 });

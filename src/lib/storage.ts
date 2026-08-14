@@ -138,8 +138,11 @@ function normaliseSprint8State(state: CareerOSState): CareerOSState {
     string,
     CareerOSState["profiles"][string]["documents"][number]["status"]
   > = {
-    "Needs update": "Review needed",
-    Archived: "Outdated",
+    Draft: "Missing",
+    "Review needed": "Missing",
+    Submitted: "Ready",
+    Outdated: "Needs update",
+    "Not applicable": "Archived",
   };
   const realProfiles = Object.fromEntries(
     Object.entries(state.profiles).filter(
@@ -159,7 +162,13 @@ function normaliseSprint8State(state: CareerOSState): CareerOSState {
         })),
         documents: workspace.documents.map((document) => ({
           ...document,
-          status: documentStatuses[document.status] ?? document.status,
+          status: document.storagePath
+            ? documentStatuses[document.status] ?? document.status
+            : "Missing",
+          language: document.language ?? "Other",
+          parseStatus: document.storagePath
+            ? document.parseStatus ?? "failed"
+            : "not_uploaded",
         })),
         chinaCampusOpportunities: workspace.chinaCampusOpportunities.map(
           (record) => {
@@ -207,6 +216,19 @@ function normaliseSprint8State(state: CareerOSState): CareerOSState {
 }
 
 export function migrateState(value: unknown): CareerOSState | null {
+  if (typeof value === "object" && value !== null && (value as Record<string, unknown>).version === 5) {
+    const upgraded: Record<string, unknown> = { ...(value as Record<string, unknown>), version: STORAGE_VERSION };
+    const profiles = upgraded.profiles as Record<string, Record<string, unknown>> | undefined;
+    if (profiles) {
+      upgraded.profiles = Object.fromEntries(Object.entries(profiles).map(([id, workspace]) => [id, {
+        ...workspace,
+        documents: Array.isArray(workspace.documents) ? workspace.documents.map((item) => ({
+          ...(item as Record<string, unknown>), status: "Missing", language: "Other", parseStatus: "not_uploaded",
+        })) : [],
+      }]));
+    }
+    if (validateState(upgraded)) return normaliseSprint8State(upgraded as CareerOSState);
+  }
   if (validateState(value)) {
     const profile = value.profiles["taicheng-guo-tommy"]?.profile;
     if (

@@ -20,6 +20,7 @@ import { displayUiValue } from "@/i18n/presentation";
 import Link from "next/link";
 import { TOMMY_ID } from "@/data/seed";
 import { getEligibleOpportunities } from "@/lib/profile-eligibility";
+import { recommendResumeForOpportunity } from "@/lib/document-evidence";
 
 export function OpportunityBrowser() {
   const {
@@ -48,10 +49,10 @@ export function OpportunityBrowser() {
       new Map(
         eligibleOpportunities.map((item) => [
           item.id,
-          calculateOpportunityMatch(item, activeWorkspace.profile),
+          calculateOpportunityMatch(item, activeWorkspace.profile, activeWorkspace.documents),
         ]),
       ),
-    [activeWorkspace.profile, eligibleOpportunities],
+    [activeWorkspace.documents, activeWorkspace.profile, eligibleOpportunities],
   );
   const visible = useMemo(
     () =>
@@ -110,6 +111,7 @@ export function OpportunityBrowser() {
   );
 
   const detailMatch = selected ? matches.get(selected.id) : null;
+  const recommendedResume = selected ? recommendResumeForOpportunity(activeWorkspace.profile, activeWorkspace.documents, selected) : null;
   const dimensionLabels = {
     "Goal alignment": t("opportunities.goalAlignment"),
     "Discipline alignment": t("opportunities.disciplineAlignment"),
@@ -380,6 +382,10 @@ export function OpportunityBrowser() {
             <p className="text-sm leading-7 text-[var(--text-secondary)]">
               {selected.description}
             </p>
+            <section className="rounded-xl bg-[var(--surface-subtle)] p-4">
+              <h3 className="font-medium">{language === "zh-CN" ? "推荐文档" : "Recommended document"}</h3>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">{recommendedResume ? `${recommendedResume.name} · ${recommendedResume.version}` : (language === "zh-CN" ? "需要准备对应简历版本" : "A suitable résumé version needs to be prepared")}</p>
+            </section>
             <section>
               <h3 className="font-medium">{t("opportunities.dimensions")}</h3>
               <div className="mt-3 divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">

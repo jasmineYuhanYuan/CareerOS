@@ -1,4 +1,4 @@
-export const STORAGE_VERSION = 5 as const;
+export const STORAGE_VERSION = 6 as const;
 export type AppLocale = "en" | "zh-CN";
 
 export type StudyLevel = "Undergraduate" | "Postgraduate";
@@ -246,12 +246,20 @@ export type CareerDocumentType =
   | "Other";
 export type CareerDocumentStatus =
   | "Missing"
-  | "Draft"
-  | "Review needed"
+  | "Uploaded"
+  | "Parsed"
+  | "Needs update"
   | "Ready"
-  | "Submitted"
-  | "Outdated"
-  | "Not applicable";
+  | "Archived";
+export type CareerDocumentLanguage = "English" | "Chinese" | "Bilingual" | "Other";
+export interface ParsedResumeData {
+  skills: string[];
+  education: string[];
+  experience: string[];
+  certifications: string[];
+  languages: string[];
+  links: string[];
+}
 export type OpportunityLifecycle =
   | "Open"
   | "Upcoming"
@@ -260,7 +268,8 @@ export type OpportunityLifecycle =
   | "Expired"
   | "Archived"
   | "Verification required";
-export type ApplicationMaterialStatus = CareerDocumentStatus;
+export type ApplicationMaterialStatus =
+  | "Missing" | "Draft" | "Review needed" | "Ready" | "Submitted" | "Outdated" | "Not applicable";
 export type InterviewSessionType = "Interview" | "Online assessment";
 export type InterviewSessionStatus =
   "Planned" | "Invited" | "Completed" | "Cancelled";
@@ -270,6 +279,14 @@ export interface ApplicationMaterial {
   label: string;
   status: ApplicationMaterialStatus;
   documentId?: string;
+  documentSnapshot?: {
+    documentId: string;
+    title: string;
+    version: string;
+    fileName: string;
+    storagePath: string;
+    capturedAt: string;
+  };
   notes: string;
 }
 
@@ -533,8 +550,19 @@ export interface CareerDocumentRecord {
   version: string;
   updatedAt: string;
   notes: string;
-  externalUrl?: string;
   status: CareerDocumentStatus;
+  language?: CareerDocumentLanguage;
+  targetMarket?: string;
+  fileName?: string;
+  storagePath?: string;
+  mimeType?: string;
+  fileSize?: number;
+  uploadedAt?: string;
+  extractedText?: string;
+  parsedData?: ParsedResumeData;
+  parseStatus?: "not_uploaded" | "parsed" | "failed";
+  parseError?: string;
+  isPrimary?: boolean;
 }
 
 export interface DashboardPreferences {

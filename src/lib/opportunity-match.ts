@@ -1,14 +1,16 @@
-import type { CareerProfile, MatchDimension, MatchResult, Opportunity } from "@/types/domain";
+import type { CareerDocumentRecord, CareerProfile, MatchDimension, MatchResult, Opportunity } from "@/types/domain";
+import { resumeEvidence } from "@/lib/document-evidence";
 
 function includesLoose(values: string[], target: string): boolean {
   const normalised = target.toLowerCase();
   return values.some((value) => value.toLowerCase().includes(normalised) || normalised.includes(value.toLowerCase()));
 }
 
-export function calculateOpportunityMatch(opportunity: Opportunity, profile: CareerProfile): MatchResult {
+export function calculateOpportunityMatch(opportunity: Opportunity, profile: CareerProfile, documents: CareerDocumentRecord[] = []): MatchResult {
   const profileSkills = profile.skills.map((skill) => skill.name.toLowerCase());
-  const matchingSkills = opportunity.skillTags.filter((skill) => profileSkills.includes(skill.toLowerCase()));
-  const missingSkills = opportunity.skillTags.filter((skill) => !profileSkills.includes(skill.toLowerCase()));
+  const documentSkills = resumeEvidence(documents);
+  const matchingSkills = opportunity.skillTags.filter((skill) => profileSkills.includes(skill.toLowerCase()) || documentSkills.has(skill.toLowerCase()));
+  const missingSkills = opportunity.skillTags.filter((skill) => !profileSkills.includes(skill.toLowerCase()) && !documentSkills.has(skill.toLowerCase()));
   const goalMatch = opportunity.roleFamilyTags.some((tag) => includesLoose(profile.careerGoals, tag));
   const disciplineMatch = opportunity.disciplineTags.some((tag) => includesLoose([profile.discipline], tag));
   const locationMatch = includesLoose(profile.preferredCities, opportunity.city) || opportunity.remoteType === "Remote";
@@ -20,7 +22,7 @@ export function calculateOpportunityMatch(opportunity: Opportunity, profile: Car
   const dimensions: MatchDimension[] = [
     { name: "Goal alignment", score: goalMatch ? 100 : 40, weight: 0.2, evidence: goalMatch ? ["Opportunity family aligns with a stated career goal"] : [], uncertainty: goalMatch ? "" : "Goal wording does not directly match the opportunity." },
     { name: "Discipline alignment", score: disciplineMatch ? 100 : 20, weight: 0.2, evidence: disciplineMatch ? [`${profile.discipline} aligns with an opportunity discipline`] : [], uncertainty: disciplineMatch ? "" : "Discipline alignment is not explicit." },
-    { name: "Skill overlap", score: opportunity.skillTags.length ? Math.round(matchingSkills.length / opportunity.skillTags.length * 100) : null, weight: 0.2, evidence: matchingSkills.map((skill) => `${skill} appears in the profile`), uncertainty: opportunity.skillTags.length ? "" : "No structured skill requirements are available." },
+    { name: "Skill overlap", score: opportunity.skillTags.length ? Math.round(matchingSkills.length / opportunity.skillTags.length * 100) : null, weight: 0.2, evidence: matchingSkills.map((skill) => documentSkills.has(skill.toLowerCase()) ? `Resume: ${skill} found` : `Profile: ${skill} found`), uncertainty: opportunity.skillTags.length ? "" : "No structured skill requirements are available." },
     { name: "Location alignment", score: locationMatch ? 100 : 35, weight: 0.1, evidence: locationMatch ? [`${opportunity.locationText} aligns with location preferences or remote work`] : [], uncertainty: locationMatch ? "" : "Location preference may need review." },
     { name: "Experience/project relevance", score: relevantProjects.length ? 85 : profile.projects.length ? 45 : null, weight: 0.1, evidence: relevantProjects.map((skill) => `Project evidence relates to ${skill}`), uncertainty: profile.projects.length ? "Project descriptions may not contain every relevant competency." : "No project evidence is recorded." },
     { name: "Eligibility confidence", score: eligibilityKnown && opportunity.eligibilityText ? 75 : null, weight: 0.1, evidence: eligibilityKnown ? ["Work eligibility is recorded"] : [], uncertainty: opportunity.eligibilityText ? "Eligibility still requires source confirmation." : "Eligibility requirements are unavailable." },
@@ -38,5 +40,5 @@ export function calculateOpportunityMatch(opportunity: Opportunity, profile: Car
     ...missingSkills.map((skill) => `${skill} is mentioned but not listed in the profile`),
     ...dimensions.filter((item) => item.uncertainty).map((item) => item.uncertainty),
   ].slice(0, 5);
-  return { score, strengths, gaps, dimensions, confidence, explanation: "A deterministic planning estimate based on recorded profile and opportunity fields." };
+  return { score, strengths, gaps, dimensions, confidence, explanation: "A deterministic planning estimate based on profile, parsed resume, project, and verified opportunity evidence." };
 }

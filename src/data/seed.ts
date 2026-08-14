@@ -326,7 +326,9 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
       version: "Template",
       updatedAt: "2026-07-29",
       notes: "Empty template. Add only verified personal details.",
-      status: "Draft",
+      status: "Missing",
+      language: "Other",
+      parseStatus: "not_uploaded",
     }));
   }
   return base;

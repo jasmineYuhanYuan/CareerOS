@@ -3,6 +3,7 @@ import { australianChiropracticRegistration } from "@/data/verified/chiropractic
 import { verifiedCareerOpportunities } from "@/data/verified/opportunities";
 import { verifiedProgrammes } from "@/data/verified/programmes";
 import { deriveOpportunityLifecycle } from "@/lib/opportunity-lifecycle";
+import { documentIsReady, resumeEvidence } from "@/lib/document-evidence";
 import type { ProfileWorkspace } from "@/types/domain";
 import type {
   CareerRequirement,
@@ -55,7 +56,7 @@ function requirement(
 
 function hasDocument(workspace: ProfileWorkspace, matcher: RegExp): boolean {
   return workspace.documents.some(
-    (document) => document.status === "Ready"
+    (document) => documentIsReady(document)
       && matcher.test(`${document.name} ${document.documentType}`),
   );
 }
@@ -113,6 +114,7 @@ function opportunityRequirements(workspace: ProfileWorkspace, sourceId: string):
   const profileEvidence = new Set([
     ...profile.skills.map((skill) => skill.name.toLowerCase()),
     ...profile.projects.flatMap((project) => project.competencies.map((skill) => skill.toLowerCase())),
+    ...resumeEvidence(workspace.documents),
   ]);
   const requirements: CareerRequirement[] = [
     requirement("target-lifecycle", "Opportunity is accepting or preparing for applications", "required", ["Closed", "Expired", "Archived"].includes(lifecycle) ? "blocked" : lifecycle === "Verification required" ? "unknown" : "confirmed", `Verified lifecycle: ${lifecycle}.`, source),
@@ -125,7 +127,8 @@ function opportunityRequirements(workspace: ProfileWorkspace, sourceId: string):
     const matched = Array.from(profileEvidence).some((evidence) =>
       evidence.includes(skill.toLowerCase()) || skill.toLowerCase().includes(evidence),
     );
-    requirements.push(requirement(`skill-${skill.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, skill, "strongly-preferred", matched ? "confirmed" : "missing", matched ? "Stored profile evidence overlaps this published skill." : "No matching stored skill or project evidence.", source));
+    const inResume = resumeEvidence(workspace.documents).has(skill.toLowerCase());
+    requirements.push(requirement(`skill-${skill.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, skill, "strongly-preferred", matched ? "confirmed" : "missing", matched ? `${inResume ? "Resume" : "Profile or project"} evidence overlaps this published skill.` : "No matching profile, resume, or project evidence.", source));
   }
   if (/citizen/i.test(record.eligibility.join(" "))) {
     requirements.push(requirement("citizenship", "Australian citizenship", "required", /australian citizen/i.test(profile.workEligibility) ? "confirmed" : /not.*citizen/i.test(profile.workEligibility) ? "blocked" : "unknown", "The official opportunity source explicitly requires Australian citizenship.", source));

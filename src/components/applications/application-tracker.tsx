@@ -21,6 +21,7 @@ import { applicationAnalytics } from "@/lib/application-pipeline";
 import { displayUiValue } from "@/i18n/presentation";
 import { ApplicationFilters, ApplicationMetrics } from "./application-overview";
 import { QuickApplicationImport } from "./quick-application-import";
+import { documentHasRealFile } from "@/lib/document-evidence";
 
 const statuses: ApplicationStatus[] = [
   "Interested",
@@ -245,13 +246,14 @@ export function ApplicationTracker() {
                 }
               />
             </Field>
-            <Field label="CV version">
-              <Input
+            <Field label={zh ? "简历版本" : "Résumé version"}>
+              <Select
                 value={draft.cvVersion}
-                onChange={(e) =>
-                  setDraft({ ...draft, cvVersion: e.target.value })
-                }
-              />
+                onChange={(e) => {
+                  const selected = activeWorkspace.documents.find((item) => item.id === e.target.value);
+                  setDraft({ ...draft, cvVersion: selected?.id ?? "", materials: (draft.materials ?? []).map((material) => /résumé|resume|cv/i.test(material.label) && selected ? { ...material, status: selected.status === "Ready" ? "Ready" : "Review needed", documentId: selected.id, documentSnapshot: { documentId: selected.id, title: selected.name, version: selected.version, fileName: selected.fileName ?? "", storagePath: selected.storagePath ?? "", capturedAt: new Date().toISOString() } } : material) });
+                }}
+              ><option value="">{zh ? "选择已上传简历" : "Select uploaded résumé"}</option>{activeWorkspace.documents.filter((item) => documentHasRealFile(item) && /résumé/i.test(item.documentType)).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.version}</option>)}</Select>
             </Field>
           </div>
           <Field label={zh ? "备注" : "Notes"}>

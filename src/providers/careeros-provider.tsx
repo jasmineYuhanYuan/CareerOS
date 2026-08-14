@@ -315,7 +315,7 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
     updateActive((workspace) => ({ ...workspace, contacts: workspace.contacts.filter((item) => item.id !== id) }));
   }, [updateActive]);
   const upsertDocument = useCallback((document: CareerDocumentRecord) => {
-    updateActive((workspace) => ({
+    updateActive((workspace) => document.profileId !== workspace.profile.id ? workspace : ({
       ...workspace,
       documents: workspace.documents.some((item) => item.id === document.id)
         ? workspace.documents.map((item) => item.id === document.id ? document : item)

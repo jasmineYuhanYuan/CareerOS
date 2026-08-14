@@ -272,10 +272,10 @@ export const en = {
   "contacts.empty": "No contacts yet.",
   "contacts.search": "Search contacts",
   "documents.eyebrow": "Career materials",
-  "documents.title": "Document records",
+  "documents.title": "Document Hub",
   "documents.description":
     "Track document metadata and versions without uploading files.",
-  "documents.add": "Add document",
+  "documents.add": "Upload document",
   "documents.empty": "No document records yet.",
   "settings.language": "Interface language",
   "settings.region": "Default opportunity region",

@@ -62,8 +62,8 @@ export function Dashboard() {
     )
     .sort(
       (a, b) =>
-        calculateOpportunityMatch(b, profile).score -
-        calculateOpportunityMatch(a, profile).score,
+        calculateOpportunityMatch(b, profile, activeWorkspace.documents).score -
+        calculateOpportunityMatch(a, profile, activeWorkspace.documents).score,
     );
   const recommended = [
     ...relevant
