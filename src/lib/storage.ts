@@ -2,6 +2,7 @@ import { createSeedState, YUHAN_ID } from "@/data/seed";
 import { verifiedChinaCampusOpportunities } from "@/data/china-recruiting/verified-opportunities";
 import type { CareerOSState, ProfileWorkspace } from "@/types/domain";
 import { STORAGE_VERSION } from "@/types/domain";
+import { initialStatusHistory, normaliseApplicationStatus } from "@/lib/application-status";
 
 export const STORAGE_KEY = "careeros:mvp";
 
@@ -126,14 +127,6 @@ export function validateState(value: unknown): value is CareerOSState {
 }
 
 function normaliseSprint8State(state: CareerOSState): CareerOSState {
-  const applicationStatuses: Record<
-    string,
-    CareerOSState["profiles"][string]["applications"][number]["status"]
-  > = {
-    Saved: "Interested",
-    Assessment: "OA invited",
-    Interview: "Interviewing",
-  };
   const documentStatuses: Record<
     string,
     CareerOSState["profiles"][string]["documents"][number]["status"]
@@ -154,12 +147,22 @@ function normaliseSprint8State(state: CareerOSState): CareerOSState {
       profileId,
       {
         ...workspace,
-        applications: workspace.applications.map((application) => ({
-          ...application,
-          status: applicationStatuses[application.status] ?? application.status,
-          materials: application.materials ?? [],
-          sessions: application.sessions ?? [],
-        })),
+        applications: workspace.applications.map((application) => {
+          const status = normaliseApplicationStatus(application.status);
+          const migratedHistory = application.statusHistory?.length
+            ? application.statusHistory.map((event) => ({ ...event, status: normaliseApplicationStatus(event.status) }))
+            : initialStatusHistory(status, application.lastUpdatedAt || application.savedAt, application.notes);
+          const statusHistory = migratedHistory.at(-1)?.status === status
+            ? migratedHistory
+            : [...migratedHistory, ...initialStatusHistory(status, application.lastUpdatedAt || application.savedAt, application.notes)];
+          return {
+            ...application,
+            status,
+            statusHistory,
+            materials: application.materials ?? [],
+            sessions: application.sessions ?? [],
+          };
+        }),
         documents: workspace.documents.map((document) => ({
           ...document,
           status: document.storagePath
@@ -216,7 +219,7 @@ function normaliseSprint8State(state: CareerOSState): CareerOSState {
 }
 
 export function migrateState(value: unknown): CareerOSState | null {
-  if (typeof value === "object" && value !== null && (value as Record<string, unknown>).version === 5) {
+  if (typeof value === "object" && value !== null && [5, 6].includes(Number((value as Record<string, unknown>).version))) {
     const upgraded: Record<string, unknown> = { ...(value as Record<string, unknown>), version: STORAGE_VERSION };
     const profiles = upgraded.profiles as Record<string, Record<string, unknown>> | undefined;
     if (profiles) {

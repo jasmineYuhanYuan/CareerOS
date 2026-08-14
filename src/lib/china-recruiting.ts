@@ -11,6 +11,7 @@ import type {
   OpportunityLifecycle,
   JobApplication,
 } from "@/types/domain";
+import { initialStatusHistory } from "@/lib/application-status";
 
 export function createChinaApplicationRecord(
   opportunity: ChinaCampusOpportunity,
@@ -38,6 +39,7 @@ export function createChinaApplicationRecord(
         occurredAt: timestamp,
       },
     ],
+    statusHistory: initialStatusHistory("Preparing", timestamp, `Created from ${opportunity.company} campus opportunity.`),
     sourceSnapshot: {
       location: opportunity.location,
       officialUrl: opportunity.officialApplyLink,

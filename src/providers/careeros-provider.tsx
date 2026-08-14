@@ -32,6 +32,7 @@ import type {
 import { opportunities } from "@/data/opportunities";
 import { isJobRelevantToProfile, isOpportunityRelevantToProfile } from "@/lib/profile-eligibility";
 import { emptyMarketSnapshot, type MarketSnapshot } from "@/lib/market-client";
+import { ensureStatusHistory, initialStatusHistory, recordStatusTransition } from "@/lib/application-status";
 
 interface CareerOSContextValue {
   state: CareerOSState;
@@ -194,7 +195,7 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
   }, [updateActive]);
 
   const createApplication = useCallback((application: JobApplication) => {
-    updateActive((workspace) => ({ ...workspace, applications: [...workspace.applications, application] }));
+    updateActive((workspace) => ({ ...workspace, applications: [...workspace.applications, ensureStatusHistory(application)] }));
   }, [updateActive]);
 
   const addJobApplication = useCallback((jobId: string) => {
@@ -218,6 +219,7 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
         notes: "",
         lastUpdatedAt: timestamp,
         activity: [{ id: `activity-${Date.now()}`, type: "created", label: "Application created", occurredAt: timestamp }],
+        statusHistory: initialStatusHistory("Preparing", timestamp),
         materials: [
           { id: `material-resume-${Date.now()}`, label: "Résumé / CV", status: "Missing", notes: "" },
           { id: `material-cover-${Date.now()}`, label: "Cover letter", status: "Missing", notes: "" },
@@ -235,7 +237,7 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
   const updateApplication = useCallback((application: JobApplication) => {
     updateActive((workspace) => ({
       ...workspace,
-      applications: workspace.applications.map((item) => item.id === application.id ? application : item),
+      applications: workspace.applications.map((item) => item.id === application.id ? recordStatusTransition(item, application, application.lastUpdatedAt || now()) : item),
     }));
   }, [updateActive]);
 

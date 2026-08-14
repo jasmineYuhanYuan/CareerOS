@@ -305,6 +305,7 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
             occurredAt: "2026-07-28T09:00:00.000Z",
           },
         ],
+        statusHistory: [{ id: "demo-status-yuhan", status: "Preparing", timestamp: "2026-07-28T09:00:00.000Z", notes: "Sample planning record." }],
       },
     ];
   } else {

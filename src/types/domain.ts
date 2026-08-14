@@ -1,4 +1,4 @@
-export const STORAGE_VERSION = 6 as const;
+export const STORAGE_VERSION = 7 as const;
 export type AppLocale = "en" | "zh-CN";
 
 export type StudyLevel = "Undergraduate" | "Postgraduate";
@@ -26,14 +26,24 @@ export type ApplicationStatus =
   | "Interested"
   | "Researching"
   | "Preparing"
-  | "Ready to apply"
+  | "Ready to Apply"
   | "Applied"
-  | "OA invited"
-  | "OA completed"
-  | "Interview invited"
-  | "Interviewing"
-  | "Reference check"
-  | "Offer"
+  | "Resume Screening"
+  | "Resume Passed"
+  | "Assessment In Progress"
+  | "Assessment Invitation Received"
+  | "Assessment Scheduled"
+  | "Assessment Completed"
+  | "Interview Pending"
+  | "Interview Invitation"
+  | "Interview 1"
+  | "Interview 2"
+  | "Final Interview"
+  | "Background Check"
+  | "Reference Check"
+  | "Offer Received"
+  | "Offer Accepted"
+  | "Offer Declined"
   | "Rejected"
   | "Withdrawn"
   | "Archived";
@@ -405,6 +415,13 @@ export interface ActivityEvent {
   occurredAt: string;
 }
 
+export interface ApplicationStatusEvent {
+  id: string;
+  status: ApplicationStatus;
+  timestamp: string;
+  notes: string;
+}
+
 export interface JobApplication {
   id: string;
   profileId: string;
@@ -420,6 +437,7 @@ export interface JobApplication {
   notes: string;
   lastUpdatedAt: string;
   activity: ActivityEvent[];
+  statusHistory: ApplicationStatusEvent[];
   sourceSnapshot?: {
     location: string;
     officialUrl: string;

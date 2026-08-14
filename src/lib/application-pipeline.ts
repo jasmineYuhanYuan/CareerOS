@@ -1,19 +1,31 @@
 import type { ApplicationStatus, JobApplication } from "@/types/domain";
+import { initialStatusHistory, suggestedNextAction } from "@/lib/application-status";
 
 const terminalStatuses = new Set<ApplicationStatus>([
-  "Offer",
+  "Offer Accepted",
+  "Offer Declined",
   "Rejected",
   "Withdrawn",
   "Archived",
 ]);
 const submittedStatuses = new Set<ApplicationStatus>([
   "Applied",
-  "OA invited",
-  "OA completed",
-  "Interview invited",
-  "Interviewing",
-  "Reference check",
-  "Offer",
+  "Resume Screening",
+  "Resume Passed",
+  "Assessment In Progress",
+  "Assessment Invitation Received",
+  "Assessment Scheduled",
+  "Assessment Completed",
+  "Interview Pending",
+  "Interview Invitation",
+  "Interview 1",
+  "Interview 2",
+  "Final Interview",
+  "Background Check",
+  "Reference Check",
+  "Offer Received",
+  "Offer Accepted",
+  "Offer Declined",
   "Rejected",
 ]);
 
@@ -24,6 +36,9 @@ export interface ApplicationAnalytics {
   offers: number;
   rejections: number;
   averageResponseDays: number | null;
+  assessmentWaiting: number;
+  resumeScreening: number;
+  offerPending: number;
 }
 
 export interface QuickApplicationInput {
@@ -59,8 +74,7 @@ export function createQuickApplication(
     status: input.status,
     savedAt: now,
     appliedAt: input.appliedDate,
-    nextAction:
-      input.status === "Applied" ? "Await response and monitor email" : "",
+    nextAction: suggestedNextAction(input.status),
     nextActionDate: "",
     cvVersion: "",
     notes: input.sourceLabel ? `Source: ${input.sourceLabel}` : "",
@@ -73,6 +87,7 @@ export function createQuickApplication(
         occurredAt: now,
       },
     ],
+    statusHistory: initialStatusHistory(input.status, now, input.sourceLabel ? `Imported from ${input.sourceLabel}` : ""),
     sourceSnapshot: input.sourceUrl
       ? {
           location: "",
@@ -118,7 +133,7 @@ export function applicationAnalytics(
     const response = application.activity.find(
       (event) =>
         event.type === "status_changed" &&
-        /OA invited|Interview invited|Rejected|Offer/.test(event.label),
+        /Assessment Invitation Received|Interview Invitation|Rejected|Offer Received/.test(event.label),
     );
     if (!response) return [];
     const days = Math.round(
@@ -133,18 +148,21 @@ export function applicationAnalytics(
       submittedStatuses.has(application.status),
     ).length,
     awaitingResponse: userRecords.filter((application) =>
-      ["Applied", "OA completed"].includes(application.status),
+      ["Applied", "Resume Screening", "Assessment Completed", "Interview Pending"].includes(application.status),
     ).length,
     interviews: userRecords.filter((application) =>
-      ["Interview invited", "Interviewing", "Reference check"].includes(
+      ["Interview Pending", "Interview Invitation", "Interview 1", "Interview 2", "Final Interview", "Background Check", "Reference Check"].includes(
         application.status,
       ),
     ).length,
-    offers: userRecords.filter((application) => application.status === "Offer")
+    offers: userRecords.filter((application) => ["Offer Received", "Offer Accepted"].includes(application.status))
       .length,
     rejections: userRecords.filter(
       (application) => application.status === "Rejected",
     ).length,
+    assessmentWaiting: userRecords.filter((application) => ["Assessment In Progress", "Assessment Invitation Received", "Assessment Scheduled"].includes(application.status)).length,
+    resumeScreening: userRecords.filter((application) => application.status === "Resume Screening").length,
+    offerPending: userRecords.filter((application) => application.status === "Offer Received").length,
     averageResponseDays:
       responseDurations.length >= 3
         ? Math.round(

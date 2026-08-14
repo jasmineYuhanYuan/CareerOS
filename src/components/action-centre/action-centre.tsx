@@ -61,7 +61,7 @@ export function ActionCentre() {
   );
   const applicationsNeedingAction = activeWorkspace.applications.filter(
     (item) =>
-      !["Offer", "Rejected", "Withdrawn", "Archived"].includes(item.status) &&
+      !["Offer Accepted", "Offer Declined", "Rejected", "Withdrawn", "Archived"].includes(item.status) &&
       (item.nextAction || item.nextActionDate),
   );
   const sessions = activeWorkspace.applications.flatMap((application) =>

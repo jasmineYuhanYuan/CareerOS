@@ -13,17 +13,9 @@ import type {
   ApplicationStatus,
   JobApplication,
 } from "@/types/domain";
+import { applicationStatuses } from "@/lib/application-status";
 
-const importStatuses: ApplicationStatus[] = [
-  "Applied",
-  "OA invited",
-  "OA completed",
-  "Interview invited",
-  "Interviewing",
-  "Offer",
-  "Rejected",
-  "Withdrawn",
-];
+const importStatuses: ApplicationStatus[] = applicationStatuses.filter((status) => !["Interested", "Researching", "Preparing", "Ready to Apply", "Archived"].includes(status));
 
 export function QuickApplicationImport({
   language,

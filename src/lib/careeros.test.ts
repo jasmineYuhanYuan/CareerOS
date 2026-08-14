@@ -144,7 +144,7 @@ describe("local storage parsing and fallback", () => {
 
   it("normalises legacy application and material workflow states", () => {
     const legacy = createSeedState();
-    legacy.profiles[YUHAN_ID].applications[0].status = "Interviewing";
+    legacy.profiles[YUHAN_ID].applications[0].status = "Interview 1";
     const raw = JSON.parse(JSON.stringify(legacy)) as typeof legacy;
     (
       raw.profiles[YUHAN_ID].applications[0] as unknown as { status: string }
@@ -164,12 +164,29 @@ describe("local storage parsing and fallback", () => {
     ).status = "Needs update";
     const migrated = parseStoredState(JSON.stringify(raw));
     expect(migrated.profiles[YUHAN_ID].applications[0].status).toBe(
-      "OA invited",
+      "Assessment Invitation Received",
     );
+    expect(migrated.profiles[YUHAN_ID].applications[0].statusHistory.at(-1)?.status).toBe("Assessment Invitation Received");
     expect(migrated.profiles[YUHAN_ID].applications[0].materials).toEqual([]);
     expect(migrated.profiles[YUHAN_ID].documents[0].status).toBe(
       "Missing",
     );
+  });
+
+  it("upgrades version 6 snapshots without dropping application data", () => {
+    const legacy = createSeedState();
+    const raw = JSON.parse(JSON.stringify(legacy)) as Record<string, unknown>;
+    raw.version = 6;
+    const profiles = raw.profiles as Record<string, { applications: Array<Record<string, unknown>> }>;
+    const record = profiles[YUHAN_ID].applications[0];
+    record.status = "Assessment Invitation";
+    delete record.statusHistory;
+    record.notes = "No invitation link received";
+    const migrated = parseStoredState(JSON.stringify(raw));
+    const application = migrated.profiles[YUHAN_ID].applications[0];
+    expect(application.status).toBe("Assessment Invitation Received");
+    expect(application.notes).toBe("No invitation link received");
+    expect(application.statusHistory).toHaveLength(1);
   });
 });
 

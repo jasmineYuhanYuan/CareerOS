@@ -25,7 +25,7 @@ import {
 } from "@/lib/china-recruiting";
 import { displayCompanyName, displayUiValue } from "@/i18n/presentation";
 import { deriveOpportunityLifecycle } from "@/lib/opportunity-lifecycle";
-import { applicationAnalytics } from "@/lib/application-pipeline";
+import { applicationAnalytics, isActiveApplication } from "@/lib/application-pipeline";
 import {
   getDailyCareerActions,
   getDailyOpportunities,
@@ -128,7 +128,7 @@ export function Dashboard() {
       label: t("dashboard.activeApplications"),
       hint: t("dashboard.metricApplicationsHint"),
       value: activeWorkspace.applications.filter(
-        (item) => !["Rejected", "Withdrawn"].includes(item.status),
+        (item) => isActiveApplication(item.status),
       ).length,
       href: "/applications",
     },
@@ -204,6 +204,18 @@ export function Dashboard() {
           {[[language === "zh-CN" ? "新增" : "Discovered", marketSnapshot.latestRun?.discovered_count ?? 0], [language === "zh-CN" ? "开放" : "Opened", marketSnapshot.latestRun?.opened_count ?? 0], [language === "zh-CN" ? "关闭" : "Closed", marketSnapshot.latestRun?.closed_count ?? 0], [language === "zh-CN" ? "降级" : "Downgraded", marketSnapshot.latestRun?.downgraded_count ?? 0], [language === "zh-CN" ? "待核验" : "Needs verification", marketSnapshot.latestRun?.verification_required_count ?? 0]].map(([label, value]) => <div key={label} className="rounded-xl border border-[var(--border)] p-3"><strong className="font-display text-2xl">{value}</strong><span className="block text-xs text-[var(--text-secondary)]">{label}</span></div>)}
         </div>
         {marketSnapshot.recentEvents.length > 0 && <div className="mt-5 border-t border-[var(--border)] pt-4"><p className="text-sm font-medium">{language === "zh-CN" ? "最近变更" : "Recent changes"}</p><ul className="mt-2 space-y-2 text-xs text-[var(--text-secondary)]">{marketSnapshot.recentEvents.slice(0, 4).map((event) => <li key={event.id}>{event.event_type} · {event.observed_status ?? "—"} · {event.evidence_text}</li>)}</ul></div>}
+      </section>
+
+      <section className="mb-8">
+        <SectionHeader title={language === "zh-CN" ? "申请流程待办" : "Application actions"} />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[
+            [language === "zh-CN" ? "等待笔试" : "Assessment waiting", applicationFunnel.assessmentWaiting],
+            [language === "zh-CN" ? "面试" : "Interviews", applicationFunnel.interviews],
+            [language === "zh-CN" ? "简历筛选" : "Resume screening", applicationFunnel.resumeScreening],
+            [language === "zh-CN" ? "Offer 待处理" : "Offer pending", applicationFunnel.offerPending],
+          ].map(([label, value]) => <Link key={label} href="/applications" className="interactive-lift surface-card p-4"><strong className="font-display text-3xl">{value}</strong><span className="mt-1 block text-sm text-[var(--text-secondary)]">{label}</span></Link>)}
+        </div>
       </section>
 
       <section className="mb-8">
@@ -303,12 +315,12 @@ export function Dashboard() {
               t("dashboard.oa"),
               activeWorkspace.applications.filter(
                 (item) =>
-                  ["OA invited", "OA completed"].includes(item.status) &&
+                  ["Assessment In Progress", "Assessment Invitation Received", "Assessment Scheduled", "Assessment Completed"].includes(item.status) &&
                   !item.id.startsWith("demo-"),
               ).length,
             ],
             [t("dashboard.interviews"), applicationFunnel.interviews],
-            ["Offer", applicationFunnel.offers],
+            [language === "zh-CN" ? "Offer" : "Offers", applicationFunnel.offers],
             [t("dashboard.rejected"), applicationFunnel.rejections],
             [t("dashboard.waiting"), applicationFunnel.awaitingResponse],
           ].map(([label, value]) => (

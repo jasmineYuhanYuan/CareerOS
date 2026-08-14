@@ -22,23 +22,7 @@ import { displayUiValue } from "@/i18n/presentation";
 import { ApplicationFilters, ApplicationMetrics } from "./application-overview";
 import { QuickApplicationImport } from "./quick-application-import";
 import { documentHasRealFile } from "@/lib/document-evidence";
-
-const statuses: ApplicationStatus[] = [
-  "Interested",
-  "Researching",
-  "Preparing",
-  "Ready to apply",
-  "Applied",
-  "OA invited",
-  "OA completed",
-  "Interview invited",
-  "Interviewing",
-  "Reference check",
-  "Offer",
-  "Rejected",
-  "Withdrawn",
-  "Archived",
-];
+import { applicationStatuses as statuses, applicationStatusTone, initialStatusHistory, suggestedNextAction } from "@/lib/application-status";
 const materialStatuses: ApplicationMaterialStatus[] = [
   "Missing",
   "Draft",
@@ -77,6 +61,7 @@ function emptyApplication(profileId: string): JobApplication {
         occurredAt: createdAt,
       },
     ],
+    statusHistory: initialStatusHistory("Interested", createdAt),
     materials: [
       {
         id: `material-resume-${Date.now()}`,
@@ -210,6 +195,7 @@ export function ApplicationTracker() {
                   setDraft({
                     ...draft,
                     status: e.target.value as ApplicationStatus,
+                    nextAction: suggestedNextAction(e.target.value as ApplicationStatus),
                   })
                 }
               >
@@ -514,25 +500,27 @@ export function ApplicationTracker() {
           </section>
           {draft.id && (
             <section>
-              <h3 className="text-sm font-medium">Activity history</h3>
-              <ol className="mt-2 divide-y divide-[var(--border)]">
-                {draft.activity
+              <h3 className="text-sm font-medium">{zh ? "招聘时间线" : "Recruitment Timeline"}</h3>
+              <ol className="relative mt-3 border-l border-[var(--border-strong)] pl-5">
+                {draft.statusHistory
                   .slice()
-                  .reverse()
                   .map((event) => (
                     <li
                       key={event.id}
-                      className="flex justify-between gap-3 py-3 text-xs"
+                      className="relative pb-5 text-xs last:pb-0"
                     >
-                      <span className="font-medium">{event.label}</span>
+                      <span className="absolute -left-[1.42rem] top-1 size-2.5 rounded-full bg-[var(--accent)] ring-4 ring-[var(--surface)]" />
                       <time
-                        dateTime={event.occurredAt}
+                        dateTime={event.timestamp}
                         className="text-[var(--text-tertiary)]"
                       >
-                        {new Date(event.occurredAt).toLocaleDateString("en-AU")}
+                        {new Date(event.timestamp).toLocaleDateString(zh ? "zh-CN" : "en-AU", { day: "numeric", month: "short" })}
                       </time>
+                      <p className="mt-1 font-medium">{displayUiValue(event.status, language)}</p>
+                      {event.notes && <p className="mt-1 text-[var(--text-secondary)]">{event.notes}</p>}
                     </li>
                   ))}
+                {!statuses.slice(statuses.indexOf(draft.status) + 1).every((status) => ["Rejected", "Withdrawn", "Archived"].includes(status)) && !["Offer Accepted", "Offer Declined", "Rejected", "Withdrawn", "Archived"].includes(draft.status) && <li className="relative text-xs text-[var(--text-tertiary)]"><span className="absolute -left-[1.42rem] top-1 size-2.5 rounded-full border-2 border-[var(--border-strong)] bg-[var(--surface)]" />Pending…</li>}
               </ol>
             </section>
           )}
@@ -646,8 +634,8 @@ export function ApplicationTracker() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <StatusBadge status="active">
-                      {application.status}
+                    <StatusBadge status={applicationStatusTone(application.status)}>
+                      {displayUiValue(application.status, language)}
                     </StatusBadge>
                   </td>
                   <td className="p-4">{application.nextAction || "Not set"}</td>
@@ -672,6 +660,7 @@ export function ApplicationTracker() {
             const items = visible.filter(
               (application) => application.status === status,
             );
+            if (items.length === 0) return null;
             return (
               <section
                 key={status}

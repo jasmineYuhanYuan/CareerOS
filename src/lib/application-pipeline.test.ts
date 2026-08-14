@@ -26,6 +26,7 @@ function application(
     notes: "",
     lastUpdatedAt: "2026-07-03",
     activity: [],
+    statusHistory: [],
     materials: [],
     sessions: [],
   };
@@ -46,6 +47,16 @@ describe("application pipeline quality", () => {
     ]);
     expect(result.submitted).toBe(2);
     expect(result.averageResponseDays).toBeNull();
+  });
+
+  it("calculates the expanded funnel and today-action counts", () => {
+    const result = applicationAnalytics([
+      application("screening", "Resume Screening"),
+      application("assessment", "Assessment In Progress"),
+      application("interview", "Interview 1"),
+      application("offer", "Offer Received"),
+    ]);
+    expect(result).toMatchObject({ resumeScreening: 1, assessmentWaiting: 1, interviews: 1, offerPending: 1, offers: 1 });
   });
 
   it("creates a quick-import record with its official source snapshot", () => {
