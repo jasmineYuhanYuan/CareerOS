@@ -3,6 +3,7 @@ import { verifiedChinaCampusOpportunities } from "@/data/china-recruiting/verifi
 import type { CareerOSState, ProfileWorkspace } from "@/types/domain";
 import { STORAGE_VERSION } from "@/types/domain";
 import { inferApplicationSource, initialStatusHistory, normaliseApplicationStatus } from "@/lib/application-status";
+import { mergeKnownYuhanApplications } from "@/data/real-applications";
 
 export const STORAGE_KEY = "careeros:mvp";
 
@@ -147,7 +148,7 @@ function normaliseSprint8State(state: CareerOSState): CareerOSState {
       profileId,
       {
         ...workspace,
-        applications: workspace.applications.map((application) => {
+        applications: (profileId === YUHAN_ID ? mergeKnownYuhanApplications(workspace.applications) : workspace.applications).map((application) => {
           const status = normaliseApplicationStatus(application.status);
           const migratedHistory = application.statusHistory?.length
             ? application.statusHistory.map((event) => ({ ...event, status: normaliseApplicationStatus(event.status) }))

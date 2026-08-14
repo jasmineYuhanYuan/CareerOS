@@ -620,18 +620,18 @@ export function ApplicationTracker() {
           <table className="w-full min-w-[700px] text-left text-sm">
             <thead className="bg-[var(--surface-subtle)] text-xs uppercase tracking-wide text-[var(--text-secondary)]">
               <tr>
-                <th className="p-4">Role</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Next action</th>
-                <th className="p-4">Date</th>
+                <th className="p-4">{zh ? "岗位" : "Role"}</th>
+                <th className="p-4">{zh ? "状态" : "Status"}</th>
+                <th className="p-4">{zh ? "下一步行动" : "Next action"}</th>
+                <th className="p-4">{zh ? "日期" : "Date"}</th>
                 <th className="p-4">
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">{zh ? "操作" : "Actions"}</span>
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {visible.map((application) => (
-                <tr key={application.id}>
+                <tr key={application.id} id={application.id}>
                   <td className="p-4">
                     <strong className="font-medium">
                       {application.jobTitle}
@@ -645,7 +645,7 @@ export function ApplicationTracker() {
                       {displayUiValue(application.status, language)}
                     </StatusBadge>
                   </td>
-                  <td className="p-4">{application.nextAction || "Not set"}</td>
+                  <td className="p-4">{application.nextAction || (zh ? "未设置" : "Not set")}</td>
                   <td className="p-4">{application.nextActionDate || "—"}</td>
                   <td className="p-4">
                     <Button
@@ -653,7 +653,7 @@ export function ApplicationTracker() {
                       variant="secondary"
                       onClick={() => setDraft(structuredClone(application))}
                     >
-                      Edit
+                      {zh ? "编辑" : "Edit"}
                     </Button>
                   </td>
                 </tr>
@@ -684,6 +684,7 @@ export function ApplicationTracker() {
                     <button
                       type="button"
                       key={application.id}
+                      id={application.id}
                       onClick={() => setDraft(structuredClone(application))}
                       className="min-h-24 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left transition-colors hover:border-[var(--accent)]"
                     >
@@ -695,7 +696,7 @@ export function ApplicationTracker() {
                       </span>
                       {application.nextAction && (
                         <span className="mt-3 block text-xs font-medium text-[var(--text-secondary)]">
-                          Next: {application.nextAction}
+                          {zh ? "下一步：" : "Next: "}{application.nextAction}
                         </span>
                       )}
                     </button>
@@ -726,6 +727,7 @@ export function ApplicationTracker() {
                     <button
                       type="button"
                       key={application.id}
+                      id={`mobile-${application.id}`}
                       onClick={() => setDraft(structuredClone(application))}
                       className="block min-h-20 w-full p-4 text-left"
                     >
@@ -737,7 +739,7 @@ export function ApplicationTracker() {
                       </span>
                       {application.nextAction && (
                         <span className="mt-2 block text-xs text-[var(--text-secondary)]">
-                          Next: {application.nextAction}
+                          {zh ? "下一步：" : "Next: "}{application.nextAction}
                         </span>
                       )}
                     </button>

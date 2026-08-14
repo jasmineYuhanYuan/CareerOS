@@ -22,10 +22,10 @@ describe("Tommy clinic directory", () => {
     expect(browser).not.toContain('href="/chiropractic"');
   });
 
-  it("never counts directory records as current vacancies", () => {
+  it("keeps directory prospects separate from the independently verified vacancy", () => {
     expect(clinicsForProfile(state.profiles[TOMMY_ID].profile)).toHaveLength(10);
-    expect(verifiedCurrentChiropracticVacancies()).toBe(0);
-    expect(getRecommendedJobs(state.profiles[TOMMY_ID].profile, "2026-08-14")).toHaveLength(0);
+    expect(verifiedCurrentChiropracticVacancies()).toBe(1);
+    expect(getRecommendedJobs(state.profiles[TOMMY_ID].profile, "2026-08-14")).toHaveLength(1);
   });
 
   it("keeps every historical chiropractic vacancy archived", () => {

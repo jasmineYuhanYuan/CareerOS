@@ -74,6 +74,15 @@ describe("deterministic match scoring", () => {
 });
 
 describe("local storage parsing and fallback", () => {
+  it("syncs the known Xiaohongshu application without changing other records", () => {
+    const state = createSeedState();
+    const application = state.profiles[YUHAN_ID].applications.find((item) => item.id === "yuhan-xiaohongshu-product-engineer-19383");
+    expect(application?.status).toBe("Assessment In Progress");
+    expect(application?.status).not.toBe("Assessment Invitation Received");
+    expect(application?.statusHistory.map((event) => event.status)).toEqual(["Applied", "Resume Screening", "Assessment In Progress"]);
+    expect(application?.nextAction).toBe("Check email and recruitment portal for assessment invitation.");
+    expect(state.profiles[TOMMY_ID].applications).toEqual([]);
+  });
   it("removes only the placeholder profile and defaults safely to Yuhan", () => {
     const raw = createSeedState();
     raw.profiles.placeholder = {
@@ -252,8 +261,8 @@ describe("Sprint 4 dashboard presentation", () => {
     const activity = recentApplicationActivity(
       createSeedState().profiles[YUHAN_ID],
     );
-    expect(activity).toHaveLength(1);
-    expect(activity[0].label).toBe("Application created");
+    expect(activity).toHaveLength(4);
+    expect(activity[0].label).toBe("Resume Screening → Assessment In Progress");
   });
 
   it("removes duplicate sample suffixes and localises the consolidated warning", () => {

@@ -1,5 +1,6 @@
 import type { CareerOSState, CareerDocumentRecord, CareerProfile, Job, Organisation, PostgraduateProgram, ProfileWorkspace, RoadmapItem } from "@/types/domain";
 import { STORAGE_VERSION } from "@/types/domain";
+import { yuhanKnownApplications } from "@/data/real-applications";
 import { verifiedCareerOpportunities } from "@/data/verified/opportunities";
 import { verifiedProgrammes } from "@/data/verified/programmes";
 import { verifiedChinaCampusOpportunities } from "@/data/china-recruiting/verified-opportunities";
@@ -308,6 +309,7 @@ function workspace(profile: CareerProfile): ProfileWorkspace {
         ],
         statusHistory: [{ id: "demo-status-yuhan", status: "Preparing", timestamp: "2026-07-28T09:00:00.000Z", notes: "Sample planning record." }],
       },
+      ...structuredClone(yuhanKnownApplications),
     ];
   } else {
     const templates: Array<[string, CareerDocumentRecord["documentType"]]> = [

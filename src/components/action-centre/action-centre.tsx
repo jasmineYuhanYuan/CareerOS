@@ -163,7 +163,7 @@ export function ActionCentre() {
                   <StatusBadge>{item.status}</StatusBadge>
                   <p className="mt-2 font-medium">{item.jobTitle}</p>
                   <p className="text-sm text-[var(--text-secondary)]">
-                    {item.nextAction || "Next action date requires review"}{" "}
+                    {item.nextAction || (zh ? "需要检查下一步行动日期" : "Next action date requires review")}{" "}
                     {item.nextActionDate && `· ${item.nextActionDate}`}
                   </p>
                 </li>
@@ -319,9 +319,9 @@ export function ActionCentre() {
                 <article key={employer.id} className="surface-card p-5">
                   <div className="flex flex-wrap gap-2">
                     <StatusBadge status="positive">
-                      Verified directory
+                      {zh ? "已核验目录" : "Verified directory"}
                     </StatusBadge>
-                    <StatusBadge>Not a vacancy</StatusBadge>
+                    <StatusBadge>{zh ? "非招聘岗位" : "Not a vacancy"}</StatusBadge>
                   </div>
                   <h3 className="mt-3 font-medium">
                     {employer.organisationName}

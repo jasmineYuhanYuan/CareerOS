@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { verifiedCareerOpportunities } from "@/data/verified/opportunities";
 import { verifiedChinaCampusOpportunities } from "@/data/china-recruiting/verified-opportunities";
+import { chiropracticVacancies } from "@/data/verified/chiropractic";
 
 export type MarketLifecycle = "Open" | "Closing soon" | "Upcoming" | "Verification required" | "Closed" | "Expired" | "Archived";
 
@@ -16,6 +17,7 @@ export interface MarketPageObservation {
   evidenceType: string;
   evidenceText: string;
   applyUrl: string | null;
+  deadline: string | null;
 }
 
 const CLOSED = ["position is no longer available", "applications are closed", "job has expired", "职位已关闭", "停止招聘", "招聘已结束"];
@@ -24,16 +26,33 @@ const POSITION = ["job description", "position description", "responsibilities",
 
 const signal = (body: string, values: string[]) => values.find((item) => body.toLowerCase().includes(item.toLowerCase()));
 
+function detectedDeadline(body: string): string | null {
+  const match = body.match(/["']validThrough["']\s*:\s*["'](\d{4}-\d{2}-\d{2})/i)
+    ?? body.match(/(?:application closing date|closing date|截止日期)[^\d]{0,30}(\d{4}-\d{2}-\d{2})/i);
+  return match?.[1] ?? null;
+}
+
+function detectedApplyUrl(body: string, pageUrl: string): string {
+  const anchor = /<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  for (const match of body.matchAll(anchor)) {
+    const label = match[2].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (!signal(label, APPLY)) continue;
+    try { return new URL(match[1], pageUrl).href; } catch { return pageUrl; }
+  }
+  return pageUrl;
+}
+
 export function classifyMarketPage(input: { ok: boolean; status: number; body: string; url: string; deadline?: string | null; checkedAt?: string }): MarketPageObservation {
   const today = (input.checkedAt ?? new Date().toISOString()).slice(0, 10);
-  if (input.deadline && input.deadline < today) return { status: "Expired", evidenceType: "expired-deadline", evidenceText: `Published deadline ${input.deadline} has passed.`, applyUrl: null };
-  if (!input.ok) return { status: "Verification required", evidenceType: "page-unavailable", evidenceText: `Official page returned HTTP ${input.status}; closure was not inferred.`, applyUrl: null };
+  const deadline = detectedDeadline(input.body) ?? input.deadline ?? null;
+  if (deadline && deadline < today) return { status: "Expired", evidenceType: "expired-deadline", evidenceText: `Published deadline ${deadline} has passed.`, applyUrl: null, deadline };
+  if (!input.ok) return { status: "Verification required", evidenceType: "page-unavailable", evidenceText: `Official page returned HTTP ${input.status}; closure was not inferred.`, applyUrl: null, deadline };
   const closed = signal(input.body, CLOSED);
-  if (closed) return { status: "Closed", evidenceType: "closure-message", evidenceText: `Official page contained closure evidence: ${closed}`, applyUrl: null };
+  if (closed) return { status: "Closed", evidenceType: "closure-message", evidenceText: `Official page contained closure evidence: ${closed}`, applyUrl: null, deadline };
   const apply = signal(input.body, APPLY);
   const position = signal(input.body, POSITION);
-  if (apply && position) return { status: "Open", evidenceType: "position-and-application", evidenceText: `Official position page contained position-level content and application action: ${apply}`, applyUrl: input.url };
-  return { status: "Verification required", evidenceType: "inconclusive", evidenceText: "Page was reachable, but position-level content plus an application action were not both present.", applyUrl: null };
+  if (apply && position) return { status: "Open", evidenceType: "position-and-application", evidenceText: `Official position page contained position-level content and application action: ${apply}`, applyUrl: detectedApplyUrl(input.body, input.url), deadline };
+  return { status: "Verification required", evidenceType: "inconclusive", evidenceText: "Page was reachable, but position-level content plus an application action were not both present.", applyUrl: null, deadline };
 }
 
 export function staleLifecycle(lastVerifiedAt: string | null, lifecycle: MarketLifecycle, checkedAt: string, staleDays = 14): MarketLifecycle {
@@ -59,6 +78,11 @@ export async function bootstrapMarketData(db: SupabaseClient) {
     sources.set(sourceId, { id: sourceId, name: item.sourceName, official_url: item.sourceUrl, market: "china-tech", source_type: "employer", crawl_strategy: "listing", profile_scope: [item.profileId] });
     const open = ["Open", "Closing soon"].includes(item.lifecycleStatus ?? item.verificationStatus);
     opportunities.push({ id: item.id, source_id: sourceId, external_id: item.id, title: item.position, organisation: item.company, city: item.location, country: "China", location_text: item.location, employment_type: "Internship", role_family: item.roleFamily, profile_scope: [item.profileId], source_url: item.sourceUrl, apply_url: open ? item.officialApplyLink : null, lifecycle_status: open ? (item.lifecycleStatus ?? "Open") : (item.lifecycleStatus ?? "Verification required"), verification_status: open ? "Verified" : "Verification required", verification_evidence: item.verificationMethod, published_at: item.publishedDate, deadline: item.deadline, last_verified_at: open ? `${item.lastVerifiedAt}T00:00:00Z` : null, last_seen_at: `${item.lastVerifiedAt}T00:00:00Z`, metadata: { fitScore: item.fitScore } });
+  }
+  for (const item of chiropracticVacancies.filter((record) => record.vacancyStatus === "Current")) {
+    const sourceId = `bootstrap-chiro-${slug(item.employer)}`;
+    sources.set(sourceId, { id: sourceId, name: item.source, official_url: item.officialUrl, market: "australia-chiropractic", source_type: "job-board", crawl_strategy: "registration", profile_scope: ["taicheng-guo-tommy"] });
+    opportunities.push({ id: item.id, source_id: sourceId, external_id: item.id, title: item.exactTitle, organisation: item.employer, city: item.location.split(",")[0], country: "Australia", location_text: item.location, employment_type: item.employmentType, role_family: "Chiropractic", profile_scope: ["taicheng-guo-tommy"], source_url: item.officialUrl, apply_url: item.applicationUrl, lifecycle_status: "Open", verification_status: "Verified", verification_evidence: item.dataNotes, published_at: item.publicationDate, deadline: item.closingDate, last_verified_at: `${item.lastVerified}T00:00:00Z`, last_seen_at: `${item.lastVerified}T00:00:00Z`, metadata: { source: item.source, vacancyEvidence: item.dataNotes } });
   }
   const { error: sourceError } = await db.from("market_sources").upsert([...sources.values()], { onConflict: "id", ignoreDuplicates: true });
   if (sourceError) throw sourceError;
@@ -101,6 +125,7 @@ export async function runMarketAudit(db: SupabaseClient, fetcher: typeof fetch =
       const body = await response.text();
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       await db.from("market_sources").update({ health_status: "healthy", consecutive_failures: 0, last_checked_at: startedAt, last_success_at: startedAt, last_error: null, updated_at: startedAt }).eq("id", source.id);
+      if (source.consecutive_failures > 0) await db.from("market_verification_events").insert({ run_id: run.id, source_id: source.id, event_type: "source-recovered", evidence_type: "request-restored", evidence_text: "Source verification restored after a previous request failure.", http_status: response.status, checked_at: startedAt });
       if (source.crawl_strategy !== "listing") return;
       const links = discoverOfficialLinks(body, source.official_url);
       for (const link of links) {
@@ -126,10 +151,18 @@ export async function runMarketAudit(db: SupabaseClient, fetcher: typeof fetch =
       if (next === "Open" && previous !== "Open") summary.opened++;
       if (["Closed", "Expired"].includes(next) && !["Closed", "Expired"].includes(previous)) summary.closed++;
       if (next === "Verification required" && ["Open", "Closing soon"].includes(previous)) summary.downgraded++;
-      await db.from("market_opportunities").update({ lifecycle_status: next, verification_status: next === "Open" ? "Verified" : next, verification_evidence: observation.evidenceText, apply_url: observation.applyUrl, last_seen_at: response.ok ? startedAt : item.last_seen_at, last_verified_at: next === "Open" ? startedAt : item.last_verified_at, archived_at: ["Closed", "Expired", "Archived"].includes(next) ? startedAt : null, updated_at: startedAt }).eq("id", item.id);
-      await db.from("market_verification_events").insert({ run_id: run.id, source_id: item.source_id, opportunity_id: item.id, event_type: next === previous ? "unchanged" : next === "Open" ? "verified-open" : ["Closed", "Expired"].includes(next) ? "closed" : "downgraded", previous_status: previous, observed_status: next, evidence_type: observation.evidenceType, evidence_text: observation.evidenceText, http_status: response.status, checked_at: startedAt });
-    } catch {
+      const deadlineChanged = Boolean(observation.deadline && item.deadline && observation.deadline !== item.deadline);
+      const applicationUrlChanged = Boolean(next === "Open" && item.apply_url && observation.applyUrl && item.apply_url !== observation.applyUrl);
+      const reopened = next === "Open" && ["Closed", "Expired"].includes(previous);
+      const restored = next === "Open" && previous === "Verification required";
+      const eventType = deadlineChanged ? "deadline-changed" : applicationUrlChanged ? "application-url-changed" : reopened ? "role-reopened" : restored ? "verification-restored" : next === previous ? "unchanged" : next === "Open" ? "verified-open" : ["Closed", "Expired"].includes(next) ? "closed" : "downgraded";
+      const changeEvidence = deadlineChanged ? `Deadline changed: ${item.deadline} → ${observation.deadline}` : applicationUrlChanged ? `Application URL changed: ${item.apply_url} → ${observation.applyUrl}` : observation.evidenceText;
+      await db.from("market_opportunities").update({ lifecycle_status: next, verification_status: next === "Open" ? "Verified" : next, verification_evidence: observation.evidenceText, apply_url: observation.applyUrl, deadline: observation.deadline, last_seen_at: response.ok ? startedAt : item.last_seen_at, last_verified_at: next === "Open" ? startedAt : item.last_verified_at, archived_at: ["Closed", "Expired", "Archived"].includes(next) ? startedAt : null, updated_at: startedAt }).eq("id", item.id);
+      await db.from("market_verification_events").insert({ run_id: run.id, source_id: item.source_id, opportunity_id: item.id, event_type: eventType, previous_status: previous, observed_status: next, evidence_type: observation.evidenceType, evidence_text: changeEvidence, http_status: response.status, checked_at: startedAt });
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : "Position verification failed.";
       const next = staleLifecycle(item.last_verified_at, item.lifecycle_status, startedAt);
+      await db.from("market_verification_events").insert({ run_id: run.id, source_id: item.source_id, opportunity_id: item.id, event_type: "verification-failed", previous_status: item.lifecycle_status, observed_status: next, evidence_type: "request-failed", evidence_text: message, checked_at: startedAt });
       if (next === "Verification required") {
         summary.downgraded++;
         await db.from("market_opportunities").update({ lifecycle_status: next, verification_status: next, verification_evidence: "The position page could not be rechecked and its last positive verification is stale.", apply_url: null, updated_at: startedAt }).eq("id", item.id);

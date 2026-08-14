@@ -26,8 +26,9 @@ describe("verified career datasets", () => {
     expect(validateEmployerDirectory(canberraChiropracticEmployers)).toEqual([]);
   });
 
-  it("never presents stale job-board leads as current chiropractic vacancies", () => {
-    expect(chiropracticVacancies.every((record) => record.vacancyStatus === "Archived")).toBe(true);
-    expect(chiropracticVacancies.some((record) => record.vacancyStatus === "Current")).toBe(false);
+  it("keeps stale leads archived and requires evidence for the current chiropractic vacancy", () => {
+    expect(chiropracticVacancies.filter((record) => record.vacancyStatus === "Archived")).toHaveLength(3);
+    expect(chiropracticVacancies.filter((record) => record.vacancyStatus === "Current")).toHaveLength(1);
+    expect(chiropracticVacancies.find((record) => record.vacancyStatus === "Current")).toMatchObject({ verificationStatus: "Verified", sourceType: "Job board" });
   });
 });

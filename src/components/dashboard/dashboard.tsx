@@ -26,13 +26,8 @@ import {
 import { displayCompanyName, displayUiValue } from "@/i18n/presentation";
 import { deriveOpportunityLifecycle } from "@/lib/opportunity-lifecycle";
 import { applicationAnalytics, isActiveApplication } from "@/lib/application-pipeline";
-import {
-  getDailyCareerActions,
-  getDailyOpportunities,
-  getRecommendedJobs,
-} from "@/lib/opportunity-engine";
 import { getEligibleOpportunities } from "@/lib/profile-eligibility";
-import { liveVerifiedOpportunities } from "@/lib/market-client";
+import { liveVerifiedOpportunities, needsReviewQueue, opportunityChanges } from "@/lib/market-client";
 
 function greetingKey():
   "dashboard.morning" | "dashboard.afternoon" | "dashboard.evening" {
@@ -43,7 +38,7 @@ function greetingKey():
 }
 
 export function Dashboard() {
-  const { activeWorkspace, upsertRoadmapItem, marketSnapshot } = useCareerOS();
+  const { state, activeWorkspace, upsertRoadmapItem, marketSnapshot } = useCareerOS();
   const { language, t } = useLanguage();
   const profile = activeWorkspace.profile;
   const isTommy = profile.id === TOMMY_ID;
@@ -99,13 +94,39 @@ export function Dashboard() {
   const progress = Math.round((completedChecks / checks.length) * 100);
   const activity = recentApplicationActivity(activeWorkspace);
   const applicationFunnel = applicationAnalytics(activeWorkspace.applications);
-  const dailyActions = getDailyCareerActions(activeWorkspace, today);
-  const dailyOpportunities = getDailyOpportunities(profile, today);
-  const dailyRecommended = getRecommendedJobs(profile, today).slice(0, 5);
-  const latestDailyVerification = dailyOpportunities
-    .map((item) => item.dateVerified)
-    .sort()
-    .at(-1);
+  const verifiedToday = marketSnapshot.loaded && marketSnapshot.configured
+    ? liveVerifiedOpportunities(marketSnapshot, profile.id)
+    : [];
+  const topVerified = [...verifiedToday]
+    .sort((a, b) => calculateOpportunityMatch(b, profile, activeWorkspace.documents).score - calculateOpportunityMatch(a, profile, activeWorkspace.documents).score)
+    .slice(0, 5);
+  const closingSoon = verifiedToday
+    .filter((item) => item.deadline && item.deadline >= today && item.deadline <= new Date(Date.parse(`${today}T00:00:00Z`) + 14 * 86_400_000).toISOString().slice(0, 10))
+    .sort((a, b) => (a.deadline ?? "").localeCompare(b.deadline ?? ""))
+    .slice(0, 5);
+  const recentStatusChanges = activeWorkspace.applications
+    .filter((application) => !application.id.startsWith("demo-"))
+    .flatMap((application) => application.statusHistory.slice(1).map((event, index) => ({
+      id: event.id,
+      organisation: application.organisationName,
+      role: application.jobTitle,
+      from: application.statusHistory[index].status,
+      to: event.status,
+      timestamp: event.timestamp,
+    })))
+    .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+    .slice(0, 5);
+  const marketChanges = opportunityChanges(marketSnapshot);
+  const reviewQueue = needsReviewQueue(marketSnapshot);
+  const applicationActions = activeWorkspace.applications
+    .filter((application) => !application.id.startsWith("demo-") && isActiveApplication(application.status) && application.nextAction)
+    .map((application) => ({ id: application.id, label: language === "zh-CN" && application.status === "Assessment In Progress" ? `检查 ${application.organisationName} 是否收到笔试链接` : application.nextAction, href: `/applications#${encodeURIComponent(application.id)}` }));
+  const todayActionItems = [
+    ...applicationActions,
+    ...(topVerified.length ? [{ id: "apply-verified", label: language === "zh-CN" ? `今天优先投递 ${Math.min(3, topVerified.length)} 个已核验岗位` : `Prioritise ${Math.min(3, topVerified.length)} verified applications today`, href: "/opportunities" }] : []),
+    ...(closingSoon.length ? [{ id: "closing-verified", label: language === "zh-CN" ? `${closingSoon.length} 个已核验岗位即将截止` : `${closingSoon.length} verified opportunities closing soon`, href: "/recruitment-calendar" }] : []),
+    ...activeWorkspace.contacts.filter((contact) => contact.nextFollowUpDate && contact.nextFollowUpDate <= today).slice(0, 1).map((contact) => ({ id: `follow-${contact.id}`, label: language === "zh-CN" ? `跟进 ${contact.name}` : `Follow up with ${contact.name}`, href: "/action-centre" })),
+  ].slice(0, 6);
   const chinaMetrics = chinaPipelineMetrics(
     activeWorkspace.chinaCampusOpportunities,
     today,
@@ -189,6 +210,32 @@ export function Dashboard() {
         <ProfileSelector />
       </header>
 
+      <section className="mb-10" aria-label={t("dashboard.todayCareerActions")}>
+        <SectionHeader title={t("dashboard.todayCareerActions")} />
+        {todayActionItems.length ? <ol className="surface-card divide-y divide-[var(--border)]">{todayActionItems.map((action, index) => <li key={action.id}><Link href={action.href} className="group flex min-h-16 items-center gap-4 px-5 py-4 hover:bg-[var(--surface-subtle)]"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-sm font-semibold text-[var(--accent)]">{index + 1}</span><span className="flex-1 font-medium">{action.label}</span><span aria-hidden="true" className="text-[var(--accent)]">→</span></Link></li>)}</ol> : <p className="surface-card p-5 text-sm text-[var(--text-secondary)]">{language === "zh-CN" ? "今天没有需要立即处理的求职任务。" : "No immediate career actions are due today."}</p>}
+      </section>
+
+
+      <section className="mb-10">
+        <SectionHeader title={language === "zh-CN" ? "最近申请变化" : "Recent Application Changes"} />
+        {recentStatusChanges.length ? <div className="surface-card divide-y divide-[var(--border)]">{recentStatusChanges.map((change) => <Link key={change.id} href="/applications" className="block px-5 py-4 hover:bg-[var(--surface-subtle)]"><div className="flex flex-wrap items-baseline justify-between gap-2"><div><p className="text-sm text-[var(--text-secondary)]">{change.organisation}</p><p className="font-medium">{change.role}</p></div><time className="text-xs text-[var(--text-tertiary)]">{formatDate(change.timestamp, language)}</time></div><p className="mt-2 text-sm"><span className="text-[var(--text-secondary)]">{displayUiValue(change.from, language)}</span> <span aria-hidden="true">→</span> <span className="font-medium text-[var(--accent)]">{displayUiValue(change.to, language)}</span></p></Link>)}</div> : <p className="surface-card p-5 text-sm text-[var(--text-secondary)]">{language === "zh-CN" ? "暂无申请状态变化。" : "No application status changes yet."}</p>}
+      </section>
+
+      <section className="mb-10">
+        <SectionHeader title={language === "zh-CN" ? "今日推荐岗位" : "Top Recommended Opportunities"} action={<Link href="/opportunities" className="text-sm font-medium text-[var(--accent)]">{t("common.viewAll")}</Link>} />
+        {topVerified.length ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">{topVerified.map((item) => { const match = calculateOpportunityMatch(item, profile, activeWorkspace.documents); return <article key={item.id} className="surface-card flex flex-col p-4"><p className="text-xs text-[var(--text-secondary)]">{item.organisationName}</p><h3 className="mt-2 font-medium">{item.title}</h3><p className="mt-1 text-xs text-[var(--text-secondary)]">{item.locationText}</p><strong className="mt-3 text-[var(--accent)]">{match.score}%</strong><p className="mt-2 text-xs text-[var(--text-tertiary)]">{language === "zh-CN" ? "截止：" : "Deadline: "}{item.deadline ? formatDate(item.deadline, language) : displayUiValue("Not published", language)}</p><p className="mt-1 text-xs text-[var(--text-tertiary)]">{item.sourceName} · {t("dashboard.lastVerified", { date: formatDate(item.lastVerifiedAt ?? "", language) })}</p><a href={item.sourceUrl} target="_blank" rel="noreferrer" className="mt-auto pt-4 text-sm font-semibold text-[var(--accent)]">{language === "zh-CN" ? "投递" : "Apply"} ↗</a></article>; })}</div> : <p className="surface-card p-5 text-sm text-[var(--text-secondary)]">{language === "zh-CN" ? "今天没有适合当前档案且已核验为开放的岗位。" : "No verified active opportunities match this profile today."}</p>}
+      </section>
+
+      <section className="mb-10">
+        <SectionHeader title={language === "zh-CN" ? "即将截止" : "Closing Soon"} />
+        {closingSoon.length ? <div className="surface-card divide-y divide-[var(--border)]">{closingSoon.map((item) => <a key={item.id} href={item.sourceUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-[var(--surface-subtle)]"><span><span className="block font-medium">{item.organisationName} — {item.title}</span><span className="mt-1 block text-xs text-[var(--text-secondary)]">{item.locationText}</span></span><time className="shrink-0 text-sm text-[var(--warning)]">{formatDate(item.deadline ?? "", language)}</time></a>)}</div> : <p className="surface-card p-5 text-sm text-[var(--text-secondary)]">{language === "zh-CN" ? "目前没有即将截止的已核验岗位。" : "No verified opportunities are closing soon."}</p>}
+      </section>
+
+      <section className="mb-10">
+        <SectionHeader title={language === "zh-CN" ? "过去 7 天岗位变化" : "Opportunity Changes · 7 days"} />
+        {marketChanges.length ? <div className="surface-card divide-y divide-[var(--border)]">{marketChanges.slice(0, 7).map((change) => <div key={change.id} className="px-5 py-4"><div className="flex flex-wrap items-center gap-2"><StatusBadge status={change.event_type.includes("closed") || change.event_type.includes("failed") ? "danger" : change.event_type.includes("deadline") ? "warning" : "positive"}>{displayUiValue(change.event_type, language)}</StatusBadge><span className="font-medium">{change.organisation && change.role_title ? `${change.organisation} — ${change.role_title}` : change.source_name}</span></div><p className="mt-2 text-xs text-[var(--text-secondary)]">{change.evidence_text}</p></div>)}</div> : <p className="surface-card p-5 text-sm text-[var(--text-secondary)]">{language === "zh-CN" ? "过去 7 天没有已记录的岗位变化。" : "No opportunity changes were recorded in the past 7 days."}</p>}
+      </section>
+
       <section className="surface-card mb-8 p-5 sm:p-6" aria-label={language === "zh-CN" ? "市场数据更新状态" : "Market data update status"}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -206,98 +253,10 @@ export function Dashboard() {
         {marketSnapshot.recentEvents.length > 0 && <div className="mt-5 border-t border-[var(--border)] pt-4"><p className="text-sm font-medium">{language === "zh-CN" ? "最近变更" : "Recent changes"}</p><ul className="mt-2 space-y-2 text-xs text-[var(--text-secondary)]">{marketSnapshot.recentEvents.slice(0, 4).map((event) => <li key={event.id}>{event.event_type} · {event.observed_status ?? "—"} · {event.evidence_text}</li>)}</ul></div>}
       </section>
 
-      <section className="mb-8">
-        <SectionHeader title={language === "zh-CN" ? "申请流程待办" : "Application actions"} />
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[
-            [language === "zh-CN" ? "等待笔试" : "Assessment waiting", applicationFunnel.assessmentWaiting],
-            [language === "zh-CN" ? "面试" : "Interviews", applicationFunnel.interviews],
-            [language === "zh-CN" ? "简历筛选" : "Resume screening", applicationFunnel.resumeScreening],
-            [language === "zh-CN" ? "Offer 待处理" : "Offer pending", applicationFunnel.offerPending],
-          ].map(([label, value]) => <Link key={label} href="/applications" className="interactive-lift surface-card p-4"><strong className="font-display text-3xl">{value}</strong><span className="mt-1 block text-sm text-[var(--text-secondary)]">{label}</span></Link>)}
-        </div>
-      </section>
-
-      <section className="mb-8">
-        <SectionHeader title={language === "zh-CN" ? "申请渠道" : "Application sources"} />
-        {applicationFunnel.sourcePerformance.length ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{applicationFunnel.sourcePerformance.map((source) => <Link key={source.source} href="/applications" className="interactive-lift surface-card p-4"><div className="flex items-baseline justify-between gap-3"><span className="font-medium">{displayUiValue(source.source, language)}</span><strong className="font-display text-2xl">{source.applications}</strong></div><p className="mt-2 text-xs text-[var(--text-secondary)]">{language === "zh-CN" ? `面试率 ${source.interviewRate}% · Offer 率 ${source.offerRate}%` : `${source.interviewRate}% interview · ${source.offerRate}% offer`}</p></Link>)}</div> : <p className="surface-card p-4 text-sm text-[var(--text-secondary)]">{language === "zh-CN" ? "添加申请来源后显示渠道统计。" : "Source analytics appear after applications are added."}</p>}
-      </section>
-
-      <section className="mb-8">
-        <SectionHeader title={t("dashboard.todayCareerActions")} />
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {dailyActions.map((action) => (
-            <Link
-              key={action.id}
-              href={action.href}
-              className="interactive-lift surface-card p-4"
-            >
-              <strong className="font-display text-3xl">{action.count}</strong>
-              <span className="mt-1 block text-sm text-[var(--text-secondary)]">
-                {t(
-                  action.type === "apply"
-                    ? "dashboard.jobsToApply"
-                    : action.type === "closing"
-                      ? "dashboard.jobsClosingSoon"
-                      : action.type === "resume"
-                        ? "dashboard.resumeUpdates"
-                        : "dashboard.followUps",
-                )}
-              </span>
-            </Link>
-          ))}
-        </div>
-        {latestDailyVerification && (
-          <p className="mt-3 text-xs text-[var(--text-tertiary)]">
-            {t("dashboard.lastVerified", {
-              date: formatDate(latestDailyVerification, language),
-            })}
-          </p>
-        )}
-      </section>
-
-      {!isTommy && dailyRecommended.length > 0 && (
-        <section className="mb-8">
-          <SectionHeader title={t("dashboard.recommendedJobs")} />
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-            {dailyRecommended.map((item) => (
-              <article key={item.id} className="surface-card flex flex-col p-4">
-                <p className="text-xs text-[var(--text-secondary)]">
-                  {item.company}
-                </p>
-                <h3 className="mt-2 font-medium">{item.roleTitle}</h3>
-                <p className="mt-1 text-xs text-[var(--text-secondary)]">
-                  {item.location}
-                </p>
-                <strong className="mt-3 text-[var(--accent)]">
-                  {t("dashboard.matchPercent", { score: item.matchScore })}
-                </strong>
-                <div className="mt-2">
-                  <StatusBadge status="positive">
-                    {displayUiValue("Open", language)}
-                  </StatusBadge>
-                </div>
-                <p className="mt-2 text-xs text-[var(--text-tertiary)]">
-                  {item.deadline
-                    ? formatDate(item.deadline, language)
-                    : displayUiValue("Not published", language)}
-                </p>
-                <p className="mt-1 text-xs text-[var(--text-tertiary)]">
-                  {t("dashboard.lastVerified", {
-                    date: formatDate(item.dateVerified, language),
-                  })}
-                </p>
-                <a
-                  href={item.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-auto pt-4 text-sm font-medium text-[var(--accent)]"
-                >
-                  {t("dashboard.applyOfficial")} ↗
-                </a>
-              </article>
-            ))}
-          </div>
+      {state.dashboardPreferences.demoMode && (
+        <section className="mb-8 rounded-[1.35rem] border border-[var(--warning)]/40 bg-[var(--surface)] p-5" aria-label={language === "zh-CN" ? "内部人工核验队列" : "Internal review queue"}>
+          <SectionHeader eyebrow={language === "zh-CN" ? "仅内部视图" : "Internal view only"} title={language === "zh-CN" ? `需要人工确认（${reviewQueue.length}）` : `Needs Review (${reviewQueue.length})`} />
+          {reviewQueue.length ? <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="text-xs text-[var(--text-secondary)]"><tr><th className="py-2 pr-3">{language === "zh-CN" ? "来源" : "Source"}</th><th className="py-2 pr-3">{language === "zh-CN" ? "岗位" : "Role"}</th><th className="py-2 pr-3">{language === "zh-CN" ? "问题" : "Issue"}</th><th className="py-2 pr-3">HTTP</th><th className="py-2">{language === "zh-CN" ? "最近尝试" : "Last attempt"}</th></tr></thead><tbody>{reviewQueue.slice(0, 20).map((item) => <tr key={item.id} className="border-t border-[var(--border)] align-top"><td className="py-3 pr-3">{item.source}</td><td className="py-3 pr-3 font-medium">{item.role}</td><td className="py-3 pr-3"><span className="block">{displayUiValue(item.issue, language)}</span><span className="mt-1 block text-xs text-[var(--text-secondary)]">{item.reason}</span></td><td className="py-3 pr-3">{item.httpStatus ?? "—"}</td><td className="py-3">{item.lastAttempt ? formatDate(item.lastAttempt, language) : "—"}</td></tr>)}</tbody></table></div> : <p className="text-sm text-[var(--text-secondary)]">{language === "zh-CN" ? "当前没有需要人工确认的岗位。" : "No opportunities currently need manual review."}</p>}
         </section>
       )}
 

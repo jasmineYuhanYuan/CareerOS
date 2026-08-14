@@ -132,6 +132,21 @@ const zhValues: Record<string, string> = {
   Current: "当前有效",
   "Partially verified": "部分核验",
   Verified: "已核验",
+  discovered: "新增",
+  "verified-open": "已核验开放",
+  closed: "已关闭",
+  downgraded: "降级待核验",
+  "source-failed": "来源核验失败",
+  "source-recovered": "来源核验恢复",
+  "verification-failed": "岗位核验失败",
+  "verification-restored": "岗位核验恢复",
+  "role-reopened": "岗位重新开放",
+  "deadline-changed": "截止日期变化",
+  "application-url-changed": "投递链接变化",
+  "verification-required": "需要人工确认",
+  inconclusive: "页面信息不明确",
+  "page-unavailable": "页面无法访问",
+  "request-failed": "请求失败",
 };
 
 const zhCompanies: Record<string, string> = {

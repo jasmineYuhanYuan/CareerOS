@@ -42,7 +42,7 @@ describe("daily opportunity engine", () => {
     expect(
       tommy.filter((item) => item.applicationStatus === "prospect"),
     ).toHaveLength(10);
-    expect(getActiveJobs(tommy)).toHaveLength(0);
+    expect(getActiveJobs(tommy)).toHaveLength(1);
   });
 
   it("recommends only fresh active jobs", () => {
