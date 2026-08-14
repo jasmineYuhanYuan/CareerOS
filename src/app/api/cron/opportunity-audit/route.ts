@@ -24,7 +24,15 @@ async function audit(request: Request, trigger: "cron" | "manual") {
   try {
     return Response.json({ ok: true, ...(await runMarketAudit(db, fetch, trigger)) });
   } catch (error) {
-    return Response.json({ ok: false, error: error instanceof Error ? error.message : "Market audit failed." }, { status: 500 });
+    const detail = error instanceof Error
+      ? error.message
+      : typeof error === "object" && error !== null && "message" in error
+        ? String(error.message)
+        : "Market audit failed.";
+    await db.from("market_audit_runs")
+      .update({ status: "failed", completed_at: new Date().toISOString(), error_summary: [{ stage: "pipeline", message: detail }] })
+      .eq("status", "running");
+    return Response.json({ ok: false, error: detail }, { status: 500 });
   }
 }
 
