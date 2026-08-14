@@ -10,15 +10,15 @@ const bodyFont = DM_Sans({ variable: "--font-body", subsets: ["latin"] });
 const displayFont = Manrope({ variable: "--font-display", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "CareerOS", template: "%s · CareerOS" },
+  title: { default: "CareerOS — AI-powered Career Intelligence Platform", template: "%s · CareerOS" },
   description:
-    "A focused workspace for managing career goals, applications, postgraduate study and next steps.",
+    "An AI-powered career intelligence platform connecting verified employers and jobs with candidate evidence, explainable matching, and application CRM.",
   applicationName: "CareerOS",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg" },
   openGraph: {
-    title: "CareerOS",
-    description: "A calm, local-first workspace for career planning.",
+    title: "CareerOS — AI-powered Career Intelligence Platform",
+    description: "Verified employer and job intelligence, candidate evidence, explainable matching, and application CRM.",
     type: "website",
   },
 };

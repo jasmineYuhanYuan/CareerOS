@@ -10,6 +10,7 @@ import { useCareerOS } from "@/providers/careeros-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { CareerProfile, Project, Skill } from "@/types/domain";
 import { useToast } from "@/providers/toast-provider";
+import { buildCandidateIntelligence } from "@/lib/platform-intelligence";
 
 function splitValues(value: string): string[] {
   return value.split(",").map((item) => item.trim()).filter(Boolean);
@@ -20,9 +21,10 @@ const emptyProject: Project = { id: "", name: "", role: "", description: "", com
 
 export function ProfileManager() {
   const { activeWorkspace, updateProfile } = useCareerOS();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { notify } = useToast();
   const profile = activeWorkspace.profile;
+  const candidateIntelligence = buildCandidateIntelligence(profile, activeWorkspace.documents);
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState(profile);
   const [profileError, setProfileError] = useState("");
@@ -98,6 +100,17 @@ export function ProfileManager() {
 
       <div className="grid gap-x-12 lg:grid-cols-[1.35fr_.65fr]">
         <main>
+          <section className="border-b border-[var(--border)] py-9">
+            <SectionHeader
+              title={language === "zh-CN" ? "候选人情报" : "Candidate Intelligence"}
+              description={language === "zh-CN" ? "由个人资料和已解析简历合并生成，不推测未提供的信息。" : "Structured from profile and parsed résumé evidence without inferring missing facts."}
+            />
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="surface-card p-4"><p className="text-xs text-[var(--text-tertiary)]">{language === "zh-CN" ? "资料完整度" : "Profile completeness"}</p><p className="mt-2 text-2xl font-semibold">{candidateIntelligence.completeness}%</p></div>
+              <div className="surface-card p-4"><p className="text-xs text-[var(--text-tertiary)]">{language === "zh-CN" ? "有证据技能" : "Evidence-backed skills"}</p><p className="mt-2 text-2xl font-semibold">{candidateIntelligence.skills.length}</p></div>
+              <div className="surface-card p-4"><p className="text-xs text-[var(--text-tertiary)]">{language === "zh-CN" ? "目标方向" : "Target roles"}</p><p className="mt-2 text-2xl font-semibold">{candidateIntelligence.targetRoles.length}</p></div>
+            </div>
+          </section>
           <section className="border-b border-[var(--border)] py-9">
             <SectionHeader title={t("profile.about")} />
             <p className="max-w-3xl text-[0.95rem] leading-7 text-[var(--text-secondary)]">{profile.experienceSummary}</p>
