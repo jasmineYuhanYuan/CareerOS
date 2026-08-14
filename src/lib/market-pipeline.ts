@@ -62,7 +62,12 @@ export async function bootstrapMarketData(db: SupabaseClient) {
   }
   const { error: sourceError } = await db.from("market_sources").upsert([...sources.values()], { onConflict: "id", ignoreDuplicates: true });
   if (sourceError) throw sourceError;
-  const { error: opportunityError } = await db.from("market_opportunities").upsert(opportunities, { onConflict: "id", ignoreDuplicates: true });
+  const bySourceUrl = new Map<string, Record<string, unknown>>();
+  for (const opportunity of opportunities) {
+    const sourceUrl = String(opportunity.source_url);
+    if (!bySourceUrl.has(sourceUrl)) bySourceUrl.set(sourceUrl, opportunity);
+  }
+  const { error: opportunityError } = await db.from("market_opportunities").upsert([...bySourceUrl.values()], { onConflict: "id", ignoreDuplicates: true });
   if (opportunityError) throw opportunityError;
 }
 
