@@ -22,6 +22,7 @@ import { TOMMY_ID } from "@/data/seed";
 import { getEligibleOpportunities } from "@/lib/profile-eligibility";
 import { recommendResumeForOpportunity } from "@/lib/document-evidence";
 import { TOMMY_ADD_CLINIC_ROUTE, TOMMY_CLINIC_DIRECTORY_ROUTE } from "@/lib/clinic-directory";
+import { liveVerifiedOpportunities } from "@/lib/market-client";
 
 export function OpportunityBrowser() {
   const {
@@ -30,6 +31,7 @@ export function OpportunityBrowser() {
     toggleSavedOpportunity,
     addJobApplication,
     upsertRoadmapItem,
+    marketSnapshot,
   } = useCareerOS();
   const { language, t } = useLanguage();
   const [query, setQuery] = useState("");
@@ -40,9 +42,10 @@ export function OpportunityBrowser() {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sort, setSort] = useState<"relevance" | "deadline">("relevance");
   const [selected, setSelected] = useState<Opportunity | null>(null);
-  const eligibleOpportunities = useMemo(
-    () => getEligibleOpportunities(activeWorkspace.profile, opportunities),
-    [activeWorkspace.profile],
+  const eligibleOpportunities = useMemo(() => marketSnapshot.loaded && marketSnapshot.configured
+    ? liveVerifiedOpportunities(marketSnapshot, activeWorkspace.profile.id)
+    : getEligibleOpportunities(activeWorkspace.profile, opportunities),
+    [activeWorkspace.profile, marketSnapshot],
   );
 
   const matches = useMemo(

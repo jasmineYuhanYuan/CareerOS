@@ -32,6 +32,7 @@ import {
   getRecommendedJobs,
 } from "@/lib/opportunity-engine";
 import { getEligibleOpportunities } from "@/lib/profile-eligibility";
+import { liveVerifiedOpportunities } from "@/lib/market-client";
 
 function greetingKey():
   "dashboard.morning" | "dashboard.afternoon" | "dashboard.evening" {
@@ -42,7 +43,7 @@ function greetingKey():
 }
 
 export function Dashboard() {
-  const { activeWorkspace, upsertRoadmapItem } = useCareerOS();
+  const { activeWorkspace, upsertRoadmapItem, marketSnapshot } = useCareerOS();
   const { language, t } = useLanguage();
   const profile = activeWorkspace.profile;
   const isTommy = profile.id === TOMMY_ID;
@@ -55,7 +56,9 @@ export function Dashboard() {
   );
   const deadlines = aggregateDeadlines(activeWorkspace).slice(0, 7);
   const today = new Date().toISOString().slice(0, 10);
-  const relevant = getEligibleOpportunities(profile, opportunities)
+  const relevant = (marketSnapshot.loaded && marketSnapshot.configured
+    ? liveVerifiedOpportunities(marketSnapshot, profile.id)
+    : getEligibleOpportunities(profile, opportunities))
     .filter((item) => !item.archived)
     .filter((item) =>
       isTommy ? false : ["Australia", "China"].includes(item.country),
@@ -185,6 +188,23 @@ export function Dashboard() {
         </div>
         <ProfileSelector />
       </header>
+
+      <section className="surface-card mb-8 p-5 sm:p-6" aria-label={language === "zh-CN" ? "市场数据更新状态" : "Market data update status"}>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="eyebrow">{language === "zh-CN" ? "自动市场更新" : "Automatic market update"}</p>
+            <h2 className="mt-1 font-display text-xl font-medium">{marketSnapshot.latestRun
+              ? (language === "zh-CN" ? `最近运行：${marketSnapshot.latestRun.status}` : `Latest run: ${marketSnapshot.latestRun.status}`)
+              : (language === "zh-CN" ? "等待首次自动审计" : "Awaiting first automatic audit")}</h2>
+            {marketSnapshot.latestRun && <p className="mt-2 text-xs text-[var(--text-secondary)]">{formatDate(marketSnapshot.latestRun.started_at, language)} · {marketSnapshot.latestRun.sources_checked} sources · {marketSnapshot.latestRun.sources_failed} failed</p>}
+          </div>
+          <StatusBadge status={marketSnapshot.latestRun?.status === "completed" ? "positive" : "warning"}>{marketSnapshot.latestRun?.status ?? "pending"}</StatusBadge>
+        </div>
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {[[language === "zh-CN" ? "新增" : "Discovered", marketSnapshot.latestRun?.discovered_count ?? 0], [language === "zh-CN" ? "开放" : "Opened", marketSnapshot.latestRun?.opened_count ?? 0], [language === "zh-CN" ? "关闭" : "Closed", marketSnapshot.latestRun?.closed_count ?? 0], [language === "zh-CN" ? "降级" : "Downgraded", marketSnapshot.latestRun?.downgraded_count ?? 0], [language === "zh-CN" ? "待核验" : "Needs verification", marketSnapshot.latestRun?.verification_required_count ?? 0]].map(([label, value]) => <div key={label} className="rounded-xl border border-[var(--border)] p-3"><strong className="font-display text-2xl">{value}</strong><span className="block text-xs text-[var(--text-secondary)]">{label}</span></div>)}
+        </div>
+        {marketSnapshot.recentEvents.length > 0 && <div className="mt-5 border-t border-[var(--border)] pt-4"><p className="text-sm font-medium">{language === "zh-CN" ? "最近变更" : "Recent changes"}</p><ul className="mt-2 space-y-2 text-xs text-[var(--text-secondary)]">{marketSnapshot.recentEvents.slice(0, 4).map((event) => <li key={event.id}>{event.event_type} · {event.observed_status ?? "—"} · {event.evidence_text}</li>)}</ul></div>}
+      </section>
 
       <section className="mb-8">
         <SectionHeader title={t("dashboard.todayCareerActions")} />

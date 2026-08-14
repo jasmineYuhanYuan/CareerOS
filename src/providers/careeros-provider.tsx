@@ -31,12 +31,14 @@ import type {
 } from "@/types/domain";
 import { opportunities } from "@/data/opportunities";
 import { isJobRelevantToProfile, isOpportunityRelevantToProfile } from "@/lib/profile-eligibility";
+import { emptyMarketSnapshot, type MarketSnapshot } from "@/lib/market-client";
 
 interface CareerOSContextValue {
   state: CareerOSState;
   activeWorkspace: CareerOSState["profiles"][string];
   hydrated: boolean;
   storageError: string;
+  marketSnapshot: MarketSnapshot;
   setActiveProfileId: (id: string) => void;
   updateProfile: (profile: CareerProfile) => void;
   upsertProfile: (profile: CareerProfile) => void;
@@ -78,6 +80,7 @@ function now(): string {
 export function CareerOSProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CareerOSState>(createSeedState);
   const [hydrated, setHydrated] = useState(false);
+  const [marketSnapshot, setMarketSnapshot] = useState<MarketSnapshot>(emptyMarketSnapshot);
   const storageError = "";
 
   useEffect(() => {
@@ -117,6 +120,16 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
       });
     return () => controller.abort();
   }, [hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const controller = new AbortController();
+    void fetch(`/api/market?profileId=${encodeURIComponent(state.activeProfileId)}`, { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Market refresh failed")))
+      .then((payload: Omit<MarketSnapshot, "loaded">) => setMarketSnapshot({ ...payload, loaded: true }))
+      .catch((error: unknown) => { if (!(error instanceof DOMException && error.name === "AbortError")) setMarketSnapshot((current) => ({ ...current, loaded: true })); });
+    return () => controller.abort();
+  }, [hydrated, state.activeProfileId]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -375,14 +388,14 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
 
   const activeWorkspace = state.profiles[state.activeProfileId];
   const value = useMemo<CareerOSContextValue>(() => ({
-    state, activeWorkspace, hydrated, storageError, setActiveProfileId, updateProfile, upsertProfile,
+    state, activeWorkspace, hydrated, storageError, marketSnapshot, setActiveProfileId, updateProfile, upsertProfile,
     toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication,
     toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication,
     upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage,
     updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact,
     upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData,
     importChinaCampusOpportunities, updateChinaCampusOpportunity, createChinaApplication,
-  }), [state, activeWorkspace, hydrated, storageError, setActiveProfileId, updateProfile, upsertProfile, toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication, toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication, upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage, updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact, upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData, importChinaCampusOpportunities, updateChinaCampusOpportunity, createChinaApplication]);
+  }), [state, activeWorkspace, hydrated, storageError, marketSnapshot, setActiveProfileId, updateProfile, upsertProfile, toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication, toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication, upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage, updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact, upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData, importChinaCampusOpportunities, updateChinaCampusOpportunity, createChinaApplication]);
 
   return (
     <CareerOSContext.Provider value={value}>
