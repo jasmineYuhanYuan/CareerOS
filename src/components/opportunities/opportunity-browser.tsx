@@ -21,6 +21,7 @@ import Link from "next/link";
 import { TOMMY_ID } from "@/data/seed";
 import { getEligibleOpportunities } from "@/lib/profile-eligibility";
 import { recommendResumeForOpportunity } from "@/lib/document-evidence";
+import { TOMMY_ADD_CLINIC_ROUTE, TOMMY_CLINIC_DIRECTORY_ROUTE } from "@/lib/clinic-directory";
 
 export function OpportunityBrowser() {
   const {
@@ -255,10 +256,10 @@ export function OpportunityBrowser() {
                   : "You can still review the Canberra / ACT clinic directory, prepare Ahpra registration materials, or record target clinics for proactive outreach."}
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
-                <Link className="button-secondary" href="/chiropractic">{language === "zh-CN" ? "查看诊所目录" : "View clinic directory"}</Link>
+                <Link className="button-secondary" href={TOMMY_CLINIC_DIRECTORY_ROUTE}>{language === "zh-CN" ? "查看诊所目录" : "View clinic directory"}</Link>
+                <Link className="button-secondary" href="/gap-analysis">{language === "zh-CN" ? "查看 AHPRA 注册准备" : "Review AHPRA registration"}</Link>
                 <Link className="button-secondary" href="/roadmap">{language === "zh-CN" ? "打开职业规划" : "Open career roadmap"}</Link>
-                <Link className="button-secondary" href="/gap-analysis">{language === "zh-CN" ? "查看注册准备" : "Review registration preparation"}</Link>
-                <Link className="button-secondary" href="/contacts">{language === "zh-CN" ? "添加目标诊所" : "Add target clinic"}</Link>
+                <Link className="button-secondary" href={TOMMY_ADD_CLINIC_ROUTE}>{language === "zh-CN" ? "添加目标诊所" : "Add target clinic"}</Link>
               </div>
             </div>
           ) : (
