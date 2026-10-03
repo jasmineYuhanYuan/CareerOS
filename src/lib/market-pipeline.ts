@@ -3,13 +3,15 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { verifiedCareerOpportunities } from "@/data/verified/opportunities";
 import { verifiedChinaCampusOpportunities } from "@/data/china-recruiting/verified-opportunities";
 import { chiropracticVacancies } from "@/data/verified/chiropractic";
+import { classifySourceFailure, discoverVacancyLinks, extractJobId, freshnessWindowDays, normalisedVacancyFingerprint, shouldAutoPause, type SourceHealthClassification } from "@/lib/market-adapters";
 
 export type MarketLifecycle = "Open" | "Closing soon" | "Upcoming" | "Verification required" | "Closed" | "Expired" | "Archived";
 
 export interface MarketSourceRow {
   id: string; name: string; official_url: string; market: string; source_type: string;
   crawl_strategy: "listing" | "registration" | "directory"; profile_scope: string[];
-  enabled: boolean; consecutive_failures: number;
+  enabled: boolean; consecutive_failures: number; health_classification?: SourceHealthClassification;
+  last_discovery_at?: string | null; last_verification_at?: string | null;
 }
 
 export interface MarketPageObservation {
@@ -71,18 +73,18 @@ export async function bootstrapMarketData(db: SupabaseClient) {
     const sourceId = `bootstrap-${slug(item.company)}`;
     sources.set(sourceId, { id: sourceId, name: `${item.company} official careers`, official_url: item.careersUrl, market: "australia-tech", source_type: item.sourceType === "Government" ? "government" : "employer", crawl_strategy: "listing", profile_scope: item.profileScope ?? ["yuhan-yuan"] });
     const open = item.applicationStage === "Open" && Boolean(item.officialApplyUrl);
-    opportunities.push({ id: item.id, source_id: sourceId, external_id: item.jobId ?? item.id, title: item.title, organisation: item.company, city: item.city, country: item.country, location_text: `${item.city}, ${item.country}`, employment_type: item.employmentType, role_family: item.roleFamily ?? "Other", profile_scope: item.profileScope ?? ["yuhan-yuan"], source_url: item.officialUrl, apply_url: open ? item.officialApplyUrl : null, lifecycle_status: open ? "Open" : item.applicationStage === "Closed" ? "Closed" : item.applicationStage === "Archived" ? "Archived" : item.applicationStage === "Upcoming" ? "Upcoming" : "Verification required", verification_status: open ? "Verified" : item.applicationStage === "Closed" ? "Closed" : item.applicationStage === "Archived" ? "Archived" : "Verification required", verification_evidence: open ? "Bootstrap: official position-level application URL; pending daily re-verification." : "Bootstrap metadata is not proof of a live vacancy.", published_at: item.publishedDate, opens_at: item.openingDate, deadline: item.deadline, last_verified_at: open ? `${item.lastVerified}T00:00:00Z` : null, last_seen_at: `${item.lastVerified}T00:00:00Z`, archived_at: item.applicationStage === "Archived" ? `${item.lastVerified}T00:00:00Z` : null, metadata: { skills: item.skills, salary: item.salary, sponsorship: item.visaSponsorship } });
+    opportunities.push({ id: item.id, source_id: sourceId, external_id: item.jobId ?? item.id, job_id: item.jobId ?? null, dedupe_fingerprint: normalisedVacancyFingerprint({ organisation: item.company, title: item.title, location: `${item.city}, ${item.country}` }), title: item.title, organisation: item.company, city: item.city, country: item.country, location_text: `${item.city}, ${item.country}`, employment_type: item.employmentType, role_family: item.roleFamily ?? "Other", profile_scope: item.profileScope ?? ["yuhan-yuan"], source_url: item.officialUrl, apply_url: open ? item.officialApplyUrl : null, lifecycle_status: open ? "Open" : item.applicationStage === "Closed" ? "Closed" : item.applicationStage === "Archived" ? "Archived" : item.applicationStage === "Upcoming" ? "Upcoming" : "Verification required", verification_status: open ? "Verified" : item.applicationStage === "Closed" ? "Closed" : item.applicationStage === "Archived" ? "Archived" : "Verification required", verification_method: open ? "bootstrap-position-url" : "bootstrap-metadata", verification_evidence: open ? "Bootstrap: official position-level application URL; pending daily re-verification." : "Bootstrap metadata is not proof of a live vacancy.", published_at: item.publishedDate, opens_at: item.openingDate, deadline: item.deadline, last_verified_at: open ? `${item.lastVerified}T00:00:00Z` : null, last_seen_at: `${item.lastVerified}T00:00:00Z`, archived_at: item.applicationStage === "Archived" ? `${item.lastVerified}T00:00:00Z` : null, metadata: { skills: item.skills, salary: item.salary, sponsorship: item.visaSponsorship, provenance: [item.officialUrl] } });
   }
   for (const item of verifiedChinaCampusOpportunities) {
     const sourceId = `bootstrap-cn-${slug(item.company)}`;
     sources.set(sourceId, { id: sourceId, name: item.sourceName, official_url: item.sourceUrl, market: "china-tech", source_type: "employer", crawl_strategy: "listing", profile_scope: [item.profileId] });
     const open = ["Open", "Closing soon"].includes(item.lifecycleStatus ?? item.verificationStatus);
-    opportunities.push({ id: item.id, source_id: sourceId, external_id: item.id, title: item.position, organisation: item.company, city: item.location, country: "China", location_text: item.location, employment_type: "Internship", role_family: item.roleFamily, profile_scope: [item.profileId], source_url: item.sourceUrl, apply_url: open ? item.officialApplyLink : null, lifecycle_status: open ? (item.lifecycleStatus ?? "Open") : (item.lifecycleStatus ?? "Verification required"), verification_status: open ? "Verified" : "Verification required", verification_evidence: item.verificationMethod, published_at: item.publishedDate, deadline: item.deadline, last_verified_at: open ? `${item.lastVerifiedAt}T00:00:00Z` : null, last_seen_at: `${item.lastVerifiedAt}T00:00:00Z`, metadata: { fitScore: item.fitScore } });
+    opportunities.push({ id: item.id, source_id: sourceId, external_id: item.jobId ?? item.id, job_id: item.jobId ?? null, dedupe_fingerprint: normalisedVacancyFingerprint({ organisation: item.company, title: item.position, location: item.location, programme: item.hiringSeason }), title: item.position, organisation: item.company, city: item.location, country: "China", location_text: item.location, employment_type: "Internship", role_family: item.roleFamily, profile_scope: [item.profileId], source_url: item.sourceUrl, apply_url: open ? item.officialApplyLink : null, lifecycle_status: open ? (item.lifecycleStatus ?? "Open") : (item.lifecycleStatus ?? "Verification required"), verification_status: open ? "Verified" : "Verification required", verification_method: item.verificationMethod, verification_evidence: item.verificationMethod, published_at: item.publishedDate, deadline: item.deadline, last_verified_at: open ? `${item.lastVerifiedAt}T00:00:00Z` : null, last_seen_at: `${item.lastVerifiedAt}T00:00:00Z`, metadata: { fitScore: item.fitScore, provenance: [item.sourceUrl] } });
   }
   for (const item of chiropracticVacancies.filter((record) => record.vacancyStatus === "Current")) {
     const sourceId = `bootstrap-chiro-${slug(item.employer)}`;
     sources.set(sourceId, { id: sourceId, name: item.source, official_url: item.officialUrl, market: "australia-chiropractic", source_type: "job-board", crawl_strategy: "registration", profile_scope: ["taicheng-guo-tommy"] });
-    opportunities.push({ id: item.id, source_id: sourceId, external_id: item.id, title: item.exactTitle, organisation: item.employer, city: item.location.split(",")[0], country: "Australia", location_text: item.location, employment_type: item.employmentType, role_family: "Chiropractic", profile_scope: ["taicheng-guo-tommy"], source_url: item.officialUrl, apply_url: item.applicationUrl, lifecycle_status: "Open", verification_status: "Verified", verification_evidence: item.dataNotes, published_at: item.publicationDate, deadline: item.closingDate, last_verified_at: `${item.lastVerified}T00:00:00Z`, last_seen_at: `${item.lastVerified}T00:00:00Z`, metadata: { source: item.source, vacancyEvidence: item.dataNotes } });
+    opportunities.push({ id: item.id, source_id: sourceId, external_id: item.id, dedupe_fingerprint: normalisedVacancyFingerprint({ organisation: item.employer, title: item.exactTitle, location: item.location }), title: item.exactTitle, organisation: item.employer, city: item.location.split(",")[0], country: "Australia", location_text: item.location, employment_type: item.employmentType, role_family: "Chiropractic", profile_scope: ["taicheng-guo-tommy"], source_url: item.officialUrl, apply_url: item.applicationUrl, lifecycle_status: "Open", verification_status: "Verified", verification_method: "official-vacancy-page", verification_evidence: item.dataNotes, published_at: item.publicationDate, deadline: item.closingDate, last_verified_at: `${item.lastVerified}T00:00:00Z`, last_seen_at: `${item.lastVerified}T00:00:00Z`, metadata: { source: item.source, vacancyEvidence: item.dataNotes, provenance: [item.officialUrl] } });
   }
   const { error: sourceError } = await db.from("market_sources").upsert([...sources.values()], { onConflict: "id", ignoreDuplicates: true });
   if (sourceError) throw sourceError;
@@ -96,18 +98,8 @@ export async function bootstrapMarketData(db: SupabaseClient) {
 }
 
 export function discoverOfficialLinks(html: string, baseUrl: string) {
-  const results = new Map<string, { url: string; title: string }>();
-  const anchor = /<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
-  for (const match of html.matchAll(anchor)) {
-    const title = match[2].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-    if (!/(intern|graduate|software|engineer|developer|data|product|算法|开发|工程师|实习|校招)/i.test(title)) continue;
-    try {
-      const url = new URL(match[1], baseUrl);
-      if (url.protocol !== "https:") continue;
-      results.set(url.href.split("#")[0], { url: url.href.split("#")[0], title });
-    } catch { /* malformed source link */ }
-  }
-  return [...results.values()].slice(0, 30).map((item) => ({ ...item, id: `discovered-${idFor(item.url)}` }));
+  return discoverVacancyLinks(html, { sourceId: "legacy", sourceType: "employer", crawlStrategy: "listing", officialUrl: baseUrl })
+    .map((item) => ({ ...item, id: `discovered-${idFor(item.url)}` }));
 }
 
 export async function runMarketAudit(db: SupabaseClient, fetcher: typeof fetch = fetch, triggerType: "cron" | "manual" = "cron") {
@@ -124,20 +116,36 @@ export async function runMarketAudit(db: SupabaseClient, fetcher: typeof fetch =
       const response = await fetcher(source.official_url, { headers: { "user-agent": "CareerOS-Market-Audit/2.0 (+https://career-os-azure.vercel.app)" }, redirect: "follow", signal: AbortSignal.timeout(12_000) });
       const body = await response.text();
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      await db.from("market_sources").update({ health_status: "healthy", consecutive_failures: 0, last_checked_at: startedAt, last_success_at: startedAt, last_error: null, updated_at: startedAt }).eq("id", source.id);
+      const links = discoverVacancyLinks(body, { sourceId: source.id, sourceType: source.source_type, crawlStrategy: source.crawl_strategy, officialUrl: source.official_url });
+      const classification: SourceHealthClassification = source.crawl_strategy !== "listing" || links.length > 0 ? "HEALTHY" : "NEEDS_SOURCE_SPECIFIC_ADAPTER";
+      await db.from("market_sources").update({ health_status: "healthy", health_classification: classification, consecutive_failures: 0, last_checked_at: startedAt, last_success_at: startedAt, last_error: classification === "HEALTHY" ? null : "Official page is reachable but the generic adapter found no vacancy links.", last_failure_type: classification === "HEALTHY" ? null : "source-structure-changed", last_http_status: response.status, updated_at: startedAt }).eq("id", source.id);
       if (source.consecutive_failures > 0) await db.from("market_verification_events").insert({ run_id: run.id, source_id: source.id, event_type: "source-recovered", evidence_type: "request-restored", evidence_text: "Source verification restored after a previous request failure.", http_status: response.status, checked_at: startedAt });
       if (source.crawl_strategy !== "listing") return;
-      const links = discoverOfficialLinks(body, source.official_url);
       for (const link of links) {
-        const { data: existing } = await db.from("market_opportunities").select("id").eq("source_url", link.url).maybeSingle();
+        const organisation = source.name.replace(/ (official careers|Campus Recruitment|Jobs)$/i, "");
+        const fingerprint = normalisedVacancyFingerprint({ organisation, title: link.title, location: source.market === "china-tech" ? "China" : "Australia" });
+        const { data: existing } = link.jobId
+          ? await db.from("market_opportunities").select("id,source_url,metadata").eq("organisation", organisation).eq("external_id", link.jobId).maybeSingle()
+          : await db.from("market_opportunities").select("id,source_url,metadata").eq("dedupe_fingerprint", fingerprint).maybeSingle();
+        if (existing && existing.source_url !== link.url) {
+          const metadata = typeof existing.metadata === "object" && existing.metadata !== null ? existing.metadata as Record<string, unknown> : {};
+          const provenance = Array.isArray(metadata.provenance) ? metadata.provenance.map(String) : [existing.source_url];
+          await db.from("market_opportunities").update({ metadata: { ...metadata, provenance: [...new Set([...provenance, link.url])] }, updated_at: startedAt }).eq("id", existing.id);
+        }
         if (existing) continue;
-        const row = { id: link.id, source_id: source.id, external_id: idFor(link.url), title: link.title, organisation: source.name.replace(/ (official careers|Campus Recruitment|Jobs)$/i, ""), city: source.market === "china-tech" ? "China" : "Australia", country: source.market === "china-tech" ? "China" : "Australia", location_text: "Location requires verification", employment_type: /intern|实习/i.test(link.title) ? "Internship" : /graduate|校招/i.test(link.title) ? "Graduate" : "Full-time", role_family: /data|算法|ai/i.test(link.title) ? "Data / AI" : /product|产品/i.test(link.title) ? "Product" : "Software Engineering", profile_scope: source.profile_scope, source_url: link.url, lifecycle_status: "Verification required", verification_status: "Verification required", verification_evidence: "Discovered on an official source; position page awaits verification.", last_seen_at: startedAt };
+        const row = { id: `discovered-${idFor(link.url)}`, source_id: source.id, external_id: link.jobId ?? idFor(link.url), job_id: link.jobId, dedupe_fingerprint: fingerprint, title: link.title, organisation, city: source.market === "china-tech" ? "China" : "Australia", country: source.market === "china-tech" ? "China" : "Australia", location_text: "Location requires verification", employment_type: /intern|实习/i.test(link.title) ? "Internship" : /graduate|校招/i.test(link.title) ? "Graduate" : "Full-time", role_family: /data|算法|ai/i.test(link.title) ? "Data / AI" : /product|产品/i.test(link.title) ? "Product" : "Software Engineering", profile_scope: source.profile_scope, source_url: link.url, lifecycle_status: "Verification required", verification_status: "Verification required", verification_evidence: "Discovered on an official source; position page awaits verification.", verification_method: "official-listing-discovery", last_seen_at: startedAt, metadata: { provenance: [link.url] } };
         const { error: insertError } = await db.from("market_opportunities").insert(row);
-        if (!insertError) { summary.discovered++; await db.from("market_verification_events").insert({ run_id: run.id, source_id: source.id, opportunity_id: link.id, event_type: "discovered", observed_status: "Verification required", evidence_type: "official-link-discovery", evidence_text: row.verification_evidence, checked_at: startedAt }); }
+        if (!insertError) { summary.discovered++; await db.from("market_sources").update({ last_discovery_at: startedAt }).eq("id", source.id); await db.from("market_verification_events").insert({ run_id: run.id, source_id: source.id, opportunity_id: row.id, event_type: "discovered", observed_status: "Verification required", evidence_type: "official-link-discovery", evidence_text: row.verification_evidence, checked_at: startedAt }); }
       }
     } catch (caught) {
       summary.failed++; const message = caught instanceof Error ? caught.message : "Unknown source error"; summary.errors.push({ sourceId: source.id, message });
-      await db.from("market_sources").update({ health_status: source.consecutive_failures + 1 >= 3 ? "failed" : "degraded", consecutive_failures: source.consecutive_failures + 1, last_checked_at: startedAt, last_error: message, updated_at: startedAt }).eq("id", source.id);
+      const failures = source.consecutive_failures + 1;
+      const parsedStatus = message.match(/HTTP (\d{3})/)?.[1];
+      const httpStatus = parsedStatus ? Number(parsedStatus) : undefined;
+      const failureType = classifySourceFailure(caught, httpStatus);
+      const classification: SourceHealthClassification = failureType === "access-restricted" ? "UNSUITABLE_FOR_AUTOMATION" : failureType === "http-error" ? "NEEDS_NEW_OFFICIAL_URL" : "NEEDS_SOURCE_SPECIFIC_ADAPTER";
+      const paused = shouldAutoPause(failures, classification);
+      await db.from("market_sources").update({ enabled: !paused, health_status: paused ? "disabled" : failures >= 3 ? "failed" : "degraded", health_classification: classification, consecutive_failures: failures, last_checked_at: startedAt, last_error: message, last_failure_type: failureType, last_http_status: httpStatus ?? null, updated_at: startedAt }).eq("id", source.id);
       await db.from("market_verification_events").insert({ run_id: run.id, source_id: source.id, event_type: "source-failed", evidence_type: "request-failed", evidence_text: message, checked_at: startedAt });
     }
   }));
@@ -145,7 +153,8 @@ export async function runMarketAudit(db: SupabaseClient, fetcher: typeof fetch =
   await Promise.all((active ?? []).map(async (item) => {
     try {
       const response = await fetcher(item.source_url, { headers: { "user-agent": "CareerOS-Market-Audit/2.0" }, redirect: "follow", signal: AbortSignal.timeout(12_000) });
-      const observation = classifyMarketPage({ ok: response.ok, status: response.status, body: await response.text(), url: item.source_url, deadline: item.deadline, checkedAt: startedAt });
+      const body = await response.text();
+      const observation = classifyMarketPage({ ok: response.ok, status: response.status, body, url: item.source_url, deadline: item.deadline, checkedAt: startedAt });
       const previous = item.lifecycle_status as MarketLifecycle;
       const next = observation.status;
       if (next === "Open" && previous !== "Open") summary.opened++;
@@ -157,7 +166,9 @@ export async function runMarketAudit(db: SupabaseClient, fetcher: typeof fetch =
       const restored = next === "Open" && previous === "Verification required";
       const eventType = deadlineChanged ? "deadline-changed" : applicationUrlChanged ? "application-url-changed" : reopened ? "role-reopened" : restored ? "verification-restored" : next === previous ? "unchanged" : next === "Open" ? "verified-open" : ["Closed", "Expired"].includes(next) ? "closed" : "downgraded";
       const changeEvidence = deadlineChanged ? `Deadline changed: ${item.deadline} → ${observation.deadline}` : applicationUrlChanged ? `Application URL changed: ${item.apply_url} → ${observation.applyUrl}` : observation.evidenceText;
-      await db.from("market_opportunities").update({ lifecycle_status: next, verification_status: next === "Open" ? "Verified" : next, verification_evidence: observation.evidenceText, apply_url: observation.applyUrl, deadline: observation.deadline, last_seen_at: response.ok ? startedAt : item.last_seen_at, last_verified_at: next === "Open" ? startedAt : item.last_verified_at, archived_at: ["Closed", "Expired", "Archived"].includes(next) ? startedAt : null, updated_at: startedAt }).eq("id", item.id);
+      const jobId = item.job_id ?? extractJobId(item.source_url, body);
+      await db.from("market_opportunities").update({ lifecycle_status: next, verification_status: next === "Open" ? "Verified" : next, verification_method: observation.evidenceType, verification_evidence: observation.evidenceText, apply_url: observation.applyUrl, deadline: observation.deadline, job_id: jobId, last_seen_at: response.ok ? startedAt : item.last_seen_at, last_verified_at: next === "Open" ? startedAt : item.last_verified_at, archived_at: ["Closed", "Expired", "Archived"].includes(next) ? startedAt : null, updated_at: startedAt }).eq("id", item.id);
+      if (next === "Open") await db.from("market_sources").update({ last_verification_at: startedAt }).eq("id", item.source_id);
       await db.from("market_verification_events").insert({ run_id: run.id, source_id: item.source_id, opportunity_id: item.id, event_type: eventType, previous_status: previous, observed_status: next, evidence_type: observation.evidenceType, evidence_text: changeEvidence, http_status: response.status, checked_at: startedAt });
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : "Position verification failed.";
@@ -169,6 +180,14 @@ export async function runMarketAudit(db: SupabaseClient, fetcher: typeof fetch =
         await db.from("market_verification_events").insert({ run_id: run.id, source_id: item.source_id, opportunity_id: item.id, event_type: "downgraded", previous_status: item.lifecycle_status, observed_status: next, evidence_type: "stale-verification", evidence_text: "Open status expired after repeated inability to obtain fresh position-level application evidence.", checked_at: startedAt });
       }
     }
+  }));
+  const { data: stillOpen } = await db.from("market_opportunities").select("id,last_verified_at,lifecycle_status,source_id,market_sources(source_type,crawl_strategy)").in("lifecycle_status", ["Open", "Closing soon"]);
+  await Promise.all((stillOpen ?? []).map(async (item) => {
+    const source = Array.isArray(item.market_sources) ? item.market_sources[0] : item.market_sources;
+    const next = staleLifecycle(item.last_verified_at, item.lifecycle_status, startedAt, freshnessWindowDays(source?.source_type ?? "employer", source?.crawl_strategy ?? "listing"));
+    if (next !== "Verification required") return;
+    summary.downgraded++;
+    await db.from("market_opportunities").update({ lifecycle_status: next, verification_status: next, verification_method: "freshness-window", verification_evidence: "The last positive verification exceeded this source type's freshness window.", apply_url: null, updated_at: startedAt }).eq("id", item.id);
   }));
   const verificationRequired = (active ?? []).filter((item) => item.lifecycle_status === "Verification required").length + summary.downgraded;
   const status = summary.failed === 0 ? "completed" : summary.failed < summary.checked ? "partial" : "failed";
