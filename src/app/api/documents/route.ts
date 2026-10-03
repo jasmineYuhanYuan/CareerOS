@@ -9,11 +9,20 @@ async function authenticate(request: Request) { const header = request.headers.g
 function safeSegment(value: string) { return value.trim().replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^[-.]+/, "").slice(0, 120); }
 function stringArray(form: FormData, key: string): string[] { try { const value = JSON.parse(String(form.get(key) ?? "[]")); return Array.isArray(value) ? value.map(String).filter(Boolean).slice(0, 20) : []; } catch { return []; } }
 
+export async function GET(request: Request) {
+  const auth = await authenticate(request); if (!auth) return Response.json({ error: "Unauthorized." }, { status: 401 });
+  const profileId = safeSegment(new URL(request.url).searchParams.get("profileId") ?? ""); if (!profileId) return Response.json({ error: "Profile is required." }, { status: 400 });
+  const { data, error } = await auth.client.from("career_documents").select("*").eq("user_id", auth.userId).eq("profile_id", profileId).order("uploaded_at", { ascending: false });
+  if (error) return Response.json({ error: "Document library could not be loaded." }, { status: 500 });
+  return Response.json({ documents: (data ?? []).map((row) => databaseDocumentToRecord(row as Record<string, unknown>)) }, { headers: { "cache-control": "private, no-store" } });
+}
+
 export async function POST(request: Request) {
   const auth = await authenticate(request); if (!auth) return Response.json({ error: "Unauthorized." }, { status: 401 });
   const form = await request.formData(); const file = form.get("file"); const profileId = safeSegment(String(form.get("profileId") ?? ""));
   if (!(file instanceof File) || !profileId) return Response.json({ error: "File and profile are required." }, { status: 400 });
-  if (!DOCUMENT_MIME_TYPES.includes(file.type as typeof DOCUMENT_MIME_TYPES[number]) || file.size <= 0 || file.size > MAX_DOCUMENT_BYTES) return Response.json({ error: "Upload a PDF or DOCX up to 10 MB." }, { status: 415 });
+  const extension = file.name.match(/\.(pdf|docx)$/i)?.[1]?.toLowerCase(); const matchingType = extension === "pdf" ? file.type === DOCUMENT_MIME_TYPES[0] : extension === "docx" ? file.type === DOCUMENT_MIME_TYPES[1] : false;
+  if (!matchingType || file.size <= 0 || file.size > MAX_DOCUMENT_BYTES) return Response.json({ error: "Upload a PDF or DOCX up to 10 MB with a matching file type." }, { status: 415 });
   const stream = new ReadableStream({ async start(controller) {
     const encoder = new TextEncoder(); const send = (event: object) => controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
     const id = crypto.randomUUID(); const fileName = safeSegment(file.name) || `document-${id}`; const storagePath = `${auth.userId}/${profileId}/${id}/${fileName}`;
