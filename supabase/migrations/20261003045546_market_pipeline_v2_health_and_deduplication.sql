@@ -31,11 +31,11 @@ create index if not exists market_sources_enabled_health_idx
 update public.market_sources set health_classification = 'NEEDS_NEW_OFFICIAL_URL'
 where id in ('amazon-au','bootstrap-amazon');
 update public.market_sources set health_classification = 'NEEDS_SOURCE_SPECIFIC_ADAPTER'
-where id in ('aps-data','aps-digital','bootstrap-australian-government','bootstrap-australian-signals-directorate','bootstrap-digital-transformation-agency','alibaba-campus','tencent-campus');
+where id in ('aps-data','aps-digital','bootstrap-australian-government','bootstrap-australian-signals-directorate','bootstrap-digital-transformation-agency','alibaba-campus','tencent-campus','atlassian-au');
 update public.market_sources set health_classification = 'UNSUITABLE_FOR_AUTOMATION'
 where id in ('canberra-clinics','bootstrap-chiro-aligned-chiro');
 update public.market_sources set health_classification = 'HEALTHY'
-where id in ('ahpra-chiropractic','atlassian-au','bootstrap-cn-baidu','bootstrap-cn-red','bytedance-campus','bootstrap-baidu');
+where id in ('ahpra-chiropractic','bootstrap-cn-baidu','bootstrap-cn-red','bytedance-campus','bootstrap-baidu');
 
 -- LinkedIn blocks unattended crawling; retain its historical vacancy evidence but
 -- do not treat the source as an automatable clinic feed.
