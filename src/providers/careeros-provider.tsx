@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -33,6 +34,10 @@ import { opportunities } from "@/data/opportunities";
 import { isJobRelevantToProfile, isOpportunityRelevantToProfile } from "@/lib/profile-eligibility";
 import { emptyMarketSnapshot, type MarketSnapshot } from "@/lib/market-client";
 import { ensureStatusHistory, initialStatusHistory, recordStatusTransition } from "@/lib/application-status";
+import { STORAGE_KEY } from "@/lib/storage";
+import { synchroniseCloudState } from "@/lib/cloud-sync";
+import { statesEqual, type CloudSyncStatus } from "@/lib/sync-engine";
+import { useAuth } from "@/providers/auth-provider";
 
 interface CareerOSContextValue {
   state: CareerOSState;
@@ -40,6 +45,9 @@ interface CareerOSContextValue {
   hydrated: boolean;
   storageError: string;
   marketSnapshot: MarketSnapshot;
+  syncStatus: CloudSyncStatus;
+  syncMessage: string;
+  retryCloudSync: () => void;
   setActiveProfileId: (id: string) => void;
   updateProfile: (profile: CareerProfile) => void;
   upsertProfile: (profile: CareerProfile) => void;
@@ -82,10 +90,21 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CareerOSState>(createSeedState);
   const [hydrated, setHydrated] = useState(false);
   const [marketSnapshot, setMarketSnapshot] = useState<MarketSnapshot>(emptyMarketSnapshot);
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const [syncStatus, setSyncStatus] = useState<CloudSyncStatus>("local");
+  const [syncMessage, setSyncMessage] = useState("");
+  const localUpdatedAt = useRef("");
+  const hadLocalData = useRef(false);
+  const initialCloudSyncComplete = useRef(false);
+  const syncing = useRef(false);
+  const applyingCloudState = useRef(false);
+  const [syncRequest, setSyncRequest] = useState(0);
   const storageError = "";
 
   useEffect(() => {
     queueMicrotask(() => {
+      hadLocalData.current = Boolean(window.localStorage.getItem(STORAGE_KEY));
+      localUpdatedAt.current = window.localStorage.getItem("careeros:local-updated-at") ?? "";
       setState(readState(window.localStorage));
       setHydrated(true);
     });
@@ -135,8 +154,56 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
     saveState(window.localStorage, state);
+    if (applyingCloudState.current) {
+      applyingCloudState.current = false;
+    } else if (initialCloudSyncComplete.current) {
+      localUpdatedAt.current = new Date().toISOString();
+      window.localStorage.setItem("careeros:local-updated-at", localUpdatedAt.current);
+    }
     document.documentElement.dataset.theme = state.theme.toLowerCase();
   }, [hydrated, state]);
+
+  const runAutomaticSync = useCallback(async (snapshot: CareerOSState) => {
+    if (!isAuthenticated || !user || syncing.current) return;
+    syncing.current = true; setSyncStatus("syncing"); setSyncMessage("");
+    try {
+      const lastSyncUser = window.localStorage.getItem("careeros:last-sync-user-id");
+      const sameOwner = !lastSyncUser || lastSyncUser === user.id;
+      const safeSnapshot = sameOwner ? snapshot : createSeedState();
+      const result = await synchroniseCloudState(safeSnapshot, localUpdatedAt.current, hadLocalData.current && sameOwner);
+      setState((current) => {
+        if (statesEqual(current, result.state)) return current;
+        applyingCloudState.current = true;
+        return result.state;
+      });
+      localUpdatedAt.current = result.updatedAt;
+      window.localStorage.setItem("careeros:local-updated-at", result.updatedAt);
+      window.localStorage.setItem("careeros:last-sync-user-id", user.id);
+      hadLocalData.current = true;
+      initialCloudSyncComplete.current = true;
+      setSyncStatus("synced"); setSyncMessage(`Synced revision ${result.revision}.`);
+    } catch (error) {
+      const offline = typeof navigator !== "undefined" && !navigator.onLine;
+      setSyncStatus(offline ? "offline" : error instanceof Error && error.message === "SYNC_CONFLICT" ? "conflict" : "error");
+      setSyncMessage(offline ? "Offline — changes remain safely stored on this device." : error instanceof Error ? error.message : "Cloud sync failed.");
+    } finally { syncing.current = false; }
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    if (!hydrated || authLoading) return;
+    if (!isAuthenticated) { initialCloudSyncComplete.current = false; queueMicrotask(() => setSyncStatus("local")); return; }
+    void runAutomaticSync(state);
+    // Reconcile once for each authenticated user/session, then the debounced effect handles changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, hydrated, isAuthenticated, user?.id, syncRequest]);
+
+  useEffect(() => {
+    if (!hydrated || !isAuthenticated || !initialCloudSyncComplete.current) return;
+    const timer = window.setTimeout(() => { void runAutomaticSync(state); }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [hydrated, isAuthenticated, runAutomaticSync, state]);
+
+  const retryCloudSync = useCallback(() => setSyncRequest((current) => current + 1), []);
 
   const updateActive = useCallback(
     (updater: (workspace: CareerOSState["profiles"][string]) => CareerOSState["profiles"][string]) => {
@@ -391,14 +458,14 @@ export function CareerOSProvider({ children }: { children: ReactNode }) {
 
   const activeWorkspace = state.profiles[state.activeProfileId];
   const value = useMemo<CareerOSContextValue>(() => ({
-    state, activeWorkspace, hydrated, storageError, marketSnapshot, setActiveProfileId, updateProfile, upsertProfile,
+    state, activeWorkspace, hydrated, storageError, marketSnapshot, syncStatus, syncMessage, retryCloudSync, setActiveProfileId, updateProfile, upsertProfile,
     toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication,
     toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication,
     upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage,
     updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact,
     upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData,
     importChinaCampusOpportunities, updateChinaCampusOpportunity, createChinaApplication,
-  }), [state, activeWorkspace, hydrated, storageError, marketSnapshot, setActiveProfileId, updateProfile, upsertProfile, toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication, toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication, upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage, updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact, upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData, importChinaCampusOpportunities, updateChinaCampusOpportunity, createChinaApplication]);
+  }), [state, activeWorkspace, hydrated, storageError, marketSnapshot, syncStatus, syncMessage, retryCloudSync, setActiveProfileId, updateProfile, upsertProfile, toggleSavedJob, addJobApplication, createApplication, updateApplication, deleteApplication, toggleSavedProgram, addPostgraduateApplication, updatePostgraduateApplication, upsertRoadmapItem, deleteRoadmapItem, updateOrganisationNote, setTheme, setLanguage, updateDashboardPreferences, toggleSavedOpportunity, upsertContact, deleteContact, upsertDocument, deleteDocument, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData, importChinaCampusOpportunities, updateChinaCampusOpportunity, createChinaApplication]);
 
   return (
     <CareerOSContext.Provider value={value}>
