@@ -15,7 +15,7 @@ import { pullCloudState, pushCloudState } from "@/lib/cloud-sync";
 import { useAuth } from "@/providers/auth-provider";
 
 export function SettingsPanel() {
-  const { state, activeWorkspace, setTheme, setLanguage, updateDashboardPreferences, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData } = useCareerOS();
+  const { state, activeWorkspace, syncStatus, syncMessage, retryCloudSync, setTheme, setLanguage, updateDashboardPreferences, setDefaultProfile, resetCurrentProfile, resetAll, exportData, importData } = useCareerOS();
   const { language, t } = useLanguage();
   const { notify } = useToast();
   const { user, isAuthenticated, isLoading, signOut } = useAuth();
@@ -87,10 +87,13 @@ export function SettingsPanel() {
         </Card>
         <Card eyebrow={t("settings.cloudSync")} title={t("settings.cloudSync")}>
           <p className="text-sm leading-7 text-[var(--text-secondary)]">{t("settings.cloudSyncDescription")}</p>
+          <p className="mt-3 text-sm font-medium" role="status">{language === "zh-CN" ? "同步状态" : "Sync status"}: {syncStatus}</p>
+          {syncMessage ? <p className="mt-1 text-xs text-[var(--text-secondary)]">{syncMessage}</p> : null}
           {isLoading ? <p className="mt-3 text-sm text-[var(--text-secondary)]">{language === "zh-CN" ? "正在检查登录状态…" : "Checking sign-in status…"}</p> : isAuthenticated ? (
             <>
               <p className="mt-3 text-sm font-medium">{t("settings.signedInAs", { email: user?.email ?? "" })}</p>
               <div className="mt-4 flex flex-wrap gap-2">
+                {syncStatus === "error" || syncStatus === "offline" || syncStatus === "conflict" ? <Button variant="secondary" disabled={syncBusy} onClick={retryCloudSync}>{language === "zh-CN" ? "重试同步" : "Retry sync"}</Button> : null}
                 <Button disabled={syncBusy} onClick={() => void runSync(async () => {
                   await pushCloudState(state);
                   return t("settings.uploadComplete");
