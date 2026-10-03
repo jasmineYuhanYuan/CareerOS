@@ -16,4 +16,13 @@ describe("Auth client security", () => {
     expect(provider).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
     expect(browser).not.toContain("serviceRole");
   });
+
+  it("does not reuse the service role key as an HTTP administration secret", () => {
+    const cron = readFileSync(resolve("src/app/api/cron/opportunity-audit/route.ts"), "utf8");
+    const marketAdmin = readFileSync(resolve("src/app/api/admin/market/route.ts"), "utf8");
+    expect(cron).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(marketAdmin).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(cron).toContain("CRON_SECRET");
+    expect(marketAdmin).toContain("CRON_SECRET");
+  });
 });

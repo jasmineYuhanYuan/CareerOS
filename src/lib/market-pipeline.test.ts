@@ -14,7 +14,7 @@ describe("automatic market pipeline", () => {
   });
 
   it("extracts a position-level apply URL and structured deadline for change detection", () => {
-    const result = classifyMarketPage({ ok: true, status: 200, body: '<script>{"validThrough":"2026-08-25"}</script><p>Job description and responsibilities.</p><a href="/apply/42">Apply now</a>', url: "https://example.com/jobs/42" });
+    const result = classifyMarketPage({ ok: true, status: 200, body: '<script>{"validThrough":"2026-08-25"}</script><p>Job description and responsibilities.</p><a href="/apply/42">Apply now</a>', url: "https://example.com/jobs/42", checkedAt: "2026-08-14T00:00:00Z" });
     expect(result).toMatchObject({ status: "Open", applyUrl: "https://example.com/apply/42", deadline: "2026-08-25" });
   });
 
