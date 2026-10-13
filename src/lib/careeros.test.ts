@@ -261,8 +261,11 @@ describe("Sprint 4 dashboard presentation", () => {
     const activity = recentApplicationActivity(
       createSeedState().profiles[YUHAN_ID],
     );
-    expect(activity).toHaveLength(4);
-    expect(activity[0].label).toBe("Resume Screening → Assessment In Progress");
+    expect(activity).toHaveLength(6);
+    expect(activity[0].label).toBe("Application created from confirmed submission");
+    expect(activity.map((item) => item.occurredAt)).toEqual(
+      activity.map((item) => item.occurredAt).toSorted().reverse(),
+    );
   });
 
   it("removes duplicate sample suffixes and localises the consolidated warning", () => {
