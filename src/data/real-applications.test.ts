@@ -3,14 +3,23 @@ import { mergeKnownYuhanApplications, yuhanKnownApplications } from "@/data/real
 
 describe("known Yuhan applications", () => {
   it("includes only applications with confirmed submission evidence", () => {
-    expect(yuhanKnownApplications.map((item) => item.organisationName)).toEqual([
-      "小红书",
-      "PriFi",
-      "PrimePilot AI",
-      "Solotude",
-      "swipejobs",
-    ]);
-    expect(yuhanKnownApplications.slice(1).every((item) => item.status === "Applied")).toBe(true);
+    expect(yuhanKnownApplications).toHaveLength(12);
+    expect(yuhanKnownApplications.filter((item) => item.organisationName === "美团")).toHaveLength(4);
+    expect(yuhanKnownApplications.filter((item) => item.organisationName === "百度")).toHaveLength(3);
+    const newPortalRecords = yuhanKnownApplications.filter((item) => item.organisationName === "美团" || item.organisationName === "百度");
+    expect(newPortalRecords.every((item) => item.appliedAt === "2026-10-14")).toBe(true);
+  });
+
+  it("maps the official portal stages without overstating pending preferences", () => {
+    const meituanScreening = yuhanKnownApplications.find((item) => item.jobId === "meituan-fintech-ai-fullstack-intern-2027");
+    const meituanPending = yuhanKnownApplications.filter((item) => item.organisationName === "美团" && item.notes.includes("待开启"));
+    const baidu = yuhanKnownApplications.filter((item) => item.organisationName === "百度");
+
+    expect(meituanScreening?.status).toBe("Resume Screening");
+    expect(meituanPending).toHaveLength(2);
+    expect(meituanPending.every((item) => item.status === "Applied")).toBe(true);
+    expect(baidu.every((item) => item.status === "Resume Screening")).toBe(true);
+    expect(baidu.every((item) => item.notes.includes("截图未显示具体投递时间"))).toBe(true);
   });
 
   it("adds missing records without creating duplicates", () => {
